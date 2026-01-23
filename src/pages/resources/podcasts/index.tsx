@@ -1,5 +1,5 @@
-import Layout from "../../components/Layout";
-import BuzzsproutPlayer from "../../components/BuzzsproutPlayer";
+import Layout from "../../../components/Layout";
+import BuzzsproutPlayer from "../../../components/BuzzsproutPlayer";
 import Link from "next/link";
 import { GetServerSideProps } from "next";
 
