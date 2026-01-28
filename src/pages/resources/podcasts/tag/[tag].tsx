@@ -35,15 +35,25 @@ export async function getServerSideProps({ params }: any) {
 export default function PodcastTagPage({ tag, episodes }: any) {
   return (
     <Layout>
-      <h1 className="text-2xl font-semibold">#{tag} Podcasts</h1>
+      <div className="flex flex-col gap-2">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+          Resources
+        </div>
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+          #{tag} Podcasts
+        </h1>
+        <p className="max-w-3xl text-sm leading-relaxed text-slate-600 sm:text-base">
+          Episodes tagged with #{tag}.
+        </p>
+      </div>
 
       <ul className="mt-6 grid gap-4">
         {episodes.map((e: any) => (
-          <li key={e.id} className="border p-4 rounded">
-            <div className="font-semibold">{e.title}</div>
+          <li key={e.id} className="surface-panel surface-hover p-4">
+            <div className="text-sm font-semibold text-slate-900">{e.title}</div>
             <Link
               href={`/resources/podcasts/${e.slug}`}
-              className="text-sm text-brand-blue"
+              className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-deep hover:text-brand-blue"
             >
               View →
             </Link>

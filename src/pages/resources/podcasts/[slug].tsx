@@ -20,7 +20,7 @@ export async function getServerSideProps({ params }: any) {
   const episode = {
     id: item.id,
     title: item.title,
-    description: item.description, // blocks
+    description: item.description,
     slug: item.slug,
     publishedDate: item.publishedDate,
     transcript: item.transcript,
@@ -33,34 +33,43 @@ export async function getServerSideProps({ params }: any) {
 export default function PodcastDetail({ episode }: any) {
   return (
     <Layout>
-      <h1 className="text-3xl font-semibold">{episode.title}</h1>
-      <p className="text-sm text-slate-500">{episode.publishedDate}</p>
-
-      {/* DESCRIPTION */}
-      <div className="mt-4 prose max-w-none">
-        <RichText blocks={episode.description} />
+      <div className="flex flex-col gap-2">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+          Resources
+        </div>
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+          {episode.title}
+        </h1>
+        <p className="text-sm text-slate-500">{episode.publishedDate}</p>
       </div>
 
-      {/* TAGS */}
-      <div className="mt-4 flex gap-2">
-        {episode.tags.map((tag: any) => (
-          <Link
-            key={tag.slug}
-            href={`/resources/podcasts/tag/${tag.slug}`}
-            className="text-xs bg-slate-100 px-2 py-1 rounded"
-          >
-            #{tag.name}
-          </Link>
-        ))}
-      </div>
+      <div className="surface-panel mt-6 p-6">
+        {/* DESCRIPTION */}
+        <div className="prose max-w-none">
+          <RichText blocks={episode.description} />
+        </div>
 
-      {/* TRANSCRIPT */}
-      {episode.transcript && (
-        <article className="prose mt-6 max-w-none">
-          <h3>Transcript</h3>
-          <div>{episode.transcript}</div>
-        </article>
-      )}
+        {/* TAGS */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {episode.tags.map((tag: any) => (
+            <Link
+              key={tag.slug}
+              href={`/resources/podcasts/tag/${tag.slug}`}
+              className="rounded-full border border-slate-200/80 bg-white/80 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-brand-deep"
+            >
+              #{tag.name}
+            </Link>
+          ))}
+        </div>
+
+        {/* TRANSCRIPT */}
+        {episode.transcript && (
+          <article className="prose mt-6 max-w-none">
+            <h3>Transcript</h3>
+            <div>{episode.transcript}</div>
+          </article>
+        )}
+      </div>
     </Layout>
   );
 }

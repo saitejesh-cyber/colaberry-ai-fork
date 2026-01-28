@@ -21,44 +21,57 @@ type PodcastEpisode = {
 export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
   return (
     <Layout>
-      <h1 className="text-3xl font-semibold">Podcasts</h1>
-      <p className="text-slate-600">
-        Internal podcasts + curated external aggregation
-      </p>
+      <div className="flex flex-col gap-2">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+          Resources
+        </div>
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+          Podcasts
+        </h1>
+        <p className="max-w-3xl text-sm leading-relaxed text-slate-600 sm:text-base">
+          Internal podcasts + curated external aggregation.
+        </p>
+      </div>
 
-      <div className="mt-6 grid lg:grid-cols-2 gap-6">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.05fr_1.25fr]">
         {/* INTERNAL */}
-        <section>
-          <h3 className="font-semibold mb-3">Internal podcasts</h3>
+        <section className="surface-panel p-6">
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-sm font-semibold text-slate-900">Internal podcasts</h3>
+            <span className="rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-600">
+              {episodes.length} episodes
+            </span>
+          </div>
 
           {episodes.length === 0 && (
-            <p className="text-sm text-slate-500">No podcasts yet</p>
+            <p className="mt-3 text-sm text-slate-500">No podcasts yet.</p>
           )}
 
-          <ul className="space-y-4">
+          <ul className="mt-4 grid gap-4">
             {episodes.map((ep) => (
-              <li key={ep.id} className="border rounded p-4">
-                <h4 className="font-semibold">{ep.title}</h4>
-                <p className="text-xs text-slate-500">
-                  {ep.publishedDate}
-                </p>
+              <li
+                key={ep.id}
+                className="surface-panel surface-hover p-4"
+              >
+                <h4 className="text-sm font-semibold text-slate-900">{ep.title}</h4>
+                <p className="mt-1 text-xs text-slate-500">{ep.publishedDate}</p>
 
-                    {/* TAGS */}
-                    <div className="mt-2 flex flex-wrap gap-2">
-                        {ep.tags.map((tag: any) => (
-                            <Link
-                                key={tag.slug}
-                                href={`/resources/podcasts/tag/${tag.slug}`}
-                                className="text-xs bg-slate-100 px-2 py-1 rounded"
-                            >
-                                #{tag.name}
-                            </Link>
-                        ))}
-                    </div>
+                {/* TAGS */}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {ep.tags.map((tag: any) => (
+                    <Link
+                      key={tag.slug}
+                      href={`/resources/podcasts/tag/${tag.slug}`}
+                      className="rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-brand-deep"
+                    >
+                      #{tag.name}
+                    </Link>
+                  ))}
+                </div>
 
                 <Link
                   href={`/resources/podcasts/${ep.slug}`}
-                  className="text-sm text-brand-blue mt-2 inline-block"
+                  className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-deep hover:text-brand-blue"
                 >
                   View episode →
                 </Link>
@@ -68,8 +81,11 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
         </section>
 
         {/* EXTERNAL */}
-        <section>
-          <h3 className="font-semibold mb-3">External aggregation</h3>
+        <section className="surface-panel p-6">
+          <h3 className="text-sm font-semibold text-slate-900">External aggregation</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Surface trusted public sources with a consistent listening experience.
+          </p>
           <BuzzsproutPlayer />
         </section>
       </div>

@@ -4,12 +4,12 @@ import { ReactNode } from "react";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-white text-slate-900">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/85 backdrop-blur">
-        <div className="flex w-full items-center justify-between gap-4 px-4 py-2.5 sm:px-6 sm:py-3 lg:px-10">
+    <div className="flex min-h-dvh flex-col bg-transparent text-slate-900">
+      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/95 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+        <div className="flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-2">
-              <span className="inline-flex items-center justify-center rounded-xl bg-white px-2.5 py-1.5 shadow-sm ring-1 ring-slate-200 sm:px-3">
+              <span className="inline-flex items-center justify-center px-1">
                 <Image
                   src="/brand/colaberry-ai-logo.svg"
                   alt="Colaberry.AI"
@@ -29,43 +29,43 @@ export default function Layout({ children }: { children: ReactNode }) {
           <nav className="hidden items-center gap-1 text-sm lg:flex">
             <Link
               href="/aixcelerator"
-              className="rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
             >
               Platform
             </Link>
             <Link
               href="/aixcelerator/agents"
-              className="rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
             >
               Agents
             </Link>
             <Link
               href="/aixcelerator/mcp"
-              className="rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
             >
               MCP
             </Link>
             <Link
               href="/industries"
-              className="rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
             >
               Industries
             </Link>
             <Link
               href="/solutions"
-              className="rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
             >
               Solutions
             </Link>
             <Link
               href="/resources"
-              className="rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
             >
               Resources
             </Link>
             <Link
               href="/updates"
-              className="rounded-md px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              className="rounded-full px-3 py-2 font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
             >
               Updates
             </Link>
@@ -83,7 +83,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   name="q"
                   type="search"
                   placeholder="Search what you need:"
-                  className="w-64 rounded-lg border border-slate-200 bg-white px-3 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
+                  className="w-64 rounded-full border border-slate-200/80 bg-white/90 px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
                 />
                 <svg
                   aria-hidden="true"
@@ -109,17 +109,17 @@ export default function Layout({ children }: { children: ReactNode }) {
             <span className="mx-2 h-5 w-px bg-slate-200" />
             <Link
               href="/request-demo"
-              className="ml-1 inline-flex items-center justify-center rounded-lg bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+              className="ml-1 inline-flex items-center justify-center rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2 text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
             >
               Book a demo
             </Link>
           </nav>
 
           <details className="relative lg:hidden">
-            <summary className="list-none rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <summary className="list-none rounded-full border border-slate-200/80 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
               Menu
             </summary>
-            <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+            <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-slate-200/80 bg-white/95 p-2 shadow-lg">
               <form className="px-1 pb-2" onSubmit={(event) => event.preventDefault()}>
                 <label htmlFor="site-search-mobile" className="sr-only">
                   Search
@@ -130,7 +130,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     name="q"
                     type="search"
                     placeholder="Search what you need:"
-                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
+                    className="w-full rounded-full border border-slate-200/80 bg-white px-3 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
                   />
                   <svg
                     aria-hidden="true"
@@ -162,7 +162,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <div className="my-2 h-px bg-slate-200" />
               <Link
                 href="/request-demo"
-                className="mt-1 block rounded-lg bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-3 py-2 text-center text-xs font-semibold text-white shadow-sm hover:bg-slate-800 hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+                className="mt-1 block rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-3 py-2 text-center text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
               >
                 Book a demo
               </Link>
@@ -171,15 +171,15 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="w-full flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+      <main className="relative w-full flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         {children}
       </main>
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="grid w-full grid-cols-1 gap-6 px-4 py-8 text-sm text-slate-600 sm:grid-cols-3 sm:px-6 lg:px-10">
+      <footer className="border-t border-slate-200/70 bg-white/90">
+        <div className="grid w-full grid-cols-1 gap-6 px-4 py-8 text-sm text-slate-600 sm:grid-cols-3 sm:px-6 lg:px-8">
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 shadow-sm ring-1 ring-slate-200">
+              <span className="inline-flex items-center justify-center px-1">
                 <Image
                   src="/brand/colaberry-ai-logo.svg"
                   alt="Colaberry.AI"
