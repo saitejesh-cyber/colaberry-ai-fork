@@ -176,7 +176,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </main>
 
       <footer className="border-t border-slate-200/70 bg-white/90">
-        <div className="grid w-full grid-cols-1 gap-6 px-4 py-8 text-sm text-slate-600 sm:grid-cols-3 sm:px-6 lg:px-8">
+        <div className="grid w-full grid-cols-1 gap-6 px-4 py-8 text-sm text-slate-600 sm:grid-cols-4 sm:px-6 lg:px-8">
           <div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center justify-center px-1">
@@ -211,6 +211,54 @@ export default function Layout({ children }: { children: ReactNode }) {
               <FooterLink href="/updates">News & product</FooterLink>
             </div>
           </div>
+          <div className="sm:justify-self-end">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 sm:text-right">
+              Follow
+            </div>
+            <div className="mt-3 flex items-center gap-3 sm:justify-end">
+              <SocialIcon href="https://www.linkedin.com/company/colaberry" label="LinkedIn">
+                <path
+                  d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 1 0-4 0v7h-4V9h4v2.2A4.5 4.5 0 0 1 16 8Z"
+                  fill="currentColor"
+                />
+                <rect x="2" y="9" width="4" height="12" fill="currentColor" />
+                <circle cx="4" cy="4" r="2" fill="currentColor" />
+              </SocialIcon>
+              <SocialIcon
+                href="https://www.instagram.com/colaberryinc/"
+                label="Instagram"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" />
+              </SocialIcon>
+              <SocialIcon href="https://x.com/colaberryinc?lang=en" label="X">
+                <path
+                  d="M4 4h4.6l4 5.6L16.9 4H21l-6.6 8.6L21 20h-4.7l-4.2-5.9L7.3 20H3l7-8.9L4 4Z"
+                  fill="currentColor"
+                />
+              </SocialIcon>
+              <SocialIcon
+                href="https://www.facebook.com/colaberryschoolofdataanalytics/"
+                label="Facebook"
+              >
+                <path
+                  d="M14.5 8.5h3V5h-3c-2.5 0-4.5 2-4.5 4.5V12H7v3h3v6h3.5v-6h3l.5-3h-3.5V9.5c0-.6.4-1 1-1Z"
+                  fill="currentColor"
+                />
+              </SocialIcon>
+              <SocialIcon
+                href="https://www.youtube.com/channel/UCb23caPCK7xW8roOkr_iKRA"
+                label="YouTube"
+              >
+                <path
+                  d="M23 12s0-4.3-.6-5.7c-.4-1-1.2-1.8-2.2-2.2C18.8 3.5 12 3.5 12 3.5s-6.8 0-8.2.6c-1 .4-1.8 1.2-2.2 2.2C1 7.7 1 12 1 12s0 4.3.6 5.7c.4 1 1.2 1.8 2.2 2.2 1.4.6 8.2.6 8.2.6s6.8 0 8.2-.6c1-.4 1.8-1.2 2.2-2.2.6-1.4.6-5.7.6-5.7Z"
+                  fill="currentColor"
+                />
+                <polygon points="10 8.5 16 12 10 15.5" fill="#ffffff" />
+              </SocialIcon>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
@@ -233,5 +281,30 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
     <Link href={href} className="text-slate-600 hover:text-slate-900">
       {children}
     </Link>
+  );
+}
+
+function SocialIcon({
+  href,
+  label,
+  children,
+}: {
+  href: string;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-brand-blue/40 hover:text-brand-blue"
+      aria-label={label}
+    >
+      <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+        {children}
+      </svg>
+      <span className="sr-only">{label}</span>
+    </a>
   );
 }

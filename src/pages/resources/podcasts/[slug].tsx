@@ -2,6 +2,7 @@
 import Layout from "../../../components/Layout";
 import Link from "next/link";
 import RichText from "../../../components/RichText";
+import SectionHeader from "../../../components/SectionHeader";
 
 export async function getServerSideProps({ params }: any) {
   const res = await fetch(
@@ -33,17 +34,13 @@ export async function getServerSideProps({ params }: any) {
 export default function PodcastDetail({ episode }: any) {
   return (
     <Layout>
-      <div className="flex flex-col gap-2">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-          Resources
-        </div>
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-          {episode.title}
-        </h1>
-        <p className="text-sm text-slate-500">{episode.publishedDate}</p>
+      <div className="flex flex-col gap-3">
+        <SectionHeader as="h1" size="xl" kicker="Resources" title={episode.title}>
+          <p className="text-sm text-slate-500">{episode.publishedDate}</p>
+        </SectionHeader>
       </div>
 
-      <div className="surface-panel mt-6 p-6">
+      <div className="surface-panel mt-6 border-t-4 border-brand-blue/20 p-6">
         {/* DESCRIPTION */}
         <div className="prose max-w-none">
           <RichText blocks={episode.description} />

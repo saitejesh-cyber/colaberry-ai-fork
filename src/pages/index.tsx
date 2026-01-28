@@ -1,5 +1,6 @@
 import Layout from "../components/Layout";
 import Link from "next/link";
+import SectionHeader from "../components/SectionHeader";
 
 export default function Home() {
   const industries = [
@@ -15,6 +16,15 @@ export default function Home() {
     { name: "Manufacturing", slug: "manufacturing", icon: "factory" as const },
     { name: "Fintech", slug: "fintech", icon: "truck" as const },
     { name: "Supply Chain", slug: "supply-chain", icon: "truck" as const },
+  ];
+
+  const rootIndustries = [
+    "Agriculture",
+    "Utilities",
+    "Oil & Gas",
+    "Biotech",
+    "Manufacturing",
+    "Supply Chain",
   ];
 
   const heroTags = [
@@ -117,15 +127,15 @@ export default function Home() {
 
   return (
     <Layout>
-      <section className="surface-panel rise-in relative overflow-hidden p-8 sm:p-10 lg:p-12">
+      <section className="surface-panel rise-in relative overflow-hidden bg-gradient-to-br from-white via-white to-slate-50 p-8 sm:p-10 lg:p-12">
         <div className="relative grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep">
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
               AI operations platform
             </div>
 
-            <h1 className="mt-5 text-4xl font-semibold text-slate-900 sm:text-5xl lg:text-6xl">
+            <h1 className="mt-6 text-4xl font-semibold text-slate-900 sm:text-5xl lg:text-6xl">
               The go-to destination for discoverable agents, MCPs, and AI knowledge
             </h1>
 
@@ -148,6 +158,10 @@ export default function Home() {
                 Explore the catalog
               </Link>
             </div>
+
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Rooted in {rootIndustries.join(" • ")}
+            </p>
 
             <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm">
               <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -226,32 +240,68 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            <div className="surface-strong p-5">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Industry roots
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-700">
+                {rootIndustries.map((industry) => (
+                  <span
+                    key={industry}
+                    className="rounded-full border border-slate-200/80 bg-white px-3 py-1 font-semibold"
+                  >
+                    {industry}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="mt-10 grid gap-4 sm:mt-12 sm:grid-cols-2 lg:grid-cols-5">
-        {pillars.map((pillar, index) => {
-          const delayClass = index === 0 ? "" : `rise-delay-${Math.min(index, 3)}`;
-          return (
-            <PillarCard
-              key={pillar.title}
-              title={pillar.title}
-              description={pillar.description}
-              className={`rise-in ${delayClass}`.trim()}
-            />
-          );
-        })}
+      <section className="mt-12">
+        <SectionHeader
+          kicker="Discovery framework"
+          title="Everything is indexed, searchable, and structured for automation"
+          description="Build a destination where every asset is discoverable, categorized, and ready for LLM consumption."
+        />
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {pillars.map((pillar, index) => {
+            const delayClass = index === 0 ? "" : `rise-delay-${Math.min(index, 3)}`;
+            return (
+              <PillarCard
+                key={pillar.title}
+                title={pillar.title}
+                description={pillar.description}
+                index={index}
+                className={`rise-in ${delayClass}`.trim()}
+              />
+            );
+          })}
+        </div>
       </section>
 
-      <section className="mt-10 grid gap-4 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3">
-        {catalogs.map((catalog) => (
-          <CatalogCard key={catalog.title} {...catalog} />
-        ))}
+      <section className="mt-12">
+        <SectionHeader
+          kicker="Explore the catalog"
+          title="A structured destination for agents, MCPs, podcasts, and research"
+          description="Give teams and LLMs a single place to discover, compare, and deploy intelligence."
+        />
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {catalogs.map((catalog) => (
+            <CatalogCard key={catalog.title} {...catalog} />
+          ))}
+        </div>
       </section>
 
-      <section className="mt-10 surface-panel p-6 sm:mt-12">
-        <div className="grid gap-6 sm:grid-cols-4">
+      <section className="mt-12 surface-panel p-6">
+        <SectionHeader
+          kicker="Operational outcomes"
+          title="Enterprise-ready from day one"
+          description="Governance, observability, and integrations built into the core platform."
+        />
+        <div className="mt-6 grid gap-6 sm:grid-cols-4">
           <Stat title="Weeks to value" value="Fast" note="Start with ready templates" />
           <Stat title="Deployments" value="Repeatable" note="Versioned and auditable" />
           <Stat title="Integrations" value="Extensible" note="MCP-ready connectivity" />
@@ -259,24 +309,27 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mt-10 grid gap-4 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3">
-        {platformFeatures.map((feature) => (
-          <FeatureCard key={feature.title} {...feature} />
-        ))}
+      <section className="mt-12">
+        <SectionHeader
+          kicker="Platform capabilities"
+          title="Everything teams need to build, govern, and scale AI"
+          description="From cataloging agents to evaluating outcomes, the platform supports full lifecycle delivery."
+        />
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {platformFeatures.map((feature) => (
+            <FeatureCard key={feature.title} {...feature} />
+          ))}
+        </div>
       </section>
 
-      <section className="mt-10 surface-panel p-6 sm:mt-12">
+      <section className="mt-12 surface-panel p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-              Connect your stack
-            </div>
-            <h2 className="mt-2 text-xl font-semibold text-slate-900">
-              Integrations-ready from day one
-            </h2>
-            <p className="mt-1 max-w-2xl text-sm text-slate-600">
-              Build assistants that can act across your tools-using a standardized MCP surface.
-            </p>
+            <SectionHeader
+              kicker="Connect your stack"
+              title="Integrations-ready from day one"
+              description="Build assistants that can act across your tools-using a standardized MCP surface."
+            />
           </div>
           <Link
             href="/aixcelerator/mcp"
@@ -311,18 +364,13 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mt-10 surface-panel p-6 sm:mt-12 lg:grid lg:grid-cols-12 lg:gap-8">
+      <section className="mt-12 surface-panel p-6 lg:grid lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-5">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Our vision
-          </div>
-          <h2 className="mt-2 text-xl font-semibold text-slate-900 sm:text-2xl">
-            A vibrant destination for people, LLMs, and agents
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
-            We’re building a place where teams can discover, deploy, and improve agentic systems-while
-            staying grounded in the industries we already serve today and the ones we’ll serve next.
-          </p>
+          <SectionHeader
+            kicker="Our vision"
+            title="A vibrant destination for people, LLMs, and agents"
+            description="We’re building a place where teams can discover, deploy, and improve agentic systems-while staying grounded in the industries we already serve today and the ones we’ll serve next."
+          />
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Link
@@ -365,18 +413,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mt-10 surface-panel p-6 sm:mt-12">
+      <section className="mt-12 surface-panel p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-              Explore next
-            </div>
-            <h2 className="mt-2 text-xl font-semibold text-slate-900">
-              Resources, solutions, and updates
-            </h2>
-            <p className="mt-1 max-w-2xl text-sm text-slate-600">
-              Dedicated landing spots for podcasts, books, white papers, case studies, and news.
-            </p>
+            <SectionHeader
+              kicker="Explore next"
+              title="Resources, solutions, and updates"
+              description="Dedicated landing spots for podcasts, books, white papers, case studies, and news."
+            />
           </div>
           <Link
             href="/resources"
@@ -399,16 +443,23 @@ export default function Home() {
 function PillarCard({
   title,
   description,
+  index,
   className,
 }: {
   title: string;
   description: string;
+  index: number;
   className?: string;
 }) {
   return (
-    <div className={`surface-panel surface-hover p-4 ${className ?? ""}`.trim()}>
-      <div className="text-sm font-semibold text-slate-900">{title}</div>
-      <div className="mt-2 text-sm text-slate-600">{description}</div>
+    <div
+      className={`surface-panel surface-hover border-t-4 border-brand-blue/30 p-4 ${className ?? ""}`.trim()}
+    >
+      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+        {String(index + 1).padStart(2, "0")}
+      </div>
+      <div className="mt-2 text-base font-semibold text-slate-900">{title}</div>
+      <div className="mt-1 text-sm text-slate-600">{description}</div>
     </div>
   );
 }
@@ -425,7 +476,10 @@ function CatalogCard({
   meta: string;
 }) {
   return (
-    <Link href={href} className="surface-panel surface-hover group flex h-full flex-col p-5">
+    <Link
+      href={href}
+      className="surface-panel surface-hover group flex h-full flex-col border-t-4 border-brand-blue/20 p-5"
+    >
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-sm font-semibold text-slate-900">{title}</div>
@@ -468,12 +522,14 @@ function QuickLink({
 
 function FeatureCard({ title, description }: { title: string; description: string }) {
   return (
-    <div className="surface-panel surface-hover p-5">
+    <div className="surface-panel surface-hover border-t-4 border-brand-blue/20 p-5">
       <div className="text-sm font-semibold text-slate-900">{title}</div>
       <div className="mt-1 text-sm leading-relaxed text-slate-600">{description}</div>
     </div>
   );
 }
+
+ 
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (

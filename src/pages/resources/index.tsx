@@ -1,24 +1,24 @@
 import Layout from "../../components/Layout";
 import Link from "next/link";
+import SectionHeader from "../../components/SectionHeader";
 
 export default function Resources() {
   return (
     <Layout>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         <div className="inline-flex w-fit items-center gap-2 rounded-full border border-brand-blue/25 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
           Modular layer
         </div>
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-          Resources
-        </h1>
-        <p className="max-w-3xl text-sm leading-relaxed text-slate-600 sm:text-base">
-          A home for research, artifacts, and updates-built to support both internal publishing and
-          curated external sources as we evolve.
-        </p>
+        <SectionHeader
+          as="h1"
+          size="xl"
+          title="Resources"
+          description="A home for research, artifacts, and updates-built to support both internal publishing and curated external sources as we evolve."
+        />
       </div>
 
-      <div className="surface-panel mt-6 p-4 sm:mt-8">
+      <div className="surface-panel mt-6 border-t-4 border-brand-blue/20 p-4 sm:mt-8">
         <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
           Search resources
         </div>
@@ -127,7 +127,7 @@ function ResourceCard({
   return (
     <Link
       href={href}
-      className="surface-panel surface-hover group p-5"
+      className="surface-panel surface-hover group border-t-4 border-brand-blue/20 p-5"
     >
       <div className="flex items-start justify-between gap-4">
         <div>

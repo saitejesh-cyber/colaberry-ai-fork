@@ -1,6 +1,7 @@
 import Layout from "../../../../components/Layout";
 import { fetchPodcastEpisodes } from "../../../../lib/cms";
 import Link from "next/link";
+import SectionHeader from "../../../../components/SectionHeader";
 
 export async function getServerSideProps({ params }: any) {
     const res = await fetch(
@@ -35,21 +36,19 @@ export async function getServerSideProps({ params }: any) {
 export default function PodcastTagPage({ tag, episodes }: any) {
   return (
     <Layout>
-      <div className="flex flex-col gap-2">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-          Resources
-        </div>
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-          #{tag} Podcasts
-        </h1>
-        <p className="max-w-3xl text-sm leading-relaxed text-slate-600 sm:text-base">
-          Episodes tagged with #{tag}.
-        </p>
+      <div className="flex flex-col gap-3">
+        <SectionHeader
+          as="h1"
+          size="xl"
+          kicker="Resources"
+          title={`#${tag} Podcasts`}
+          description={`Episodes tagged with #${tag}.`}
+        />
       </div>
 
       <ul className="mt-6 grid gap-4">
         {episodes.map((e: any) => (
-          <li key={e.id} className="surface-panel surface-hover p-4">
+          <li key={e.id} className="surface-panel surface-hover border-t-4 border-brand-blue/20 p-4">
             <div className="text-sm font-semibold text-slate-900">{e.title}</div>
             <Link
               href={`/resources/podcasts/${e.slug}`}

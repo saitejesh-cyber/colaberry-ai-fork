@@ -1,31 +1,32 @@
 import Layout from "../../components/Layout";
 import Link from "next/link";
+import SectionHeader from "../../components/SectionHeader";
 import { coreCapabilities, modularLayers } from "../../data/platformCapabilities";
 
 export default function AIXcelerator() {
   return (
     <Layout>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         <div className="inline-flex w-fit items-center gap-2 rounded-full border border-brand-blue/20 bg-white py-1 pl-2 pr-3 text-xs text-brand-deep">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
           Core platform + modular layers
         </div>
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">AIXcelerator</h1>
-        <p className="max-w-3xl text-sm leading-relaxed text-slate-600 sm:text-base">
-          AIXcelerator is the core platform for governed agent delivery. It helps teams move from
-          opportunity and workflow definition to production execution-then close the loop with
-          observability and evaluation. On top of it, we can introduce modular capability layers
-          (resources, industries, playbooks, and aggregation) incrementally without disrupting the
-          core surface.
-        </p>
+        <SectionHeader
+          as="h1"
+          size="xl"
+          title="AIXcelerator"
+          description="AIXcelerator is the core platform for governed agent delivery. It helps teams move from opportunity and workflow definition to production execution-then close the loop with observability and evaluation. Modular capability layers can be introduced incrementally without disrupting the core surface."
+        />
       </div>
 
-      <section className="mt-6 sm:mt-8">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Core</div>
-            <div className="mt-1 text-sm font-semibold text-slate-900">Core platform surface</div>
-          </div>
+      <section className="mt-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeader
+            kicker="Core"
+            title="Core platform surface"
+            description="The trusted foundation for agent delivery, governance, and observability."
+            size="md"
+          />
           <div className="hidden rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 sm:inline-flex">
             Stable foundation
           </div>
@@ -45,19 +46,17 @@ export default function AIXcelerator() {
         </div>
       </section>
 
-      <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-6 sm:mt-12">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Layers</div>
-            <div className="mt-1 text-sm font-semibold text-slate-900">Modular capability layers</div>
-            <p className="mt-1 max-w-3xl text-sm text-slate-600">
-              These are first-class capabilities, introduced incrementally on top of the core. Each
-              layer can start as a curated demo surface and mature into a full system over time.
-            </p>
-          </div>
+      <section className="mt-10 surface-panel p-6 sm:mt-12">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeader
+            kicker="Layers"
+            title="Modular capability layers"
+            description="First-class capabilities introduced incrementally on top of the core. Each layer can start as a curated surface and mature into a full system over time."
+            size="md"
+          />
           <Link
             href="/resources"
-            className="mt-3 inline-flex items-center justify-center rounded-lg bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 sm:mt-0"
+            className="mt-3 inline-flex items-center justify-center rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 sm:mt-0"
           >
             Explore layers
           </Link>
@@ -93,7 +92,7 @@ function NavCard({
   return (
     <Link
       href={href}
-      className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-brand-blue/40 hover:bg-slate-50"
+      className="surface-panel surface-hover group border-t-4 border-brand-blue/20 p-5"
     >
       <div className="flex items-start justify-between gap-4">
         <div>

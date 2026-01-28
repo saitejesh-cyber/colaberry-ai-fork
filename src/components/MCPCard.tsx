@@ -6,7 +6,7 @@ type MCP = {
 
 export default function MCPCard({ mcp }: { mcp: MCP }) {
   return (
-    <div className="surface-panel surface-hover p-5">
+    <div className="surface-panel surface-hover border-t-4 border-brand-blue/20 p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h3 className="truncate text-base font-semibold text-slate-900">
