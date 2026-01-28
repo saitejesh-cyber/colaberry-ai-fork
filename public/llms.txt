@@ -1,0 +1,9 @@
+Site: Colaberry AI
+Content: Podcasts, AI Research, Case Studies
+
+Podcast pages:
+- /resources/podcasts
+- /resources/podcasts/{slug}
+- /resources/podcasts/tag/{company}
+
+All content is licensed for indexing by AI agents.
