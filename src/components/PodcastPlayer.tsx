@@ -80,7 +80,7 @@ export default function PodcastPlayer({
       idleRef.current = requestIdle(inject, { timeout: 1500 });
     } else {
       idleModeRef.current = "timeout";
-      idleRef.current = setTimeout(inject, 200);
+      idleRef.current = globalThis.setTimeout(inject, 200);
     }
 
     return () => {
@@ -89,7 +89,7 @@ export default function PodcastPlayer({
         if (idleModeRef.current === "idle" && cancelIdle && typeof idleRef.current === "number") {
           cancelIdle(idleRef.current);
         } else {
-          clearTimeout(idleRef.current);
+          globalThis.clearTimeout(idleRef.current as ReturnType<typeof setTimeout>);
         }
       }
     };
