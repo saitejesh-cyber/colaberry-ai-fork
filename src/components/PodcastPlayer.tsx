@@ -70,9 +70,9 @@ export default function PodcastPlayer({
       setTimeout(() => setLoading(false), 300);
     };
 
-    const win = typeof window !== "undefined" ? window : undefined;
-    const requestIdle = win?.requestIdleCallback as
-      | ((callback: IdleRequestCallback, options?: IdleRequestOptions) => number)
+    const globalObj = typeof globalThis !== "undefined" ? globalThis : undefined;
+    const requestIdle = (globalObj as any)?.requestIdleCallback as
+      | ((callback: () => void, options?: { timeout?: number }) => number)
       | undefined;
 
     if (requestIdle) {
@@ -85,7 +85,9 @@ export default function PodcastPlayer({
 
     return () => {
       if (idleRef.current) {
-        const cancelIdle = win?.cancelIdleCallback as ((handle: number) => void) | undefined;
+        const cancelIdle = (globalObj as any)?.cancelIdleCallback as
+          | ((handle: number) => void)
+          | undefined;
         if (idleModeRef.current === "idle" && cancelIdle && typeof idleRef.current === "number") {
           cancelIdle(idleRef.current);
         } else {
