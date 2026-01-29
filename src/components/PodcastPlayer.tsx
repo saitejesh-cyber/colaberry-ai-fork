@@ -1,33 +1,114 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type PodcastPlayerProps = {
   embedCode?: string | null;
   audioUrl?: string | null;
+  defer?: boolean;
 };
 
-export default function PodcastPlayer({ embedCode, audioUrl }: PodcastPlayerProps) {
+export default function PodcastPlayer({
+  embedCode,
+  audioUrl,
+  defer = true,
+}: PodcastPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const hasInjected = useRef(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const idleRef = useRef<number | null>(null);
+  const [shouldLoad, setShouldLoad] = useState(!defer);
+  const [loading, setLoading] = useState(!!embedCode);
 
   useEffect(() => {
-    if (!embedCode || !containerRef.current) return;
+    if (!embedCode || !defer || shouldLoad) return;
 
-    containerRef.current.innerHTML = embedCode;
+    const target = containerRef.current;
+    if (!target || typeof window === "undefined") return;
 
-    const scripts = Array.from(containerRef.current.querySelectorAll("script"));
-    scripts.forEach((oldScript) => {
-      const script = document.createElement("script");
-      Array.from(oldScript.attributes).forEach((attr) => {
-        script.setAttribute(attr.name, attr.value);
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setShouldLoad(true);
+          }
+        });
+      },
+      { rootMargin: "200px" }
+    );
+
+    observerRef.current.observe(target);
+
+    return () => {
+      observerRef.current?.disconnect();
+      observerRef.current = null;
+    };
+  }, [embedCode, defer, shouldLoad]);
+
+  useEffect(() => {
+    if (!embedCode || !containerRef.current || !shouldLoad || hasInjected.current) return;
+
+    const inject = () => {
+      if (!containerRef.current) return;
+
+      containerRef.current.innerHTML = embedCode;
+
+      const scripts = Array.from(containerRef.current.querySelectorAll("script"));
+      scripts.forEach((oldScript) => {
+        const script = document.createElement("script");
+        Array.from(oldScript.attributes).forEach((attr) => {
+          script.setAttribute(attr.name, attr.value);
+        });
+        script.async = true;
+        script.defer = true;
+        if (oldScript.textContent) {
+          script.text = oldScript.textContent;
+        }
+        oldScript.parentNode?.replaceChild(script, oldScript);
       });
-      if (oldScript.textContent) {
-        script.text = oldScript.textContent;
+
+      hasInjected.current = true;
+      setTimeout(() => setLoading(false), 300);
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      idleRef.current = (window as any).requestIdleCallback(inject, { timeout: 1500 });
+    } else {
+      idleRef.current = window.setTimeout(inject, 200);
+    }
+
+    return () => {
+      if (idleRef.current) {
+        if (typeof window !== "undefined" && "cancelIdleCallback" in window) {
+          (window as any).cancelIdleCallback(idleRef.current);
+        } else {
+          clearTimeout(idleRef.current);
+        }
       }
-      oldScript.parentNode?.replaceChild(script, oldScript);
-    });
-  }, [embedCode]);
+    };
+  }, [embedCode, shouldLoad]);
 
   if (embedCode) {
-    return <div ref={containerRef} className="podcast-embed" />;
+    return (
+      <div className="relative">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-3 text-sm text-slate-600">
+            <span>Loading podcast player…</span>
+            {!shouldLoad && (
+              <button
+                type="button"
+                onClick={() => setShouldLoad(true)}
+                className="rounded-full border border-slate-200/80 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:text-brand-deep"
+              >
+                Load now
+              </button>
+            )}
+          </div>
+        )}
+        <div
+          ref={containerRef}
+          className={`podcast-embed min-h-[150px] ${loading ? "opacity-0" : "opacity-100"}`}
+        />
+      </div>
+    );
   }
 
   if (audioUrl) {

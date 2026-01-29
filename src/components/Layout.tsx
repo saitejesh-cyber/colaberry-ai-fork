@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import Head from "next/head";
 import { ReactNode, useEffect, useState } from "react";
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -22,7 +23,11 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-transparent text-slate-900">
-      <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/80 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+      <Head>
+        <link rel="preconnect" href="https://www.buzzsprout.com" />
+        <link rel="dns-prefetch" href="https://www.buzzsprout.com" />
+      </Head>
+      <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/90 backdrop-blur-md shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
         <div className="flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-2">
@@ -205,7 +210,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="relative w-full flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <main className="relative w-full flex-1 px-4 pb-10 pt-24 sm:px-6 sm:pb-12 sm:pt-24 lg:px-8">
         {children}
       </main>
 
