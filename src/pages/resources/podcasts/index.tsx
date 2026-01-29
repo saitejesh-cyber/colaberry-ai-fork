@@ -1,6 +1,7 @@
 // src/pages/resources/podcasts/index.tsx
 import Layout from "../../../components/Layout";
 import Link from "next/link";
+import Head from "next/head";
 import { GetServerSideProps } from "next";
 import SectionHeader from "../../../components/SectionHeader";
 import BuzzsproutPlayer from "../../../components/BuzzsproutPlayer";
@@ -9,6 +10,9 @@ import { fetchPodcastEpisodes, PodcastEpisode } from "../../../lib/cms";
 export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
   return (
     <Layout>
+      <Head>
+        <title>Podcasts | Colaberry AI</title>
+      </Head>
       <div className="flex flex-col gap-3">
         <SectionHeader
           as="h1"

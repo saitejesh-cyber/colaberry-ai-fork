@@ -1,5 +1,6 @@
 import Layout from "../components/Layout";
 import Link from "next/link";
+import Head from "next/head";
 import SectionHeader from "../components/SectionHeader";
 
 export default function Home() {
@@ -127,6 +128,9 @@ export default function Home() {
 
   return (
     <Layout>
+      <Head>
+        <title>Colaberry AI | The go-to destination for agents, MCPs, and AI knowledge</title>
+      </Head>
       <section className="hero-surface rise-in p-8 sm:p-10 lg:p-12">
         <div className="relative grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
           <div>

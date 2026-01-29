@@ -14,7 +14,8 @@ export default function PodcastPlayer({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hasInjected = useRef(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const idleRef = useRef<number | null>(null);
+  const idleRef = useRef<ReturnType<typeof setTimeout> | number | null>(null);
+  const idleModeRef = useRef<"idle" | "timeout" | null>(null);
   const [shouldLoad, setShouldLoad] = useState(!defer);
   const [loading, setLoading] = useState(!!embedCode);
 
@@ -69,16 +70,24 @@ export default function PodcastPlayer({
       setTimeout(() => setLoading(false), 300);
     };
 
-    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-      idleRef.current = (window as any).requestIdleCallback(inject, { timeout: 1500 });
+    const win = typeof window !== "undefined" ? window : undefined;
+    const requestIdle = win?.requestIdleCallback as
+      | ((callback: IdleRequestCallback, options?: IdleRequestOptions) => number)
+      | undefined;
+
+    if (requestIdle) {
+      idleModeRef.current = "idle";
+      idleRef.current = requestIdle(inject, { timeout: 1500 });
     } else {
-      idleRef.current = window.setTimeout(inject, 200);
+      idleModeRef.current = "timeout";
+      idleRef.current = setTimeout(inject, 200);
     }
 
     return () => {
       if (idleRef.current) {
-        if (typeof window !== "undefined" && "cancelIdleCallback" in window) {
-          (window as any).cancelIdleCallback(idleRef.current);
+        const cancelIdle = win?.cancelIdleCallback as ((handle: number) => void) | undefined;
+        if (idleModeRef.current === "idle" && cancelIdle && typeof idleRef.current === "number") {
+          cancelIdle(idleRef.current);
         } else {
           clearTimeout(idleRef.current);
         }

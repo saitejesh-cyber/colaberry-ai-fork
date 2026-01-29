@@ -1,6 +1,7 @@
 // src/pages/resources/podcasts/[slug].tsx
 import Layout from "../../../components/Layout";
 import Link from "next/link";
+import Head from "next/head";
 import RichText from "../../../components/RichText";
 import SectionHeader from "../../../components/SectionHeader";
 import PodcastPlayer from "../../../components/PodcastPlayer";
@@ -57,6 +58,9 @@ export default function PodcastDetail({ episode }: any) {
 
   return (
     <Layout>
+      <Head>
+        <title>{`${episode.title} | Podcast | Colaberry AI`}</title>
+      </Head>
       <div className="flex flex-col gap-3">
         <SectionHeader
           as="h1"
@@ -145,7 +149,7 @@ export default function PodcastDetail({ episode }: any) {
       {episode.transcript && String(episode.transcript).trim() && (
         <div className="surface-panel mt-6 border-t-4 border-brand-blue/20 p-6">
           <details>
-            <summary className="cursor-pointer text-sm font-semibold text-slate-900">
+            <summary className="focus-ring cursor-pointer text-sm font-semibold text-slate-900">
               Transcript
             </summary>
             <div

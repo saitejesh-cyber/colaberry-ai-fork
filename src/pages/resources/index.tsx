@@ -1,10 +1,14 @@
 import Layout from "../../components/Layout";
 import Link from "next/link";
+import Head from "next/head";
 import SectionHeader from "../../components/SectionHeader";
 
 export default function Resources() {
   return (
     <Layout>
+      <Head>
+        <title>Resources | Colaberry AI</title>
+      </Head>
       <div className="flex flex-col gap-3">
         <div className="chip chip-brand inline-flex w-fit items-center gap-2 rounded-full border border-brand-blue/25 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
