@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-transparent text-slate-900">
-      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/95 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+      <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/80 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
         <div className="flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-2">
@@ -100,7 +100,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   name="q"
                   type="search"
                   placeholder="Search what you need:"
-                  className="w-64 rounded-full border border-slate-200/80 bg-white/90 px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
+                  className="w-64 rounded-full border border-slate-200/60 bg-white/80 px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
                 />
                 <svg
                   aria-hidden="true"
@@ -127,7 +127,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={toggleTheme}
-              className="focus-ring inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100/80"
+              className="focus-ring inline-flex items-center gap-2 rounded-full border border-slate-200/60 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100/80"
               aria-label="Toggle light and dark mode"
             >
               {theme === "dark" ? "Dark" : "Light"}
@@ -142,10 +142,10 @@ export default function Layout({ children }: { children: ReactNode }) {
           </nav>
 
           <details className="relative lg:hidden">
-            <summary className="list-none rounded-full border border-slate-200/80 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <summary className="list-none rounded-full border border-slate-200/60 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
               Menu
             </summary>
-            <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-slate-200/80 bg-white/95 p-2 shadow-lg">
+            <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-slate-200/60 bg-white/90 p-2 shadow-lg">
               <form className="px-1 pb-2" onSubmit={(event) => event.preventDefault()}>
                 <label htmlFor="site-search-mobile" className="sr-only">
                   Search
@@ -156,7 +156,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     name="q"
                     type="search"
                     placeholder="Search what you need:"
-                    className="w-full rounded-full border border-slate-200/80 bg-white px-3 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
+                    className="w-full rounded-full border border-slate-200/60 bg-white px-3 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
                   />
                   <svg
                     aria-hidden="true"
@@ -209,7 +209,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         {children}
       </main>
 
-      <footer className="border-t border-slate-200/70 bg-white/90">
+      <footer className="border-t border-slate-200/60 bg-white/80">
         <div className="grid w-full grid-cols-1 gap-6 px-4 py-8 text-sm text-slate-600 sm:grid-cols-4 sm:px-6 lg:px-8">
           <div>
             <div className="flex items-center gap-2">
@@ -350,7 +350,7 @@ function SocialIcon({
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-brand-blue/40 hover:text-brand-blue"
+      className="focus-ring inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200/70 bg-white/80 text-slate-500 transition hover:border-brand-blue/40 hover:text-brand-blue hover:shadow-sm"
       aria-label={label}
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">

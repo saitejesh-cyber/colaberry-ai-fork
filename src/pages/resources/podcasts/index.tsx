@@ -1,23 +1,10 @@
 // src/pages/resources/podcasts/index.tsx
 import Layout from "../../../components/Layout";
-import BuzzsproutPlayer from "../../../components/BuzzsproutPlayer";
 import Link from "next/link";
 import { GetServerSideProps } from "next";
 import SectionHeader from "../../../components/SectionHeader";
-
-type Tag = {
-  name: string;
-  slug: string;
-};
-
-type PodcastEpisode = {
-  id: number;
-  title: string;
-  slug: string;
-  publishedDate: string;
-  tags: Tag[];
-};
-
+import BuzzsproutPlayer from "../../../components/BuzzsproutPlayer";
+import { fetchPodcastEpisodes, PodcastEpisode } from "../../../lib/cms";
 
 export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
   return (
@@ -32,7 +19,7 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
         />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.05fr_1.25fr]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_1fr]">
         {/* INTERNAL */}
         <section className="surface-panel border-t-4 border-brand-blue/20 p-6">
           <div className="flex items-center justify-between gap-4">
@@ -52,8 +39,17 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
                 key={ep.id}
                 className="surface-panel border-t-4 border-brand-blue/20 p-4"
               >
-                <h4 className="text-sm font-semibold text-slate-900">{ep.title}</h4>
-                <p className="mt-1 text-xs text-slate-500">{ep.publishedDate}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900">{ep.title}</h4>
+                    {ep.publishedDate && (
+                      <p className="mt-1 text-xs text-slate-500">{ep.publishedDate}</p>
+                    )}
+                  </div>
+                  <span className="text-xs font-semibold text-slate-400">
+                    {ep.episodeNumber ? `#${ep.episodeNumber}` : "Podcast"}
+                  </span>
+                </div>
 
                 {/* TAGS */}
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -64,6 +60,15 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
                       className="rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-brand-deep"
                     >
                       #{tag.name}
+                    </Link>
+                  ))}
+                  {ep.companies.map((company) => (
+                    <Link
+                      key={company.slug}
+                      href={`/resources/podcasts/${company.slug}`}
+                      className="rounded-full border border-brand-blue/20 bg-white/90 px-2.5 py-1 text-xs font-semibold text-brand-deep hover:text-brand-blue"
+                    >
+                      {company.name}
                     </Link>
                   ))}
                 </div>
@@ -93,24 +98,6 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_CMS_URL}/api/podcast-episodes` +
-      `?sort=publishedDate:desc` +
-      `&populate[tags][fields][0]=name` +
-      `&populate[tags][fields][1]=slug`
-  );
-
-  const json = await res.json();
-
-  const episodes =
-    json?.data?.map((item: any) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description,
-      slug: item.slug,
-      publishedDate: item.publishedDate,
-      tags: item.tags ?? [],
-    })) || [];
-
+  const episodes = await fetchPodcastEpisodes();
   return { props: { episodes } };
 };

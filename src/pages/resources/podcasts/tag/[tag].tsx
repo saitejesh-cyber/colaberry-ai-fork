@@ -1,39 +1,41 @@
 import Layout from "../../../../components/Layout";
-import { fetchPodcastEpisodes } from "../../../../lib/cms";
 import Link from "next/link";
 import SectionHeader from "../../../../components/SectionHeader";
+import { PodcastEpisode } from "../../../../lib/cms";
 
 export async function getServerSideProps({ params }: any) {
     const res = await fetch(
         `${process.env.NEXT_PUBLIC_CMS_URL}/api/podcast-episodes` +
-        `?populate[tags][fields][0]=name` +
-        `&populate[tags][fields][1]=slug`,
+        `?filters[tags][slug][$eq]=${params.tag}` +
+        `&populate[tags][fields][0]=name` +
+        `&populate[tags][fields][1]=slug` +
+        `&populate[companies][fields][0]=name` +
+        `&populate[companies][fields][1]=slug`,
         { cache: "no-store" }
     );
 
     const json = await res.json();
-
     const episodes =
-        json?.data?.map((item: any) => ({
-            id: item.id,
-            title: item.title,
-            slug: item.slug,
-            tags: item.tags || [],
-        })) || [];
-
-    const filtered = episodes.filter((e: any) =>
-        e.tags.some((t: any) => t.slug === params.tag)
-    );
+        json?.data?.map((item: any) => {
+            const attrs = item.attributes ?? item;
+            return {
+                id: item.id,
+                title: attrs.title,
+                slug: attrs.slug,
+                tags: attrs.tags?.data ?? attrs.tags ?? [],
+                companies: attrs.companies?.data ?? attrs.companies ?? [],
+            };
+        }) || [];
 
     return {
         props: {
             tag: params.tag,
-            episodes: filtered,
+            episodes,
         },
     };
 }
 
-export default function PodcastTagPage({ tag, episodes }: any) {
+export default function PodcastTagPage({ tag, episodes }: { tag: string; episodes: PodcastEpisode[] }) {
   return (
     <Layout>
       <div className="flex flex-col gap-3">
@@ -50,6 +52,17 @@ export default function PodcastTagPage({ tag, episodes }: any) {
         {episodes.map((e: any) => (
           <li key={e.id} className="surface-panel border-t-4 border-brand-blue/20 p-4">
             <div className="text-sm font-semibold text-slate-900">{e.title}</div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {e.companies?.map((company: any) => (
+                <Link
+                  key={company.slug ?? company.id}
+                  href={`/resources/podcasts/${company.slug}`}
+                  className="rounded-full border border-brand-blue/20 bg-white/90 px-2.5 py-1 text-xs font-semibold text-brand-deep hover:text-brand-blue"
+                >
+                  {company.name ?? company.attributes?.name}
+                </Link>
+              ))}
+            </div>
             <Link
               href={`/resources/podcasts/${e.slug}`}
               className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-deep hover:text-brand-blue"

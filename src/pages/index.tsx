@@ -127,7 +127,7 @@ export default function Home() {
 
   return (
     <Layout>
-      <section className="surface-panel rise-in relative overflow-hidden bg-gradient-to-br from-white via-white to-slate-50 p-8 sm:p-10 lg:p-12">
+      <section className="hero-surface rise-in p-8 sm:p-10 lg:p-12">
         <div className="relative grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm">

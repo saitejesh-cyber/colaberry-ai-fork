@@ -28,12 +28,17 @@ export default function SectionHeader({
         : "text-xl sm:text-2xl";
   const alignClass = align === "center" ? "items-center text-center" : "items-start text-left";
   const spacingClass = size === "xl" ? "gap-3" : "gap-2";
+  const kickerAlign = align === "center" ? "justify-center" : "justify-start";
 
   return (
     <div className={`flex w-full max-w-3xl flex-col ${spacingClass} ${alignClass}`}>
       {kicker ? (
-        <div className="text-[11px] font-semibold uppercase tracking-[0.25em] text-slate-500">
-          {kicker}
+        <div className={`flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 ${kickerAlign}`}>
+          <span
+            aria-hidden="true"
+            className="h-[2px] w-10 rounded-full bg-gradient-to-r from-brand-blue to-brand-aqua"
+          />
+          <span>{kicker}</span>
         </div>
       ) : null}
       <HeadingTag className={`font-semibold leading-tight tracking-tight text-slate-900 ${titleClass}`}>
