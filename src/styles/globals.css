@@ -458,6 +458,24 @@ h6 {
   box-shadow: inset 0 0 0 1px rgba(248, 250, 252, 0.35);
 }
 
+footer .footer-link {
+  color: #1f2937 !important;
+}
+
+footer .footer-link:hover,
+footer .footer-link:focus-visible {
+  color: #0f172a !important;
+}
+
+.dark footer .footer-link {
+  color: #e2e8f0 !important;
+}
+
+.dark footer .footer-link:hover,
+.dark footer .footer-link:focus-visible {
+  color: #ffffff !important;
+}
+
 .skip-link {
   position: absolute;
   left: 1rem;

@@ -218,8 +218,8 @@ export default function Layout({ children }: { children: ReactNode }) {
         {children}
       </main>
 
-      <footer className="border-t border-slate-200/60 bg-white/90">
-        <div className="grid w-full grid-cols-1 gap-6 px-4 py-8 text-sm text-slate-800 sm:grid-cols-4 sm:px-6 lg:px-8">
+      <footer className="border-t border-slate-200/60 bg-white/90 dark:border-slate-800/60 dark:bg-slate-950/70">
+        <div className="grid w-full grid-cols-1 gap-6 px-4 py-8 text-sm text-slate-800 dark:text-slate-200 sm:grid-cols-4 sm:px-6 lg:px-8">
           <div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center justify-center px-1">
@@ -232,11 +232,11 @@ export default function Layout({ children }: { children: ReactNode }) {
                 />
               </span>
             </div>
-            <div className="mt-1 text-sm text-slate-900">AI consulting + delivery platform for agents and MCP.</div>
-            <div className="mt-3 text-xs text-slate-800">© {new Date().getFullYear()} Colaberry AI</div>
+            <div className="mt-1 text-sm text-slate-900 dark:text-slate-100">AI consulting + delivery platform for agents and MCP.</div>
+            <div className="mt-3 text-xs text-slate-800 dark:text-slate-300">© {new Date().getFullYear()} Colaberry AI</div>
           </div>
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-900">Product</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">Product</div>
             <div className="mt-2 grid gap-2">
               <FooterLink href="/aixcelerator">Platform</FooterLink>
               <FooterLink href="/aixcelerator/agents">Agents</FooterLink>
@@ -246,7 +246,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             </div>
           </div>
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-900">Resources</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">Resources</div>
             <div className="mt-2 grid gap-2">
               <FooterLink href="/resources">Resources hub</FooterLink>
               <FooterLink href="/resources/podcasts">Podcasts</FooterLink>
@@ -255,7 +255,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             </div>
           </div>
           <div className="sm:justify-self-end">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-900 sm:text-right">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100 sm:text-right">
               Follow
             </div>
             <div className="mt-3 flex items-center gap-3 sm:justify-end">
@@ -323,7 +323,7 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <Link
       href={href}
-      className="focus-ring font-semibold text-slate-800 hover:text-slate-900 hover:underline underline-offset-4 dark:text-slate-300 dark:hover:text-white"
+      className="footer-link focus-ring font-semibold hover:underline underline-offset-4"
     >
       {children}
     </Link>
@@ -362,7 +362,7 @@ function SocialIcon({
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="social-button focus-ring inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200/70 bg-white/80 text-slate-500 transition hover:border-brand-blue/40 hover:text-brand-blue hover:shadow-sm"
+      className="social-button focus-ring inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200/70 bg-white/80 text-slate-500 transition hover:border-brand-blue/40 hover:text-brand-blue hover:shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-brand-teal/50 dark:hover:text-white"
       aria-label={label}
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
