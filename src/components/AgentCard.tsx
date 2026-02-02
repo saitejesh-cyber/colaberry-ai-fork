@@ -5,7 +5,7 @@ interface Agent {
   slug?: string;
   description?: string | null;
   industry?: string | null;
-  status?: string;
+  status?: string | null;
   visibility?: string;
 }
 
