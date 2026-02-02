@@ -6,7 +6,7 @@ interface Agent {
   description?: string | null;
   industry?: string | null;
   status?: string | null;
-  visibility?: string;
+  visibility?: string | null;
 }
 
 export default function AgentCard({ agent }: { agent: Agent }) {
