@@ -5,7 +5,7 @@ type MCP = {
   slug?: string;
   description?: string | null;
   industry?: string | null;
-  visibility?: string;
+  visibility?: string | null;
 };
 
 export default function MCPCard({ mcp }: { mcp: MCP }) {
