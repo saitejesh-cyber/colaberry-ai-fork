@@ -36,6 +36,36 @@ export type PodcastEpisode = {
   coverImageAlt?: string | null;
 };
 
+export type Agent = {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  status?: string | null;
+  visibility?: "public" | "private" | string | null;
+  industry?: string | null;
+  tags?: Tag[];
+  companies?: Company[];
+  coverImageUrl?: string | null;
+  coverImageAlt?: string | null;
+};
+
+export type MCPServer = {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  status?: string | null;
+  visibility?: "public" | "private" | string | null;
+  industry?: string | null;
+  category?: string | null;
+  docsUrl?: string | null;
+  tags?: Tag[];
+  companies?: Company[];
+  coverImageUrl?: string | null;
+  coverImageAlt?: string | null;
+};
+
 function mapTag(item: any): Tag {
   const attrs = item?.attributes ?? item;
   return {
@@ -88,6 +118,64 @@ function mapEpisode(item: any): PodcastEpisode {
   };
 }
 
+function mapAgent(item: any): Agent {
+  const attrs = item?.attributes ?? item;
+  const tags =
+    attrs?.tags?.data?.map(mapTag) ??
+    (attrs?.tags ?? []).map(mapTag);
+  const companies =
+    attrs?.companies?.data?.map(mapCompany) ??
+    (attrs?.companies ?? []).map(mapCompany);
+  const rawCoverUrl = attrs?.coverImage?.data?.attributes?.url ?? null;
+  const coverImageUrl =
+    rawCoverUrl && rawCoverUrl.startsWith("/") ? `${CMS_URL}${rawCoverUrl}` : rawCoverUrl;
+  const coverImageAlt = attrs?.coverImage?.data?.attributes?.alternativeText ?? null;
+
+  return {
+    id: item?.id ?? attrs?.id ?? 0,
+    name: attrs?.name ?? "",
+    slug: attrs?.slug ?? "",
+    description: attrs?.description ?? null,
+    status: attrs?.status ?? null,
+    visibility: attrs?.visibility ?? null,
+    industry: attrs?.industry ?? null,
+    tags,
+    companies,
+    coverImageUrl,
+    coverImageAlt,
+  };
+}
+
+function mapMCPServer(item: any): MCPServer {
+  const attrs = item?.attributes ?? item;
+  const tags =
+    attrs?.tags?.data?.map(mapTag) ??
+    (attrs?.tags ?? []).map(mapTag);
+  const companies =
+    attrs?.companies?.data?.map(mapCompany) ??
+    (attrs?.companies ?? []).map(mapCompany);
+  const rawCoverUrl = attrs?.coverImage?.data?.attributes?.url ?? null;
+  const coverImageUrl =
+    rawCoverUrl && rawCoverUrl.startsWith("/") ? `${CMS_URL}${rawCoverUrl}` : rawCoverUrl;
+  const coverImageAlt = attrs?.coverImage?.data?.attributes?.alternativeText ?? null;
+
+  return {
+    id: item?.id ?? attrs?.id ?? 0,
+    name: attrs?.name ?? "",
+    slug: attrs?.slug ?? "",
+    description: attrs?.description ?? null,
+    status: attrs?.status ?? null,
+    visibility: attrs?.visibility ?? null,
+    industry: attrs?.industry ?? null,
+    category: attrs?.category ?? null,
+    docsUrl: attrs?.docsUrl ?? null,
+    tags,
+    companies,
+    coverImageUrl,
+    coverImageAlt,
+  };
+}
+
 export async function fetchPodcastEpisodes() {
   const res = await fetch(
     `${CMS_URL}/api/podcast-episodes` +
@@ -130,4 +218,96 @@ export async function fetchPodcastBySlug(slug: string) {
 
   const json = await res.json();
   return json?.data?.[0] ? mapEpisode(json.data[0]) : null;
+}
+
+export async function fetchAgents(visibility?: "public" | "private") {
+  const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
+  const res = await fetch(
+    `${CMS_URL}/api/agents` +
+      `?sort=name:asc` +
+      `${visibilityFilter}` +
+      `&publicationState=live` +
+      `&populate[tags][fields][0]=name` +
+      `&populate[tags][fields][1]=slug` +
+      `&populate[companies][fields][0]=name` +
+      `&populate[companies][fields][1]=slug` +
+      `&populate[coverImage][fields][0]=url` +
+      `&populate[coverImage][fields][1]=alternativeText`,
+    { cache: "no-store" }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch agents");
+  }
+
+  const json = await res.json();
+  return json?.data?.map(mapAgent) || [];
+}
+
+export async function fetchMCPServers(visibility?: "public" | "private") {
+  const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
+  const res = await fetch(
+    `${CMS_URL}/api/mcp-servers` +
+      `?sort=name:asc` +
+      `${visibilityFilter}` +
+      `&publicationState=live` +
+      `&populate[tags][fields][0]=name` +
+      `&populate[tags][fields][1]=slug` +
+      `&populate[companies][fields][0]=name` +
+      `&populate[companies][fields][1]=slug` +
+      `&populate[coverImage][fields][0]=url` +
+      `&populate[coverImage][fields][1]=alternativeText`,
+    { cache: "no-store" }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch MCP servers");
+  }
+
+  const json = await res.json();
+  return json?.data?.map(mapMCPServer) || [];
+}
+
+export async function fetchAgentBySlug(slug: string) {
+  const res = await fetch(
+    `${CMS_URL}/api/agents` +
+      `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
+      `&publicationState=live` +
+      `&populate[tags][fields][0]=name` +
+      `&populate[tags][fields][1]=slug` +
+      `&populate[companies][fields][0]=name` +
+      `&populate[companies][fields][1]=slug` +
+      `&populate[coverImage][fields][0]=url` +
+      `&populate[coverImage][fields][1]=alternativeText`,
+    { cache: "no-store" }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch agent");
+  }
+
+  const json = await res.json();
+  return json?.data?.[0] ? mapAgent(json.data[0]) : null;
+}
+
+export async function fetchMCPServerBySlug(slug: string) {
+  const res = await fetch(
+    `${CMS_URL}/api/mcp-servers` +
+      `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
+      `&publicationState=live` +
+      `&populate[tags][fields][0]=name` +
+      `&populate[tags][fields][1]=slug` +
+      `&populate[companies][fields][0]=name` +
+      `&populate[companies][fields][1]=slug` +
+      `&populate[coverImage][fields][0]=url` +
+      `&populate[coverImage][fields][1]=alternativeText`,
+    { cache: "no-store" }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch MCP server");
+  }
+
+  const json = await res.json();
+  return json?.data?.[0] ? mapMCPServer(json.data[0]) : null;
 }

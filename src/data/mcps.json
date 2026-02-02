@@ -2,11 +2,15 @@
   {
     "name": "AgTech MCP",
     "industry": "Agriculture",
+    "visibility": "Public",
+    "slug": "agtech-mcp",
     "description": "Satellite, weather, and hyperspectral data pipelines."
   },
   {
     "name": "Utilities MCP",
     "industry": "Utilities",
+    "visibility": "Private",
+    "slug": "utilities-mcp",
     "description": "IoT, meter data, and real-time telemetry."
   }
 ]
