@@ -22,6 +22,7 @@ export type PodcastEpisode = {
   title: string;
   slug: string;
   publishedDate: string | null;
+  podcastType?: string | null;
   description?: any;
   transcript?: any;
   episodeNumber?: number | null;
@@ -103,6 +104,7 @@ function mapEpisode(item: any): PodcastEpisode {
     title: attrs?.title ?? "",
     slug: attrs?.slug ?? "",
     publishedDate: attrs?.publishedDate ?? null,
+    podcastType: attrs?.podcastType ?? null,
     description: attrs?.description ?? null,
     transcript: attrs?.transcript ?? null,
     episodeNumber: attrs?.episodeNumber ?? null,
