@@ -25,6 +25,12 @@ export type PodcastEpisode = {
   podcastType?: string | null;
   description?: any;
   transcript?: any;
+  transcriptSegments?: { start: number; end?: number | null; text: string }[] | null;
+  transcriptStatus?: string | null;
+  transcriptSource?: string | null;
+  transcriptGeneratedAt?: string | null;
+  transcriptSrt?: string | null;
+  transcriptVtt?: string | null;
   episodeNumber?: number | null;
   duration?: string | null;
   audioUrl?: string | null;
@@ -115,6 +121,12 @@ function mapEpisode(item: any): PodcastEpisode {
     podcastType: attrs?.podcastType ?? null,
     description: attrs?.description ?? null,
     transcript: attrs?.transcript ?? null,
+    transcriptSegments: attrs?.transcriptSegments ?? null,
+    transcriptStatus: attrs?.transcriptStatus ?? null,
+    transcriptSource: attrs?.transcriptSource ?? null,
+    transcriptGeneratedAt: attrs?.transcriptGeneratedAt ?? null,
+    transcriptSrt: attrs?.transcriptSrt ?? null,
+    transcriptVtt: attrs?.transcriptVtt ?? null,
     episodeNumber: attrs?.episodeNumber ?? null,
     duration: attrs?.duration ?? null,
     audioUrl: attrs?.audioUrl ?? null,
@@ -240,50 +252,84 @@ export async function fetchPodcastBySlug(slug: string) {
 
 export async function fetchAgents(visibility?: "public" | "private") {
   const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
-  const res = await fetch(
-    `${CMS_URL}/api/agents` +
-      `?sort=name:asc` +
-      `${visibilityFilter}` +
-      `&publicationState=live` +
-      `&populate[tags][fields][0]=name` +
-      `&populate[tags][fields][1]=slug` +
-      `&populate[companies][fields][0]=name` +
-      `&populate[companies][fields][1]=slug` +
-      `&populate[coverImage][fields][0]=url` +
-      `&populate[coverImage][fields][1]=alternativeText`,
-    { cache: "no-store" }
-  );
+  const pageSize = 100;
+  let page = 1;
+  const results: ReturnType<typeof mapAgent>[] = [];
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch agents");
+  while (true) {
+    const res = await fetch(
+      `${CMS_URL}/api/agents` +
+        `?sort=name:asc` +
+        `${visibilityFilter}` +
+        `&publicationState=live` +
+        `&pagination[page]=${page}` +
+        `&pagination[pageSize]=${pageSize}` +
+        `&populate[tags][fields][0]=name` +
+        `&populate[tags][fields][1]=slug` +
+        `&populate[companies][fields][0]=name` +
+        `&populate[companies][fields][1]=slug` +
+        `&populate[coverImage][fields][0]=url` +
+        `&populate[coverImage][fields][1]=alternativeText`,
+      { cache: "no-store" }
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch agents");
+    }
+
+    const json = await res.json();
+    const data = json?.data || [];
+    results.push(...data.map(mapAgent));
+
+    const pagination = json?.meta?.pagination;
+    if (!pagination || page >= pagination.pageCount) {
+      break;
+    }
+    page += 1;
   }
 
-  const json = await res.json();
-  return json?.data?.map(mapAgent) || [];
+  return results;
 }
 
 export async function fetchMCPServers(visibility?: "public" | "private") {
   const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
-  const res = await fetch(
-    `${CMS_URL}/api/mcp-servers` +
-      `?sort=name:asc` +
-      `${visibilityFilter}` +
-      `&publicationState=live` +
-      `&populate[tags][fields][0]=name` +
-      `&populate[tags][fields][1]=slug` +
-      `&populate[companies][fields][0]=name` +
-      `&populate[companies][fields][1]=slug` +
-      `&populate[coverImage][fields][0]=url` +
-      `&populate[coverImage][fields][1]=alternativeText`,
-    { cache: "no-store" }
-  );
+  const pageSize = 100;
+  let page = 1;
+  const results: ReturnType<typeof mapMCPServer>[] = [];
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch MCP servers");
+  while (true) {
+    const res = await fetch(
+      `${CMS_URL}/api/mcp-servers` +
+        `?sort=name:asc` +
+        `${visibilityFilter}` +
+        `&publicationState=live` +
+        `&pagination[page]=${page}` +
+        `&pagination[pageSize]=${pageSize}` +
+        `&populate[tags][fields][0]=name` +
+        `&populate[tags][fields][1]=slug` +
+        `&populate[companies][fields][0]=name` +
+        `&populate[companies][fields][1]=slug` +
+        `&populate[coverImage][fields][0]=url` +
+        `&populate[coverImage][fields][1]=alternativeText`,
+      { cache: "no-store" }
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch MCP servers");
+    }
+
+    const json = await res.json();
+    const data = json?.data || [];
+    results.push(...data.map(mapMCPServer));
+
+    const pagination = json?.meta?.pagination;
+    if (!pagination || page >= pagination.pageCount) {
+      break;
+    }
+    page += 1;
   }
 
-  const json = await res.json();
-  return json?.data?.map(mapMCPServer) || [];
+  return results;
 }
 
 export async function fetchAgentBySlug(slug: string) {

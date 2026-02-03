@@ -28,11 +28,7 @@ export default function AgentCard({ agent }: { agent: Agent }) {
   const sourceKey = (agent.source || "internal").toLowerCase();
   const sourceLabel =
     sourceKey === "external" ? "External" : sourceKey === "partner" ? "Partner" : "Internal";
-  const sourceSuffix = agent.sourceName
-    ? ` (${agent.sourceName})`
-    : sourceKey === "internal"
-      ? " (Colaberry)"
-      : "";
+  const sourceSuffix = sourceKey === "internal" ? " (Colaberry)" : "";
   const sourceTone =
     sourceKey === "external"
       ? "bg-sky-50 text-sky-700 ring-sky-200 dark:bg-sky-900/30 dark:text-sky-200 dark:ring-sky-500/40"

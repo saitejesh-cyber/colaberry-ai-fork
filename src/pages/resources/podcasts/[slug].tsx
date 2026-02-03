@@ -5,6 +5,7 @@ import Head from "next/head";
 import RichText from "../../../components/RichText";
 import SectionHeader from "../../../components/SectionHeader";
 import PodcastPlayer from "../../../components/PodcastPlayer";
+import TranscriptTimeline from "../../../components/TranscriptTimeline";
 import { fetchPodcastBySlug } from "../../../lib/cms";
 import sanitizeHtml from "sanitize-html";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -54,6 +55,7 @@ export default function PodcastDetail({ episode }: any) {
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const hasLoggedView = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -89,6 +91,11 @@ export default function PodcastDetail({ episode }: any) {
   }, [episode.title, resolvedShareUrl]);
 
   const transcriptIsHtml = typeof episode.transcript === "string";
+  const transcriptSegments = Array.isArray(episode.transcriptSegments)
+    ? episode.transcriptSegments
+    : [];
+  const hasTimedTranscript = transcriptSegments.length > 0;
+  const shouldForceNative = hasTimedTranscript && audioUrl;
   const subscribeLinks = (episode.platformLinks || []).filter((link: any) => link?.url);
 
   const publishedLabel = episode.publishedDate
@@ -139,10 +146,16 @@ export default function PodcastDetail({ episode }: any) {
             </div>
             <div className="mt-3">
               <PodcastPlayer
-                embedCode={embedCode}
+                embedCode={shouldForceNative ? null : embedCode}
                 audioUrl={audioUrl}
+                audioRef={audioRef}
                 onPlay={() => logPodcastEvent("play", undefined, { slug: episode.slug, title: episode.title })}
               />
+              {hasTimedTranscript ? (
+                <p className="mt-2 text-xs text-slate-500">
+                  Transcript is synchronized with the audio player.
+                </p>
+              ) : null}
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -258,7 +271,32 @@ export default function PodcastDetail({ episode }: any) {
             </div>
           </div>
 
-          {episode.transcript && String(episode.transcript).trim() && (
+          {hasTimedTranscript && (
+            <div
+              ref={transcriptRef}
+              id="transcript"
+              className="surface-panel border-t-4 border-brand-blue/20 p-6"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Transcript
+                  </div>
+                  <h3 className="mt-2 text-lg font-semibold text-slate-900">Time‑coded transcript</h3>
+                </div>
+                {episode.transcriptGeneratedAt ? (
+                  <span className="text-xs text-slate-500">
+                    Updated {new Date(episode.transcriptGeneratedAt).toLocaleDateString()}
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-4">
+                <TranscriptTimeline segments={transcriptSegments} audioRef={audioRef} />
+              </div>
+            </div>
+          )}
+
+          {!hasTimedTranscript && episode.transcript && String(episode.transcript).trim() && (
             <div
               ref={transcriptRef}
               id="transcript"

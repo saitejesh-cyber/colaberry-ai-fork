@@ -5,6 +5,7 @@ type PodcastPlayerProps = {
   audioUrl?: string | null;
   defer?: boolean;
   onPlay?: () => void;
+  audioRef?: React.RefObject<HTMLAudioElement>;
 };
 
 export default function PodcastPlayer({
@@ -12,6 +13,7 @@ export default function PodcastPlayer({
   audioUrl,
   defer = true,
   onPlay,
+  audioRef,
 }: PodcastPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hasInjected = useRef(false);
@@ -127,6 +129,7 @@ export default function PodcastPlayer({
   if (audioUrl) {
     return (
       <audio
+        ref={audioRef}
         controls
         onPlay={onPlay}
         className="w-full rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm"

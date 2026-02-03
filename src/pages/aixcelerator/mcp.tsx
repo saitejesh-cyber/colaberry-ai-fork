@@ -1,7 +1,7 @@
 import MCPCard from "../../components/MCPCard";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { GetServerSideProps } from "next";
 import fallbackMCPs from "../../data/mcps.json";
 import { fetchMCPServers, MCPServer } from "../../lib/cms";
@@ -40,6 +40,8 @@ export default function MCP({ mcps, allowPrivate }: MCPPageProps) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 24;
   const industries = useMemo(
     () =>
       Array.from(new Set(mcps.map((m) => m.industry || "Other"))).filter(Boolean).sort(),
@@ -90,6 +92,18 @@ export default function MCP({ mcps, allowPrivate }: MCPPageProps) {
         matchesFilters(mcp, query, industryFilter, statusFilter, sourceFilter, tagFilter)
     );
   }, [allowPrivate, industryFilter, mcps, search, sourceFilter, statusFilter, tagFilter, visibility]);
+  const totalPages = Math.max(1, Math.ceil(filteredMCPs.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * pageSize;
+  const pageEnd = Math.min(pageStart + pageSize, filteredMCPs.length);
+  const pagedMCPs = useMemo(
+    () => filteredMCPs.slice(pageStart, pageEnd),
+    [filteredMCPs, pageEnd, pageStart]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, industryFilter, statusFilter, sourceFilter, tagFilter, visibility, allowPrivate, mcps.length]);
 
   return (
     <Layout>
@@ -262,15 +276,40 @@ export default function MCP({ mcps, allowPrivate }: MCPPageProps) {
           </div>
         )}
         <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Showing {filteredMCPs.length} of {mcps.length}
+          Showing {filteredMCPs.length ? `${pageStart + 1}-${pageEnd}` : 0} of{" "}
+          {filteredMCPs.length} (total {mcps.length})
         </div>
       </section>
 
       <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredMCPs.map((m, i) => (
+        {pagedMCPs.map((m, i) => (
           <MCPCard key={i} mcp={m} />
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            className="rounded-full border border-slate-200/80 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-brand-blue/40 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+          >
+            Previous
+          </button>
+          <div className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+            Page {currentPage} of {totalPages}
+          </div>
+          <button
+            type="button"
+            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+            className="rounded-full border border-slate-200/80 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-brand-blue/40 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </Layout>
   );
 }
