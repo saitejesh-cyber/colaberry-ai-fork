@@ -5,7 +5,7 @@ type PodcastPlayerProps = {
   audioUrl?: string | null;
   defer?: boolean;
   onPlay?: () => void;
-  audioRef?: React.RefObject<HTMLAudioElement>;
+  audioRef?: React.RefObject<HTMLAudioElement | null>;
 };
 
 export default function PodcastPlayer({
