@@ -38,6 +38,7 @@ export default function MCP({ mcps, allowPrivate }: MCPPageProps) {
   const [search, setSearch] = useState("");
   const [industryFilter, setIndustryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
   const industries = useMemo(
     () =>
@@ -46,6 +47,10 @@ export default function MCP({ mcps, allowPrivate }: MCPPageProps) {
   );
   const statuses = useMemo(() => {
     const list = Array.from(new Set(mcps.map((m) => (m.status || "unknown").toLowerCase())));
+    return list.sort();
+  }, [mcps]);
+  const sources = useMemo(() => {
+    const list = Array.from(new Set(mcps.map((m) => (m.source || "internal").toLowerCase())));
     return list.sort();
   }, [mcps]);
   const tagOptions = useMemo(() => {
@@ -73,18 +78,18 @@ export default function MCP({ mcps, allowPrivate }: MCPPageProps) {
       return mcps.filter((mcp) => {
         const matchesVisibility =
           (mcp.visibility || "public").toLowerCase() === "public";
-        return matchesVisibility && matchesFilters(mcp, query, industryFilter, statusFilter, tagFilter);
+        return matchesVisibility && matchesFilters(mcp, query, industryFilter, statusFilter, sourceFilter, tagFilter);
       });
     }
     if (visibility === "all") {
-      return mcps.filter((mcp) => matchesFilters(mcp, query, industryFilter, statusFilter, tagFilter));
+      return mcps.filter((mcp) => matchesFilters(mcp, query, industryFilter, statusFilter, sourceFilter, tagFilter));
     }
     return mcps.filter(
       (mcp) =>
         (mcp.visibility || "public").toLowerCase() === visibility &&
-        matchesFilters(mcp, query, industryFilter, statusFilter, tagFilter)
+        matchesFilters(mcp, query, industryFilter, statusFilter, sourceFilter, tagFilter)
     );
-  }, [allowPrivate, industryFilter, mcps, search, statusFilter, tagFilter, visibility]);
+  }, [allowPrivate, industryFilter, mcps, search, sourceFilter, statusFilter, tagFilter, visibility]);
 
   return (
     <Layout>
@@ -128,7 +133,7 @@ export default function MCP({ mcps, allowPrivate }: MCPPageProps) {
           size="md"
         />
         <div className="mt-4 grid gap-3 lg:grid-cols-12">
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-4">
             <label htmlFor="mcp-search" className="sr-only">
               Search MCP servers
             </label>
@@ -198,8 +203,26 @@ export default function MCP({ mcps, allowPrivate }: MCPPageProps) {
               ))}
             </select>
           </div>
+          <div className="lg:col-span-2">
+            <label htmlFor="mcp-source" className="sr-only">
+              Filter by source
+            </label>
+            <select
+              id="mcp-source"
+              value={sourceFilter}
+              onChange={(event) => setSourceFilter(event.target.value)}
+              className="w-full rounded-full border border-slate-200/80 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+            >
+              <option value="all">All sources</option>
+              {sources.map((source) => (
+                <option key={source} value={source}>
+                  {source.charAt(0).toUpperCase() + source.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
           {tagOptions.length > 0 && (
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-2">
               <label htmlFor="mcp-tag" className="sr-only">
                 Filter by tag
               </label>
@@ -257,6 +280,7 @@ function matchesFilters(
   query: string,
   industryFilter?: string,
   statusFilter?: string,
+  sourceFilter?: string,
   tagFilter?: string
 ) {
   const industryMatch =
@@ -267,13 +291,17 @@ function matchesFilters(
     !statusFilter || statusFilter === "all"
       ? true
       : (mcp.status || "unknown").toLowerCase() === statusFilter;
+  const sourceMatch =
+    !sourceFilter || sourceFilter === "all"
+      ? true
+      : (mcp.source || "internal").toLowerCase() === sourceFilter;
   const tagMatch =
     !tagFilter || tagFilter === "all"
       ? true
       : (mcp.tags || []).some(
           (tag) => (tag.slug || tag.name || "").toLowerCase() === tagFilter
         );
-  if (!industryMatch || !statusMatch || !tagMatch) {
+  if (!industryMatch || !statusMatch || !sourceMatch || !tagMatch) {
     return false;
   }
   if (!query) {

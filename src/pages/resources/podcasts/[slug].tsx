@@ -7,7 +7,7 @@ import SectionHeader from "../../../components/SectionHeader";
 import PodcastPlayer from "../../../components/PodcastPlayer";
 import { fetchPodcastBySlug } from "../../../lib/cms";
 import sanitizeHtml from "sanitize-html";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export async function getServerSideProps({ params }: any) {
   const episode = await fetchPodcastBySlug(params.slug);
@@ -44,16 +44,27 @@ export default function PodcastDetail({ episode }: any) {
     youtube: "YouTube",
     substack: "Substack",
     twitter: "X (Twitter)",
+    rss: "RSS",
   };
   const preferNative = Boolean(episode.useNativePlayer && episode.audioUrl);
   const embedCode = preferNative ? null : episode.buzzsproutEmbedCode;
   const audioUrl = episode.audioUrl;
   const [shareUrl, setShareUrl] = useState("");
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
+  const transcriptRef = useRef<HTMLDivElement | null>(null);
+  const hasLoggedView = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setShareUrl(window.location.href);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoggedView.current) {
+      hasLoggedView.current = true;
+      logPodcastEvent("view", undefined, { slug: episode.slug, title: episode.title });
     }
   }, []);
 
@@ -78,6 +89,7 @@ export default function PodcastDetail({ episode }: any) {
   }, [episode.title, resolvedShareUrl]);
 
   const transcriptIsHtml = typeof episode.transcript === "string";
+  const subscribeLinks = (episode.platformLinks || []).filter((link: any) => link?.url);
 
   const publishedLabel = episode.publishedDate
     ? new Date(episode.publishedDate).toLocaleDateString("en-US", {
@@ -119,139 +131,235 @@ export default function PodcastDetail({ episode }: any) {
         </div>
       )}
 
-      <div className="surface-panel mt-6 border-t-4 border-brand-blue/20 p-6">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-          Listen to the podcast
-        </div>
-        <div className="mt-3">
-          <PodcastPlayer embedCode={embedCode} audioUrl={audioUrl} />
-        </div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex flex-col gap-6">
+          <div className="surface-panel border-t-4 border-brand-blue/20 p-6">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Listen to the podcast
+            </div>
+            <div className="mt-3">
+              <PodcastPlayer
+                embedCode={embedCode}
+                audioUrl={audioUrl}
+                onPlay={() => logPodcastEvent("play", undefined, { slug: episode.slug, title: episode.title })}
+              />
+            </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Share
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            <a
-              href={shareLinks.linkedin}
-              target="_blank"
-              rel="noreferrer"
-              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
-              aria-label="Share on LinkedIn"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                <path
-                  d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 1 0-4 0v7h-4V9h4v2.2A4.5 4.5 0 0 1 16 8Z"
-                  fill="currentColor"
-                />
-                <rect x="2" y="9" width="4" height="12" fill="currentColor" />
-                <circle cx="4" cy="4" r="2" fill="currentColor" />
-              </svg>
-            </a>
-            <a
-              href={shareLinks.x}
-              target="_blank"
-              rel="noreferrer"
-              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
-              aria-label="Share on X"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                <path
-                  d="M4 4h4.6l4 5.6L16.9 4H21l-6.6 8.6L21 20h-4.7l-4.2-5.9L7.3 20H3l7-8.9L4 4Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </a>
-            <a
-              href={shareLinks.facebook}
-              target="_blank"
-              rel="noreferrer"
-              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
-              aria-label="Share on Facebook"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                <path
-                  d="M14.5 8.5h3V5h-3c-2.5 0-4.5 2-4.5 4.5V12H7v3h3v6h3.5v-6h3l.5-3h-3.5V9.5c0-.6.4-1 1-1Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </a>
-            <button
-              type="button"
-              onClick={() => resolvedShareUrl && navigator.clipboard.writeText(resolvedShareUrl)}
-              className="focus-ring inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
-            >
-              Copy link
-            </button>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Share
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href={shareLinks.linkedin}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
+                  aria-label="Share on LinkedIn"
+                  onClick={() => logPodcastEvent("share", "linkedin", { slug: episode.slug, title: episode.title })}
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                    <path
+                      d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 1 0-4 0v7h-4V9h4v2.2A4.5 4.5 0 0 1 16 8Z"
+                      fill="currentColor"
+                    />
+                    <rect x="2" y="9" width="4" height="12" fill="currentColor" />
+                    <circle cx="4" cy="4" r="2" fill="currentColor" />
+                  </svg>
+                </a>
+                <a
+                  href={shareLinks.x}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
+                  aria-label="Share on X"
+                  onClick={() => logPodcastEvent("share", "x", { slug: episode.slug, title: episode.title })}
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                    <path
+                      d="M4 4h4.6l4 5.6L16.9 4H21l-6.6 8.6L21 20h-4.7l-4.2-5.9L7.3 20H3l7-8.9L4 4Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </a>
+                <a
+                  href={shareLinks.facebook}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
+                  aria-label="Share on Facebook"
+                  onClick={() => logPodcastEvent("share", "facebook", { slug: episode.slug, title: episode.title })}
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                    <path
+                      d="M14.5 8.5h3V5h-3c-2.5 0-4.5 2-4.5 4.5V12H7v3h3v6h3.5v-6h3l.5-3h-3.5V9.5c0-.6.4-1 1-1Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (resolvedShareUrl) {
+                      navigator.clipboard.writeText(resolvedShareUrl);
+                      logPodcastEvent("share", "copy", { slug: episode.slug, title: episode.title });
+                    }
+                  }}
+                  className="focus-ring inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
+                >
+                  Copy link
+                </button>
+                {episode.transcript && String(episode.transcript).trim() && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTranscriptOpen(true);
+                      setTimeout(() => {
+                        transcriptRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }, 50);
+                    }}
+                    className="focus-ring inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
+                  >
+                    Transcript
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {episode.tags.map((tag: any) => (
+                <Link
+                  key={tag.slug}
+                  href={`/resources/podcasts/tag/${tag.slug}`}
+                  className="chip rounded-full border border-slate-200/80 bg-white/80 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-brand-deep"
+                >
+                  #{tag.name}
+                </Link>
+              ))}
+              {episode.companies.map((company: any) => (
+                <Link
+                  key={company.slug}
+                  href={`/podcast/${company.slug}`}
+                  className="chip chip-brand rounded-full border border-brand-blue/20 bg-white/80 px-2.5 py-1 text-xs font-semibold text-brand-deep hover:text-brand-blue"
+                >
+                  {company.name}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {episode.tags.map((tag: any) => (
-            <Link
-              key={tag.slug}
-              href={`/resources/podcasts/tag/${tag.slug}`}
-              className="chip rounded-full border border-slate-200/80 bg-white/80 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-brand-deep"
-            >
-              #{tag.name}
-            </Link>
-          ))}
-          {episode.companies.map((company: any) => (
-            <Link
-              key={company.slug}
-              href={`/podcast/${company.slug}`}
-              className="chip chip-brand rounded-full border border-brand-blue/20 bg-white/80 px-2.5 py-1 text-xs font-semibold text-brand-deep hover:text-brand-blue"
-            >
-              {company.name}
-            </Link>
-          ))}
-        </div>
-
-        {episode.platformLinks?.some((link: any) => link?.url) ? (
-          <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-600">
-            {episode.platformLinks
-              .filter((link: any) => link?.url)
-              .map((link: any, index: number) => (
-              <a
-                key={`${link.platform}-${index}`}
-                href={link.url}
-                target="_blank"
-                rel="noreferrer"
-                className="chip chip-muted rounded-full border border-slate-200/80 bg-white/80 px-3 py-1 font-semibold text-slate-600 hover:text-brand-deep"
-              >
-                {platformLabels[String(link.platform)] || String(link.platform || "platform")}
-              </a>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      <div className="surface-panel mt-6 border-t-4 border-brand-blue/20 p-6">
-        <div className="prose max-w-none">
-          {episode.description ? (
-            <RichText blocks={episode.description} />
-          ) : (
-            <p>Podcast summary and notes will appear here once published.</p>
-          )}
-        </div>
-      </div>
-
-      {episode.transcript && String(episode.transcript).trim() && (
-        <div className="surface-panel mt-6 border-t-4 border-brand-blue/20 p-6">
-          <details>
-            <summary className="focus-ring cursor-pointer text-sm font-semibold text-slate-900">
-              Transcript
-            </summary>
-            <div className="prose mt-4 max-w-none text-sm">
-              {transcriptIsHtml ? (
-                <div dangerouslySetInnerHTML={{ __html: episode.transcript }} />
+          <div className="surface-panel border-t-4 border-brand-blue/20 p-6">
+            <div className="prose max-w-none">
+              {episode.description ? (
+                <RichText blocks={episode.description} />
               ) : (
-                <RichText blocks={episode.transcript} />
+                <p>Podcast summary and notes will appear here once published.</p>
               )}
             </div>
-          </details>
+          </div>
+
+          {episode.transcript && String(episode.transcript).trim() && (
+            <div
+              ref={transcriptRef}
+              id="transcript"
+              className="surface-panel border-t-4 border-brand-blue/20 p-6"
+            >
+              <details
+                open={transcriptOpen}
+                onToggle={(event) => setTranscriptOpen(event.currentTarget.open)}
+              >
+                <summary className="focus-ring cursor-pointer text-sm font-semibold text-slate-900">
+                  Transcript
+                </summary>
+                <div className="prose mt-4 max-w-none text-sm">
+                  {transcriptIsHtml ? (
+                    <div dangerouslySetInnerHTML={{ __html: episode.transcript }} />
+                  ) : (
+                    <RichText blocks={episode.transcript} />
+                  )}
+                </div>
+              </details>
+            </div>
+          )}
         </div>
-      )}
+
+        <aside className="flex flex-col gap-4">
+          <div className="surface-panel border-t-4 border-brand-blue/20 p-5">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Listen on
+            </div>
+            {subscribeLinks.length > 0 ? (
+              <div className="mt-4 grid gap-2">
+                {subscribeLinks.map((link: any, index: number) => {
+                  const platform = String(link.platform || "platform");
+                  const platformKey = platform.toLowerCase();
+                  const label = platformLabels[platformKey] || platform;
+                  return (
+                    <a
+                      key={`${platformKey}-${index}`}
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() =>
+                        logPodcastEvent("subscribe", platformKey, {
+                          slug: episode.slug,
+                          title: episode.title,
+                        })
+                      }
+                      className="focus-ring inline-flex items-center justify-between rounded-full border border-slate-200/80 bg-white/80 px-4 py-2 text-xs font-semibold text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
+                    >
+                      <span>{label}</span>
+                      <span aria-hidden="true">→</span>
+                    </a>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-slate-500">Subscribe links will appear here.</p>
+            )}
+          </div>
+
+          {episode.companies?.length > 0 && (
+            <div className="surface-panel border-t-4 border-brand-blue/20 p-5">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Company tags
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {episode.companies.map((company: any) => (
+                  <Link
+                    key={company.slug}
+                    href={`/podcast/${company.slug}`}
+                    className="chip chip-brand rounded-full border border-brand-blue/20 bg-white/80 px-3 py-1 text-xs font-semibold text-brand-deep hover:text-brand-blue"
+                  >
+                    {company.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </aside>
+      </div>
     </Layout>
   );
+}
+
+async function logPodcastEvent(
+  eventType: "view" | "play" | "share" | "subscribe" | "click",
+  platform?: string,
+  episode?: { slug?: string; title?: string }
+) {
+  try {
+    await fetch("/api/podcast-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        eventType,
+        platform,
+        episodeSlug: episode?.slug,
+        episodeTitle: episode?.title,
+      }),
+    });
+  } catch {
+    // logging is best-effort only
+  }
 }

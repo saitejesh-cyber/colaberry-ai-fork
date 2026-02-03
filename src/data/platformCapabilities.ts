@@ -39,7 +39,7 @@ export const modularLayers: PlatformCapability[] = [
   {
     layer: "layer",
     title: "Podcasts",
-    description: "Internal publishing plus curated external aggregation.",
+    description: "Internal publishing plus curated external ai podcast.",
     href: "/resources/podcasts",
     status: "available",
   },

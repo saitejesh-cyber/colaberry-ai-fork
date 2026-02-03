@@ -63,7 +63,7 @@ export default function Resources() {
         <ResourceCard
           href="/resources/podcasts"
           title="Podcasts"
-          description="Internal posts + curated external aggregation."
+          description="Colaberry AI podcast + curated ai podcast."
           meta="Internal + External"
         />
         <ResourceCard

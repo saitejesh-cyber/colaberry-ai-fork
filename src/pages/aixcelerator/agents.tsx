@@ -38,6 +38,7 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
   const [search, setSearch] = useState("");
   const [industryFilter, setIndustryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
   const industries = useMemo(
     () =>
@@ -46,6 +47,10 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
   );
   const statuses = useMemo(() => {
     const list = Array.from(new Set(agents.map((a) => (a.status || "unknown").toLowerCase())));
+    return list.sort();
+  }, [agents]);
+  const sources = useMemo(() => {
+    const list = Array.from(new Set(agents.map((a) => (a.source || "internal").toLowerCase())));
     return list.sort();
   }, [agents]);
   const tagOptions = useMemo(() => {
@@ -73,18 +78,18 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
       return agents.filter((agent) => {
         const matchesVisibility =
           (agent.visibility || "public").toLowerCase() === "public";
-        return matchesVisibility && matchesFilters(agent, query, industryFilter, statusFilter, tagFilter);
+        return matchesVisibility && matchesFilters(agent, query, industryFilter, statusFilter, sourceFilter, tagFilter);
       });
     }
     if (visibility === "all") {
-      return agents.filter((agent) => matchesFilters(agent, query, industryFilter, statusFilter, tagFilter));
+      return agents.filter((agent) => matchesFilters(agent, query, industryFilter, statusFilter, sourceFilter, tagFilter));
     }
     return agents.filter(
       (agent) =>
         (agent.visibility || "public").toLowerCase() === visibility &&
-        matchesFilters(agent, query, industryFilter, statusFilter, tagFilter)
+        matchesFilters(agent, query, industryFilter, statusFilter, sourceFilter, tagFilter)
     );
-  }, [allowPrivate, agents, industryFilter, search, statusFilter, tagFilter, visibility]);
+  }, [allowPrivate, agents, industryFilter, search, sourceFilter, statusFilter, tagFilter, visibility]);
 
   return (
     <Layout>
@@ -128,7 +133,7 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
           size="md"
         />
         <div className="mt-4 grid gap-3 lg:grid-cols-12">
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-4">
             <label htmlFor="agent-search" className="sr-only">
               Search agents
             </label>
@@ -198,8 +203,26 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
               ))}
             </select>
           </div>
+          <div className="lg:col-span-2">
+            <label htmlFor="agent-source" className="sr-only">
+              Filter by source
+            </label>
+            <select
+              id="agent-source"
+              value={sourceFilter}
+              onChange={(event) => setSourceFilter(event.target.value)}
+              className="w-full rounded-full border border-slate-200/80 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+            >
+              <option value="all">All sources</option>
+              {sources.map((source) => (
+                <option key={source} value={source}>
+                  {source.charAt(0).toUpperCase() + source.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
           {tagOptions.length > 0 && (
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-2">
               <label htmlFor="agent-tag" className="sr-only">
                 Filter by tag
               </label>
@@ -257,6 +280,7 @@ function matchesFilters(
   query: string,
   industryFilter?: string,
   statusFilter?: string,
+  sourceFilter?: string,
   tagFilter?: string
 ) {
   const industryMatch =
@@ -267,13 +291,17 @@ function matchesFilters(
     !statusFilter || statusFilter === "all"
       ? true
       : (agent.status || "unknown").toLowerCase() === statusFilter;
+  const sourceMatch =
+    !sourceFilter || sourceFilter === "all"
+      ? true
+      : (agent.source || "internal").toLowerCase() === sourceFilter;
   const tagMatch =
     !tagFilter || tagFilter === "all"
       ? true
       : (agent.tags || []).some(
           (tag) => (tag.slug || tag.name || "").toLowerCase() === tagFilter
         );
-  if (!industryMatch || !statusMatch || !tagMatch) {
+  if (!industryMatch || !statusMatch || !sourceMatch || !tagMatch) {
     return false;
   }
   if (!query) {

@@ -50,7 +50,7 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
           size="xl"
           kicker="Resources"
           title="Podcasts"
-          description="Internal podcasts + curated external aggregation."
+          description="Colaberry AI Podcast + curated external ai podcast."
         />
       </div>
 
@@ -115,7 +115,7 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
         {/* INTERNAL */}
         <section className="surface-panel border-t-4 border-brand-blue/20 p-6">
           <div className="flex items-center justify-between gap-4">
-            <h3 className="text-base font-semibold text-slate-900">Internal podcasts</h3>
+            <h3 className="text-base font-semibold text-slate-900">Colaberry AI Podcast</h3>
             <span className="chip chip-muted rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-600">
               {internalEpisodes.length} episodes
             </span>
@@ -167,6 +167,9 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
 
                 <Link
                   href={`/resources/podcasts/${ep.slug}`}
+                  onClick={() =>
+                    logPodcastEvent("click", "list-internal", { slug: ep.slug, title: ep.title })
+                  }
                   className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-deep hover:text-brand-blue"
                 >
                   View episode →
@@ -178,7 +181,7 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
 
         {/* EXTERNAL */}
         <section className="surface-panel border-t-4 border-brand-blue/20 p-6">
-          <h3 className="text-base font-semibold text-slate-900">External aggregation</h3>
+          <h3 className="text-base font-semibold text-slate-900">AI Podcast</h3>
           <p className="mt-1 text-sm text-slate-600">
             Surface trusted public sources with a consistent listening experience.
           </p>
@@ -200,6 +203,9 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
                   </div>
                   <Link
                     href={`/resources/podcasts/${ep.slug}`}
+                    onClick={() =>
+                      logPodcastEvent("click", "list-external", { slug: ep.slug, title: ep.title })
+                    }
                     className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-deep hover:text-brand-blue"
                   >
                     View episode →
@@ -219,3 +225,24 @@ export const getServerSideProps: GetServerSideProps = async () => {
   const episodes = await fetchPodcastEpisodes();
   return { props: { episodes } };
 };
+
+async function logPodcastEvent(
+  eventType: "view" | "play" | "share" | "subscribe" | "click",
+  platform?: string,
+  episode?: { slug?: string; title?: string }
+) {
+  try {
+    await fetch("/api/podcast-log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        eventType,
+        platform,
+        episodeSlug: episode?.slug,
+        episodeTitle: episode?.title,
+      }),
+    });
+  } catch {
+    // logging is best-effort only
+  }
+}

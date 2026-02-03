@@ -44,6 +44,8 @@ export type Agent = {
   description?: string | null;
   status?: string | null;
   visibility?: "public" | "private" | string | null;
+  source?: "internal" | "external" | "partner" | string | null;
+  sourceUrl?: string | null;
   industry?: string | null;
   tags?: Tag[];
   companies?: Company[];
@@ -58,6 +60,8 @@ export type MCPServer = {
   description?: string | null;
   status?: string | null;
   visibility?: "public" | "private" | string | null;
+  source?: "internal" | "external" | "partner" | string | null;
+  sourceUrl?: string | null;
   industry?: string | null;
   category?: string | null;
   docsUrl?: string | null;
@@ -140,6 +144,8 @@ function mapAgent(item: any): Agent {
     description: attrs?.description ?? null,
     status: attrs?.status ?? null,
     visibility: attrs?.visibility ?? null,
+    source: attrs?.source ?? null,
+    sourceUrl: attrs?.sourceUrl ?? null,
     industry: attrs?.industry ?? null,
     tags,
     companies,
@@ -168,6 +174,8 @@ function mapMCPServer(item: any): MCPServer {
     description: attrs?.description ?? null,
     status: attrs?.status ?? null,
     visibility: attrs?.visibility ?? null,
+    source: attrs?.source ?? null,
+    sourceUrl: attrs?.sourceUrl ?? null,
     industry: attrs?.industry ?? null,
     category: attrs?.category ?? null,
     docsUrl: attrs?.docsUrl ?? null,

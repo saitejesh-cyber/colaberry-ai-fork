@@ -4,12 +4,14 @@ type PodcastPlayerProps = {
   embedCode?: string | null;
   audioUrl?: string | null;
   defer?: boolean;
+  onPlay?: () => void;
 };
 
 export default function PodcastPlayer({
   embedCode,
   audioUrl,
   defer = true,
+  onPlay,
 }: PodcastPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hasInjected = useRef(false);
@@ -126,6 +128,7 @@ export default function PodcastPlayer({
     return (
       <audio
         controls
+        onPlay={onPlay}
         className="w-full rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm"
       >
         <source src={audioUrl} />
