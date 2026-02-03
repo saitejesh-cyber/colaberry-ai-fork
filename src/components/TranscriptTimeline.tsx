@@ -8,7 +8,7 @@ type Segment = {
 
 type TranscriptTimelineProps = {
   segments: Segment[];
-  audioRef: React.RefObject<HTMLAudioElement>;
+  audioRef: React.RefObject<HTMLAudioElement | null>;
 };
 
 function formatTime(seconds: number) {
