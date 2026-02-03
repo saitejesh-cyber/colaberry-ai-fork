@@ -30,6 +30,14 @@ export const getServerSideProps: GetServerSideProps<MCPDetailProps> = async ({ p
 export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
   const isPrivate = (mcp.visibility || "public").toLowerCase() === "private";
   const status = mcp.status || "Unknown";
+  const source = mcp.source || "internal";
+  const sourceLabel =
+    source === "external" ? "External" : source === "partner" ? "Partner" : "Internal";
+  const sourceDisplay = mcp.sourceName
+    ? `${sourceLabel} (${mcp.sourceName})`
+    : source === "internal"
+      ? `${sourceLabel} (Colaberry)`
+      : sourceLabel;
 
   return (
     <Layout>
@@ -61,6 +69,14 @@ export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </span>
           <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
+            {sourceDisplay}
+          </span>
+          {mcp.verified ? (
+            <span className="chip rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              Verified
+            </span>
+          ) : null}
+          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
             {isPrivate ? "Private" : "Public"}
           </span>
           {!allowPrivate && isPrivate ? (
@@ -79,14 +95,17 @@ export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <Detail label="Visibility" value={isPrivate ? "Private" : "Public"} />
           <Detail label="Status" value={status} />
+          <Detail label="Source" value={sourceDisplay} />
+          <Detail label="Verified" value={mcp.verified ? "Yes" : "No"} />
           <Detail label="Industry" value={mcp.industry || "General"} />
           <Detail label="Category" value={mcp.category || "General"} />
           <Detail label="Documentation" value={mcp.docsUrl ? "Open docs" : "Not linked yet"} />
           <Detail label="Tags" value={formatList(mcp.tags)} />
           <Detail label="Companies" value={formatList(mcp.companies)} />
+          <Detail label="Source link" value={mcp.sourceUrl ? "Open source" : "Not linked yet"} />
         </div>
-        {mcp.docsUrl ? (
-          <div className="mt-5">
+        <div className="mt-5 flex flex-wrap gap-3">
+          {mcp.docsUrl ? (
             <a
               href={mcp.docsUrl}
               target="_blank"
@@ -95,8 +114,18 @@ export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
             >
               View documentation
             </a>
-          </div>
-        ) : null}
+          ) : null}
+          {mcp.sourceUrl ? (
+            <a
+              href={mcp.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:border-slate-300"
+            >
+              View external source
+            </a>
+          ) : null}
+        </div>
       </section>
     </Layout>
   );

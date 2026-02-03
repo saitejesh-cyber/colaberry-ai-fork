@@ -30,6 +30,14 @@ export const getServerSideProps: GetServerSideProps<AgentDetailProps> = async ({
 export default function AgentDetail({ agent, allowPrivate }: AgentDetailProps) {
   const isPrivate = (agent.visibility || "public").toLowerCase() === "private";
   const status = agent.status || "Unknown";
+  const source = agent.source || "internal";
+  const sourceLabel =
+    source === "external" ? "External" : source === "partner" ? "Partner" : "Internal";
+  const sourceDisplay = agent.sourceName
+    ? `${sourceLabel} (${agent.sourceName})`
+    : source === "internal"
+      ? `${sourceLabel} (Colaberry)`
+      : sourceLabel;
 
   return (
     <Layout>
@@ -61,6 +69,14 @@ export default function AgentDetail({ agent, allowPrivate }: AgentDetailProps) {
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </span>
           <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
+            {sourceDisplay}
+          </span>
+          {agent.verified ? (
+            <span className="chip rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              Verified
+            </span>
+          ) : null}
+          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
             {isPrivate ? "Private" : "Public"}
           </span>
           {!allowPrivate && isPrivate ? (
@@ -79,10 +95,25 @@ export default function AgentDetail({ agent, allowPrivate }: AgentDetailProps) {
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <Detail label="Visibility" value={isPrivate ? "Private" : "Public"} />
           <Detail label="Status" value={status} />
+          <Detail label="Source" value={sourceDisplay} />
+          <Detail label="Verified" value={agent.verified ? "Yes" : "No"} />
           <Detail label="Industry" value={agent.industry || "General"} />
           <Detail label="Tags" value={formatList(agent.tags)} />
           <Detail label="Companies" value={formatList(agent.companies)} />
+          <Detail label="Source link" value={agent.sourceUrl ? "Open source" : "Not linked yet"} />
         </div>
+        {agent.sourceUrl ? (
+          <div className="mt-5">
+            <a
+              href={agent.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+            >
+              View external source
+            </a>
+          </div>
+        ) : null}
       </section>
     </Layout>
   );

@@ -7,6 +7,8 @@ type MCP = {
   industry?: string | null;
   visibility?: string | null;
   source?: string | null;
+  sourceName?: string | null;
+  verified?: boolean | null;
 };
 
 export default function MCPCard({ mcp }: { mcp: MCP }) {
@@ -17,6 +19,11 @@ export default function MCPCard({ mcp }: { mcp: MCP }) {
   const sourceKey = (mcp.source || "internal").toLowerCase();
   const sourceLabel =
     sourceKey === "external" ? "External" : sourceKey === "partner" ? "Partner" : "Internal";
+  const sourceSuffix = mcp.sourceName
+    ? ` (${mcp.sourceName})`
+    : sourceKey === "internal"
+      ? " (Colaberry)"
+      : "";
   const sourceTone =
     sourceKey === "external"
       ? "bg-sky-50 text-sky-700 ring-sky-200 dark:bg-sky-900/30 dark:text-sky-200 dark:ring-sky-500/40"
@@ -43,7 +50,19 @@ export default function MCPCard({ mcp }: { mcp: MCP }) {
               className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${sourceTone}`}
             >
               {sourceLabel}
+              {sourceSuffix}
             </span>
+            {mcp.verified ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:ring-emerald-500/40">
+                <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" aria-hidden="true">
+                  <path
+                    d="M7.4 13.2 4.2 10l1.4-1.4 1.8 1.8 4.8-4.8 1.4 1.4-6.2 6.2Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                Verified
+              </span>
+            ) : null}
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${visibilityTone}`}
             >
