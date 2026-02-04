@@ -2,9 +2,172 @@ import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
 import { ReactNode, useEffect, useState } from "react";
+import { fetchGlobalNavigation, GlobalNavigation } from "../lib/cms";
+
+const fallbackNavigation: GlobalNavigation = {
+  headerLinks: [
+    { label: "Platform", href: "/aixcelerator", order: 1, group: "header" },
+    { label: "Agents", href: "/aixcelerator/agents", order: 2, group: "header" },
+    { label: "MCP", href: "/aixcelerator/mcp", order: 3, group: "header" },
+    { label: "Industries", href: "/industries", order: 4, group: "header" },
+    { label: "Solutions", href: "/solutions", order: 5, group: "header" },
+    { label: "Resources", href: "/resources", order: 6, group: "header" },
+    { label: "Updates", href: "/updates", order: 7, group: "header" },
+  ],
+  footerColumns: [
+    {
+      title: "Product",
+      links: [
+        { label: "Platform", href: "/aixcelerator", order: 1, group: "Product" },
+        { label: "Agents", href: "/aixcelerator/agents", order: 2, group: "Product" },
+        { label: "MCP servers", href: "/aixcelerator/mcp", order: 3, group: "Product" },
+        { label: "Solutions", href: "/solutions", order: 4, group: "Product" },
+        { label: "Industries", href: "/industries", order: 5, group: "Product" },
+      ],
+    },
+    {
+      title: "Resources",
+      links: [
+        { label: "Resources hub", href: "/resources", order: 1, group: "Resources" },
+        { label: "Podcasts", href: "/resources/podcasts", order: 2, group: "Resources" },
+        { label: "White papers", href: "/resources/white-papers", order: 3, group: "Resources" },
+        { label: "News & product", href: "/updates", order: 4, group: "Resources" },
+      ],
+    },
+  ],
+  cta: { label: "Book a demo", href: "/request-demo", group: "header" },
+  socialLinks: [
+    {
+      label: "LinkedIn",
+      href: "https://www.linkedin.com/company/colaberry",
+      target: "_blank",
+      icon: "linkedin",
+      order: 1,
+      group: "social",
+    },
+    {
+      label: "Instagram",
+      href: "https://www.instagram.com/colaberryinc/",
+      target: "_blank",
+      icon: "instagram",
+      order: 2,
+      group: "social",
+    },
+    {
+      label: "X",
+      href: "https://x.com/colaberryinc?lang=en",
+      target: "_blank",
+      icon: "x",
+      order: 3,
+      group: "social",
+    },
+    {
+      label: "Facebook",
+      href: "https://www.facebook.com/colaberryschoolofdataanalytics/",
+      target: "_blank",
+      icon: "facebook",
+      order: 4,
+      group: "social",
+    },
+    {
+      label: "YouTube",
+      href: "https://www.youtube.com/channel/UCb23caPCK7xW8roOkr_iKRA",
+      target: "_blank",
+      icon: "youtube",
+      order: 5,
+      group: "social",
+    },
+  ],
+  legalLinks: [],
+};
+
+const SOCIAL_ICON_PATHS: Record<string, ReactNode> = {
+  linkedin: (
+    <>
+      <path
+        d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 1 0-4 0v7h-4V9h4v2.2A4.5 4.5 0 0 1 16 8Z"
+        fill="currentColor"
+      />
+      <rect x="2" y="9" width="4" height="12" fill="currentColor" />
+      <circle cx="4" cy="4" r="2" fill="currentColor" />
+    </>
+  ),
+  instagram: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" />
+    </>
+  ),
+  x: (
+    <path
+      d="M4 4h4.6l4 5.6L16.9 4H21l-6.6 8.6L21 20h-4.7l-4.2-5.9L7.3 20H3l7-8.9L4 4Z"
+      fill="currentColor"
+    />
+  ),
+  facebook: (
+    <path
+      d="M14.5 8.5h3V5h-3c-2.5 0-4.5 2-4.5 4.5V12H7v3h3v6h3.5v-6h3l.5-3h-3.5V9.5c0-.6.4-1 1-1Z"
+      fill="currentColor"
+    />
+  ),
+  youtube: (
+    <>
+      <path
+        d="M23 12s0-4.3-.6-5.7c-.4-1-1.2-1.8-2.2-2.2C18.8 3.5 12 3.5 12 3.5s-6.8 0-8.2.6c-1 .4-1.8 1.2-2.2 2.2C1 7.7 1 12 1 12s0 4.3.6 5.7c.4 1 1.2 1.8 2.2 2.2 1.4.6 8.2.6 8.2.6s6.8 0 8.2-.6c1-.4 1.8-1.2 2.2-2.2.6-1.4.6-5.7.6-5.7Z"
+        fill="currentColor"
+      />
+      <polygon points="10 8.5 16 12 10 15.5" fill="#ffffff" />
+    </>
+  ),
+};
+
+const DEFAULT_SOCIAL_ICON = (
+  <path
+    d="M10.4 13.6a1 1 0 0 1 1.4 0l1.6 1.6a4 4 0 1 1-5.7 5.7l-1.6-1.6a1 1 0 0 1 1.4-1.4l1.6 1.6a2 2 0 1 0 2.8-2.8l-1.6-1.6a1 1 0 0 1 0-1.5Zm2.8-2.8a1 1 0 0 1 0-1.4l1.6-1.6a4 4 0 1 1 5.7 5.7l-1.6 1.6a1 1 0 0 1-1.4-1.4l1.6-1.6a2 2 0 1 0-2.8-2.8l-1.6 1.6a1 1 0 0 1-1.5 0Z"
+    fill="currentColor"
+  />
+);
+
+function normalizeIconKey(value?: string | null) {
+  return (value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function resolveSocialIcon(icon?: string | null, label?: string | null) {
+  const raw = normalizeIconKey(icon) || normalizeIconKey(label);
+  const normalized =
+    raw === "twitter" || raw === "xcom"
+      ? "x"
+      : raw === "linkedin" || raw === "linked" || raw === "ln"
+      ? "linkedin"
+      : raw === "instagram" || raw === "ig"
+      ? "instagram"
+      : raw === "facebook" || raw === "fb"
+      ? "facebook"
+      : raw === "youtube" || raw === "yt"
+      ? "youtube"
+      : raw;
+  return SOCIAL_ICON_PATHS[normalized] ?? DEFAULT_SOCIAL_ICON;
+}
+
+function getLinkRel(target?: string | null) {
+  return target === "_blank" ? "noreferrer noopener" : undefined;
+}
+
+function mergeGlobalNavigation(primary: GlobalNavigation | null, fallback: GlobalNavigation): GlobalNavigation {
+  if (!primary) return fallback;
+  return {
+    headerLinks: primary.headerLinks.length ? primary.headerLinks : fallback.headerLinks,
+    footerColumns: primary.footerColumns.length ? primary.footerColumns : fallback.footerColumns,
+    cta: primary.cta?.label && primary.cta?.href ? primary.cta : fallback.cta,
+    socialLinks: primary.socialLinks.length ? primary.socialLinks : fallback.socialLinks,
+    legalLinks: primary.legalLinks.length ? primary.legalLinks : fallback.legalLinks,
+  };
+}
 
 export default function Layout({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [globalNav, setGlobalNav] = useState<GlobalNavigation>(fallbackNavigation);
   const logoSrc = theme === "dark" ? "/brand/colaberry-ai-logo-dark.svg" : "/brand/colaberry-ai-logo.svg";
 
   useEffect(() => {
@@ -13,6 +176,22 @@ export default function Layout({ children }: { children: ReactNode }) {
     const initial = stored === "light" || stored === "dark" ? stored : prefersDark ? "dark" : "light";
     setTheme(initial);
     document.documentElement.classList.toggle("dark", initial === "dark");
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+    fetchGlobalNavigation()
+      .then((data) => {
+        if (!isActive) return;
+        setGlobalNav(mergeGlobalNavigation(data, fallbackNavigation));
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setGlobalNav(fallbackNavigation);
+      });
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -53,48 +232,17 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
 
           <nav className="hidden items-center gap-1 text-sm lg:flex">
-            <Link
-              href="/aixcelerator"
-              className="nav-link focus-ring"
-            >
-              Platform
-            </Link>
-            <Link
-              href="/aixcelerator/agents"
-              className="nav-link focus-ring"
-            >
-              Agents
-            </Link>
-            <Link
-              href="/aixcelerator/mcp"
-              className="nav-link focus-ring"
-            >
-              MCP
-            </Link>
-            <Link
-              href="/industries"
-              className="nav-link focus-ring"
-            >
-              Industries
-            </Link>
-            <Link
-              href="/solutions"
-              className="nav-link focus-ring"
-            >
-              Solutions
-            </Link>
-            <Link
-              href="/resources"
-              className="nav-link focus-ring"
-            >
-              Resources
-            </Link>
-            <Link
-              href="/updates"
-              className="nav-link focus-ring"
-            >
-              Updates
-            </Link>
+            {globalNav.headerLinks.map((link) => (
+              <Link
+                key={`${link.label}-${link.href}`}
+                href={link.href}
+                target={link.target ?? undefined}
+                rel={getLinkRel(link.target)}
+                className="nav-link focus-ring"
+              >
+                {link.label}
+              </Link>
+            ))}
 
             <form
               className="ml-2 hidden items-center lg:flex"
@@ -142,12 +290,16 @@ export default function Layout({ children }: { children: ReactNode }) {
               {theme === "dark" ? "Dark" : "Light"}
               <ThemeIcon isDark={theme === "dark"} />
             </button>
-            <Link
-              href="/request-demo"
-              className="ml-1 inline-flex items-center justify-center rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2 text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
-            >
-              Book a demo
-            </Link>
+            {globalNav.cta ? (
+              <Link
+                href={globalNav.cta.href}
+                target={globalNav.cta.target ?? undefined}
+                rel={getLinkRel(globalNav.cta.target)}
+                className="ml-1 inline-flex items-center justify-center rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2 text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+              >
+                {globalNav.cta.label}
+              </Link>
+            ) : null}
           </nav>
 
           <details className="relative lg:hidden">
@@ -187,13 +339,11 @@ export default function Layout({ children }: { children: ReactNode }) {
                   </svg>
                 </div>
               </form>
-              <MobileLink href="/aixcelerator">Platform</MobileLink>
-              <MobileLink href="/aixcelerator/agents">Agents</MobileLink>
-              <MobileLink href="/aixcelerator/mcp">MCP</MobileLink>
-              <MobileLink href="/industries">Industries</MobileLink>
-              <MobileLink href="/solutions">Solutions</MobileLink>
-              <MobileLink href="/resources">Resources</MobileLink>
-              <MobileLink href="/updates">Updates</MobileLink>
+              {globalNav.headerLinks.map((link) => (
+                <MobileLink key={`${link.label}-${link.href}`} href={link.href} target={link.target}>
+                  {link.label}
+                </MobileLink>
+              ))}
               <button
                 type="button"
                 onClick={toggleTheme}
@@ -203,12 +353,16 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <span className="text-xs font-semibold">{theme === "dark" ? "Dark" : "Light"}</span>
               </button>
               <div className="my-2 h-px bg-slate-200 dark:bg-slate-700" />
-              <Link
-                href="/request-demo"
-                className="mt-1 block rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-3 py-2 text-center text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
-              >
-                Book a demo
-              </Link>
+              {globalNav.cta ? (
+                <Link
+                  href={globalNav.cta.href}
+                  target={globalNav.cta.target ?? undefined}
+                  rel={getLinkRel(globalNav.cta.target)}
+                  className="mt-1 block rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-3 py-2 text-center text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+                >
+                  {globalNav.cta.label}
+                </Link>
+              ) : null}
             </div>
           </details>
         </div>
@@ -235,83 +389,76 @@ export default function Layout({ children }: { children: ReactNode }) {
             <div className="mt-1 text-sm text-slate-900 dark:text-slate-100">AI consulting + delivery platform for agents and MCP.</div>
             <div className="mt-3 text-xs text-slate-800 dark:text-slate-300">© {new Date().getFullYear()} Colaberry AI</div>
           </div>
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">Product</div>
-            <div className="mt-2 grid gap-2">
-              <FooterLink href="/aixcelerator">Platform</FooterLink>
-              <FooterLink href="/aixcelerator/agents">Agents</FooterLink>
-              <FooterLink href="/aixcelerator/mcp">MCP servers</FooterLink>
-              <FooterLink href="/solutions">Solutions</FooterLink>
-              <FooterLink href="/industries">Industries</FooterLink>
+          {globalNav.footerColumns.map((column, index) => (
+            <div key={`${column.title}-${index}`}>
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">
+                {column.title}
+              </div>
+              <div className="mt-2 grid gap-2">
+                {column.links.map((link) => (
+                  <FooterLink
+                    key={`${link.label}-${link.href}`}
+                    href={link.href}
+                    target={link.target}
+                  >
+                    {link.label}
+                  </FooterLink>
+                ))}
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">Resources</div>
-            <div className="mt-2 grid gap-2">
-              <FooterLink href="/resources">Resources hub</FooterLink>
-              <FooterLink href="/resources/podcasts">Podcasts</FooterLink>
-              <FooterLink href="/resources/white-papers">White papers</FooterLink>
-              <FooterLink href="/updates">News & product</FooterLink>
-            </div>
-          </div>
+          ))}
           <div className="sm:justify-self-end">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100 sm:text-right">
               Follow
             </div>
             <div className="mt-3 flex items-center gap-3 sm:justify-end">
-              <SocialIcon href="https://www.linkedin.com/company/colaberry" label="LinkedIn">
-                <path
-                  d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 1 0-4 0v7h-4V9h4v2.2A4.5 4.5 0 0 1 16 8Z"
-                  fill="currentColor"
+              {globalNav.socialLinks.map((link) => (
+                <SocialIcon
+                  key={`${link.label}-${link.href}`}
+                  href={link.href}
+                  label={link.label}
+                  icon={link.icon}
+                  target={link.target}
                 />
-                <rect x="2" y="9" width="4" height="12" fill="currentColor" />
-                <circle cx="4" cy="4" r="2" fill="currentColor" />
-              </SocialIcon>
-              <SocialIcon
-                href="https://www.instagram.com/colaberryinc/"
-                label="Instagram"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="1.6" />
-                <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.6" />
-                <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" />
-              </SocialIcon>
-              <SocialIcon href="https://x.com/colaberryinc?lang=en" label="X">
-                <path
-                  d="M4 4h4.6l4 5.6L16.9 4H21l-6.6 8.6L21 20h-4.7l-4.2-5.9L7.3 20H3l7-8.9L4 4Z"
-                  fill="currentColor"
-                />
-              </SocialIcon>
-              <SocialIcon
-                href="https://www.facebook.com/colaberryschoolofdataanalytics/"
-                label="Facebook"
-              >
-                <path
-                  d="M14.5 8.5h3V5h-3c-2.5 0-4.5 2-4.5 4.5V12H7v3h3v6h3.5v-6h3l.5-3h-3.5V9.5c0-.6.4-1 1-1Z"
-                  fill="currentColor"
-                />
-              </SocialIcon>
-              <SocialIcon
-                href="https://www.youtube.com/channel/UCb23caPCK7xW8roOkr_iKRA"
-                label="YouTube"
-              >
-                <path
-                  d="M23 12s0-4.3-.6-5.7c-.4-1-1.2-1.8-2.2-2.2C18.8 3.5 12 3.5 12 3.5s-6.8 0-8.2.6c-1 .4-1.8 1.2-2.2 2.2C1 7.7 1 12 1 12s0 4.3.6 5.7c.4 1 1.2 1.8 2.2 2.2 1.4.6 8.2.6 8.2.6s6.8 0 8.2-.6c1-.4 1.8-1.2 2.2-2.2.6-1.4.6-5.7.6-5.7Z"
-                  fill="currentColor"
-                />
-                <polygon points="10 8.5 16 12 10 15.5" fill="#ffffff" />
-              </SocialIcon>
+              ))}
             </div>
           </div>
         </div>
+        {globalNav.legalLinks.length > 0 ? (
+          <div className="border-t border-slate-200/60 px-4 py-4 text-xs text-slate-600 dark:border-slate-800/60 dark:text-slate-300 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center gap-4">
+              {globalNav.legalLinks.map((link) => (
+                <FooterLink
+                  key={`${link.label}-${link.href}`}
+                  href={link.href}
+                  target={link.target}
+                  className="text-xs font-medium"
+                >
+                  {link.label}
+                </FooterLink>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </footer>
     </div>
   );
 }
 
-function MobileLink({ href, children }: { href: string; children: ReactNode }) {
+function MobileLink({
+  href,
+  target,
+  children,
+}: {
+  href: string;
+  target?: string | null;
+  children: ReactNode;
+}) {
   return (
     <Link
       href={href}
+      target={target ?? undefined}
+      rel={getLinkRel(target)}
       className="focus-ring block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/70"
     >
       {children}
@@ -319,11 +466,26 @@ function MobileLink({ href, children }: { href: string; children: ReactNode }) {
   );
 }
 
-function FooterLink({ href, children }: { href: string; children: ReactNode }) {
+function FooterLink({
+  href,
+  target,
+  className,
+  children,
+}: {
+  href: string;
+  target?: string | null;
+  className?: string;
+  children: ReactNode;
+}) {
+  const classes = ["footer-link", "focus-ring", "hover:underline", "underline-offset-4", className ?? "font-semibold"]
+    .filter(Boolean)
+    .join(" ");
   return (
     <Link
       href={href}
-      className="footer-link focus-ring font-semibold hover:underline underline-offset-4"
+      target={target ?? undefined}
+      rel={getLinkRel(target)}
+      className={classes}
     >
       {children}
     </Link>
@@ -351,22 +513,26 @@ function ThemeIcon({ isDark }: { isDark: boolean }) {
 function SocialIcon({
   href,
   label,
-  children,
+  icon,
+  target,
 }: {
   href: string;
   label: string;
-  children: ReactNode;
+  icon?: string | null;
+  target?: string | null;
 }) {
+  const iconMarkup = resolveSocialIcon(icon, label);
+  const linkTarget = target ?? "_blank";
   return (
     <a
       href={href}
-      target="_blank"
-      rel="noreferrer"
+      target={linkTarget}
+      rel={getLinkRel(linkTarget)}
       className="social-button focus-ring inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200/70 bg-white/80 text-slate-500 transition hover:border-brand-blue/40 hover:text-brand-blue hover:shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-brand-teal/50 dark:hover:text-white"
       aria-label={label}
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-        {children}
+        {iconMarkup}
       </svg>
       <span className="sr-only">{label}</span>
     </a>

@@ -17,6 +17,28 @@ export type PlatformLink = {
   url?: string | null;
 };
 
+export type GlobalNavLink = {
+  label: string;
+  href: string;
+  target?: string | null;
+  icon?: string | null;
+  order?: number | null;
+  group?: string | null;
+};
+
+export type GlobalNavColumn = {
+  title: string;
+  links: GlobalNavLink[];
+};
+
+export type GlobalNavigation = {
+  headerLinks: GlobalNavLink[];
+  footerColumns: GlobalNavColumn[];
+  cta?: GlobalNavLink | null;
+  socialLinks: GlobalNavLink[];
+  legalLinks: GlobalNavLink[];
+};
+
 export type PodcastEpisode = {
   id: number;
   title: string;
@@ -80,6 +102,101 @@ export type MCPServer = {
   coverImageUrl?: string | null;
   coverImageAlt?: string | null;
 };
+
+function mapNavLink(item: any): GlobalNavLink {
+  const attrs = item?.attributes ?? item;
+  const rawOrder = attrs?.order;
+  const parsedOrder = typeof rawOrder === "number" ? rawOrder : rawOrder ? Number(rawOrder) : null;
+  const order = Number.isFinite(parsedOrder) ? parsedOrder : null;
+
+  return {
+    label: attrs?.label ?? "",
+    href: attrs?.href ?? "",
+    target: attrs?.target ?? null,
+    icon: attrs?.icon ?? null,
+    order,
+    group: attrs?.group ?? null,
+  };
+}
+
+function sortNavLinks(links: GlobalNavLink[]) {
+  return links
+    .map((link, index) => ({ link, index }))
+    .sort((a, b) => {
+      const aOrder = typeof a.link.order === "number" ? a.link.order : null;
+      const bOrder = typeof b.link.order === "number" ? b.link.order : null;
+      if (aOrder !== null && bOrder !== null) {
+        return aOrder - bOrder || a.index - b.index;
+      }
+      if (aOrder !== null) return -1;
+      if (bOrder !== null) return 1;
+      return a.index - b.index;
+    })
+    .map(({ link }) => link);
+}
+
+function normalizeNavLinks(items: any): GlobalNavLink[] {
+  const data = Array.isArray(items?.data) ? items.data : items;
+  if (!Array.isArray(data)) return [];
+  const links = data.map(mapNavLink).filter((link) => link.label && link.href);
+  return sortNavLinks(links);
+}
+
+function normalizeCta(item: any): GlobalNavLink | null {
+  if (!item) return null;
+  const raw = Array.isArray(item?.data) ? item.data[0] : item?.data ?? item;
+  const link = mapNavLink(raw);
+  if (!link.label || !link.href) return null;
+  return link;
+}
+
+function normalizeFooterColumns(items: any): GlobalNavColumn[] {
+  const data = Array.isArray(items?.data) ? items.data : items;
+  if (!Array.isArray(data)) return [];
+
+  const hasNestedLinks = data.some((entry) => {
+    const attrs = entry?.attributes ?? entry;
+    return Array.isArray(attrs?.links) || Array.isArray(attrs?.links?.data);
+  });
+
+  if (hasNestedLinks) {
+    return data
+      .map((entry) => {
+        const attrs = entry?.attributes ?? entry;
+        const title = attrs?.title ?? attrs?.label ?? attrs?.group ?? "";
+        const links = normalizeNavLinks(attrs?.links ?? []);
+        return { title, links };
+      })
+      .filter((column) => column.title || column.links.length > 0);
+  }
+
+  const links = normalizeNavLinks(data);
+  const grouped = new Map<string, GlobalNavLink[]>();
+  links.forEach((link) => {
+    const key = link.group ?? "Links";
+    const bucket = grouped.get(key) ?? [];
+    bucket.push(link);
+    grouped.set(key, bucket);
+  });
+
+  return Array.from(grouped.entries()).map(([title, groupLinks]) => ({
+    title,
+    links: sortNavLinks(groupLinks),
+  }));
+}
+
+function normalizeGlobalNavigation(payload: any): GlobalNavigation | null {
+  const attrs = payload?.data?.attributes ?? payload?.attributes ?? payload?.data ?? payload;
+  if (!attrs) return null;
+
+  return {
+    headerLinks: normalizeNavLinks(attrs?.headerLinks ?? []),
+    footerColumns: normalizeFooterColumns(attrs?.footerColumns ?? []),
+    cta: normalizeCta(attrs?.cta ?? null),
+    socialLinks: normalizeNavLinks(attrs?.socialLinks ?? []),
+    legalLinks: normalizeNavLinks(attrs?.legalLinks ?? []),
+  };
+}
 
 function mapTag(item: any): Tag {
   const attrs = item?.attributes ?? item;
@@ -228,6 +345,28 @@ export async function fetchPodcastEpisodes() {
 
   const json = await res.json();
   return json?.data?.map(mapEpisode) || [];
+}
+
+export async function fetchGlobalNavigation(): Promise<GlobalNavigation | null> {
+  if (!CMS_URL) return null;
+  const res = await fetch(
+    `${CMS_URL}/api/global-navigation` +
+      `?publicationState=live` +
+      `&populate[headerLinks]=*` +
+      `&populate[footerColumns]=*` +
+      `&populate[footerColumns][populate][links]=*` +
+      `&populate[cta]=*` +
+      `&populate[socialLinks]=*` +
+      `&populate[legalLinks]=*`,
+    { cache: "no-store" }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch global navigation");
+  }
+
+  const json = await res.json();
+  return normalizeGlobalNavigation(json);
 }
 
 export async function fetchPodcastBySlug(slug: string) {
