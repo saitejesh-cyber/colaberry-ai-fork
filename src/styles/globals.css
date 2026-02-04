@@ -158,6 +158,78 @@ body > * {
   color: #f8fafc;
 }
 
+.badge-external {
+  border: 1px solid rgba(125, 211, 252, 0.7);
+  background: rgba(224, 242, 254, 0.9);
+  color: #0c4a6e;
+}
+
+.badge-verified {
+  border: 1px solid rgba(134, 239, 172, 0.9);
+  background: rgba(220, 252, 231, 0.95);
+  color: #065f46;
+}
+
+.badge-public {
+  border: 1px solid rgba(110, 231, 183, 0.9);
+  background: rgba(209, 250, 229, 0.95);
+  color: #065f46;
+}
+
+.badge-live {
+  border: 1px solid rgba(110, 231, 183, 0.9);
+  background: rgba(209, 250, 229, 0.95);
+  color: #065f46;
+}
+
+.badge-beta {
+  border: 1px solid rgba(253, 186, 116, 0.9);
+  background: rgba(255, 237, 213, 0.95);
+  color: #9a3412;
+}
+
+.badge-private {
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  background: rgba(248, 250, 252, 0.95);
+  color: #0f172a;
+}
+
+.dark .badge-external {
+  border-color: rgba(56, 189, 248, 0.6);
+  background: rgba(14, 116, 144, 0.25);
+  color: #e0f2fe;
+}
+
+.dark .badge-verified {
+  border-color: rgba(74, 222, 128, 0.55);
+  background: rgba(16, 185, 129, 0.2);
+  color: #ecfdf5;
+}
+
+.dark .badge-public {
+  border-color: rgba(52, 211, 153, 0.6);
+  background: rgba(16, 185, 129, 0.22);
+  color: #ecfdf5;
+}
+
+.dark .badge-live {
+  border-color: rgba(52, 211, 153, 0.6);
+  background: rgba(16, 185, 129, 0.22);
+  color: #ecfdf5;
+}
+
+.dark .badge-beta {
+  border-color: rgba(251, 146, 60, 0.6);
+  background: rgba(234, 88, 12, 0.18);
+  color: #ffedd5;
+}
+
+.dark .badge-private {
+  border-color: rgba(148, 163, 184, 0.55);
+  background: rgba(30, 41, 59, 0.65);
+  color: #e2e8f0;
+}
+
 .social-button {
   border-color: rgba(148, 163, 184, 0.35);
   background: rgba(248, 250, 252, 0.85);

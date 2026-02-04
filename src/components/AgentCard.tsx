@@ -18,10 +18,10 @@ export default function AgentCard({ agent }: { agent: Agent }) {
   const statusKey = agent.status?.toLowerCase();
   const statusTone =
     statusKey === "active" || statusKey === "live"
-      ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+      ? "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:ring-emerald-500/40"
       : statusKey === "beta"
-        ? "bg-amber-50 text-amber-700 ring-amber-200"
-        : "bg-slate-50 text-slate-700 ring-slate-200";
+        ? "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:ring-amber-500/40"
+        : "bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-800/70 dark:text-slate-100 dark:ring-slate-600/70";
   const statusLabel = agent.status
     ? agent.status.charAt(0).toUpperCase() + agent.status.slice(1)
     : "Unknown";
