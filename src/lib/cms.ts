@@ -353,7 +353,6 @@ export async function fetchGlobalNavigation(): Promise<GlobalNavigation | null> 
     `${CMS_URL}/api/global-navigation` +
       `?publicationState=live` +
       `&populate[headerLinks]=*` +
-      `&populate[footerColumns]=*` +
       `&populate[footerColumns][populate][links]=*` +
       `&populate[cta]=*` +
       `&populate[socialLinks]=*` +
