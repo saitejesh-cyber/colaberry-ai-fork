@@ -24,6 +24,7 @@ export type GlobalNavLink = {
   icon?: string | null;
   order?: number | null;
   group?: string | null;
+  children?: GlobalNavLink[];
 };
 
 export type GlobalNavColumn = {
@@ -108,6 +109,7 @@ function mapNavLink(item: any): GlobalNavLink {
   const rawOrder = attrs?.order;
   const parsedOrder = typeof rawOrder === "number" ? rawOrder : rawOrder ? Number(rawOrder) : null;
   const order = Number.isFinite(parsedOrder) ? parsedOrder : null;
+  const children = normalizeNavLinks(attrs?.children ?? []);
 
   return {
     label: attrs?.label ?? "",
@@ -116,6 +118,7 @@ function mapNavLink(item: any): GlobalNavLink {
     icon: attrs?.icon ?? null,
     order,
     group: attrs?.group ?? null,
+    children,
   };
 }
 
@@ -352,8 +355,8 @@ export async function fetchGlobalNavigation(): Promise<GlobalNavigation | null> 
   const res = await fetch(
     `${CMS_URL}/api/global-navigation` +
       `?publicationState=live` +
-      `&populate[headerLinks]=*` +
-      `&populate[footerColumns][populate][links]=*` +
+      `&populate[headerLinks][populate][children]=*` +
+      `&populate[footerColumns][populate][links][populate][children]=*` +
       `&populate[cta]=*` +
       `&populate[socialLinks]=*` +
       `&populate[legalLinks]=*`,

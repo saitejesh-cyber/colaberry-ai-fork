@@ -232,17 +232,57 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
 
           <nav className="hidden items-center gap-1 text-sm lg:flex">
-            {globalNav.headerLinks.map((link) => (
-              <Link
-                key={`${link.label}-${link.href}`}
-                href={link.href}
-                target={link.target ?? undefined}
-                rel={getLinkRel(link.target)}
-                className="nav-link focus-ring"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {globalNav.headerLinks.map((link) => {
+              const hasChildren = !!link.children?.length;
+              return (
+                <div key={`${link.label}-${link.href}`} className="relative group">
+                  <Link
+                    href={link.href}
+                    target={link.target ?? undefined}
+                    rel={getLinkRel(link.target)}
+                    className="nav-link focus-ring inline-flex items-center gap-1"
+                    aria-haspopup={hasChildren ? "menu" : undefined}
+                  >
+                    {link.label}
+                    {hasChildren ? (
+                      <svg
+                        viewBox="0 0 20 20"
+                        aria-hidden="true"
+                        className="h-4 w-4 text-slate-400 group-hover:text-brand-ink"
+                        fill="currentColor"
+                      >
+                        <path
+                          d="M5.5 7.5 10 12l4.5-4.5"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                        />
+                      </svg>
+                    ) : null}
+                  </Link>
+                  {hasChildren ? (
+                    <div className="invisible absolute left-0 top-full z-40 mt-2 min-w-[12rem] rounded-2xl border border-slate-200/70 bg-white/95 p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 dark:border-slate-700 dark:bg-slate-900/95">
+                      <div className="grid gap-1">
+                        {link.children?.map((child) => (
+                          <Link
+                            key={`${child.label}-${child.href}`}
+                            href={child.href}
+                            target={child.target ?? undefined}
+                            rel={getLinkRel(child.target)}
+                            className="focus-ring rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/70"
+                            role="menuitem"
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
 
             <form
               className="ml-2 hidden items-center lg:flex"
@@ -339,11 +379,30 @@ export default function Layout({ children }: { children: ReactNode }) {
                   </svg>
                 </div>
               </form>
-              {globalNav.headerLinks.map((link) => (
-                <MobileLink key={`${link.label}-${link.href}`} href={link.href} target={link.target}>
-                  {link.label}
-                </MobileLink>
-              ))}
+              {globalNav.headerLinks.map((link) => {
+                const hasChildren = !!link.children?.length;
+                return (
+                  <div key={`${link.label}-${link.href}`}>
+                    <MobileLink href={link.href} target={link.target}>
+                      {link.label}
+                    </MobileLink>
+                    {hasChildren ? (
+                      <div className="ml-3 grid gap-1">
+                        {link.children?.map((child) => (
+                          <MobileLink
+                            key={`${child.label}-${child.href}`}
+                            href={child.href}
+                            target={child.target}
+                            className="text-xs text-slate-600 dark:text-slate-300"
+                          >
+                            {child.label}
+                          </MobileLink>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
               <button
                 type="button"
                 onClick={toggleTheme}
@@ -396,13 +455,25 @@ export default function Layout({ children }: { children: ReactNode }) {
               </div>
               <div className="mt-2 grid gap-2">
                 {column.links.map((link) => (
-                  <FooterLink
-                    key={`${link.label}-${link.href}`}
-                    href={link.href}
-                    target={link.target}
-                  >
-                    {link.label}
-                  </FooterLink>
+                  <div key={`${link.label}-${link.href}`}>
+                    <FooterLink href={link.href} target={link.target}>
+                      {link.label}
+                    </FooterLink>
+                    {link.children?.length ? (
+                      <div className="ml-3 mt-1 grid gap-1">
+                        {link.children.map((child) => (
+                          <FooterLink
+                            key={`${child.label}-${child.href}`}
+                            href={child.href}
+                            target={child.target}
+                            className="text-xs font-medium"
+                          >
+                            {child.label}
+                          </FooterLink>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 ))}
               </div>
             </div>
@@ -448,18 +519,35 @@ export default function Layout({ children }: { children: ReactNode }) {
 function MobileLink({
   href,
   target,
+  className,
   children,
 }: {
   href: string;
   target?: string | null;
+  className?: string;
   children: ReactNode;
 }) {
+  const classes = [
+    "focus-ring",
+    "block",
+    "rounded-lg",
+    "px-3",
+    "py-2",
+    "text-sm",
+    "text-slate-700",
+    "hover:bg-slate-50",
+    "dark:text-slate-200",
+    "dark:hover:bg-slate-800/70",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
   return (
     <Link
       href={href}
       target={target ?? undefined}
       rel={getLinkRel(target)}
-      className="focus-ring block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/70"
+      className={classes}
     >
       {children}
     </Link>
