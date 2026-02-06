@@ -424,7 +424,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 href={globalNav.cta.href}
                 target={globalNav.cta.target ?? undefined}
                 rel={getLinkRel(globalNav.cta.target)}
-                className="ml-1 inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2 text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+                className="ml-1 inline-flex h-9 items-center justify-center gap-2 rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
                   <path
@@ -513,7 +513,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     href={globalNav.cta.href}
                     target={globalNav.cta.target ?? undefined}
                     rel={getLinkRel(globalNav.cta.target)}
-                    className="mt-1 flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-3 py-2 text-center text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+                    className="mt-1 flex h-9 w-full items-center justify-center gap-2 rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-3 text-center text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
                   >
                     <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
                       <path
@@ -625,7 +625,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </footer>
       {searchOpen ? (
         <div
-          className="fixed inset-0 z-[60] flex items-start justify-center bg-slate-950/40 px-4 py-10 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-950/40 px-4 py-6 backdrop-blur-sm"
           onClick={closeSearch}
         >
           <div
