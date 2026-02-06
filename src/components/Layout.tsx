@@ -336,6 +336,14 @@ export default function Layout({ children }: { children: ReactNode }) {
           <nav className="hidden items-center gap-1 text-sm lg:flex">
             {globalNav.headerLinks.map((link) => {
               const hasChildren = !!link.children?.length;
+              const dropdownSurfaceClass =
+                theme === "dark"
+                  ? "border-slate-700 bg-slate-950 text-slate-100"
+                  : "border-slate-200/80 bg-white text-slate-900";
+              const dropdownItemClass =
+                theme === "dark"
+                  ? "text-slate-100 hover:bg-slate-800 hover:text-white"
+                  : "text-slate-900 hover:bg-slate-100 hover:text-slate-900";
               return (
                 <div key={`${link.label}-${link.href}`} className="relative group">
                   <Link
@@ -365,20 +373,24 @@ export default function Layout({ children }: { children: ReactNode }) {
                     ) : null}
                   </Link>
                   {hasChildren ? (
-                    <div className="absolute left-0 top-full z-50 mt-2 min-w-[12rem] translate-y-2 rounded-xl border border-slate-200/70 bg-white/95 p-2 opacity-0 shadow-xl transition duration-150 group-hover:translate-y-0 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 group-focus-within:pointer-events-auto dark:border-slate-700 dark:bg-slate-900/95 pointer-events-none">
-                      <div className="grid gap-1">
-                        {link.children?.map((child) => (
-                          <Link
-                            key={`${child.label}-${child.href}`}
-                            href={child.href}
-                            target={child.target ?? undefined}
-                            rel={getLinkRel(child.target)}
-                            className="focus-ring rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/70"
-                            role="menuitem"
-                          >
-                            {child.label}
-                          </Link>
-                        ))}
+                    <div className="absolute left-0 top-full z-50 pt-2 opacity-0 transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto pointer-events-none">
+                      <div
+                        className={`min-w-[12rem] translate-y-1 rounded-xl border p-2 shadow-xl transition duration-150 group-hover:translate-y-0 group-focus-within:translate-y-0 ${dropdownSurfaceClass}`}
+                      >
+                        <div className="grid gap-1">
+                          {link.children?.map((child) => (
+                            <Link
+                              key={`${child.label}-${child.href}`}
+                              href={child.href}
+                              target={child.target ?? undefined}
+                              rel={getLinkRel(child.target)}
+                              className={`focus-ring rounded-lg px-3 py-2 text-sm font-medium ${dropdownItemClass}`}
+                              role="menuitem"
+                            >
+                              {child.label}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ) : null}
