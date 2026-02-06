@@ -505,18 +505,18 @@ h6 {
 }
 
 .nav-link {
-  border-radius: 999px;
-  padding: 0.5rem 0.9rem;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.45rem 0.5rem;
   font-weight: 600;
   color: #0f172a;
-  transition: background-color 160ms ease, color 160ms ease;
+  transition: color 160ms ease, border-color 160ms ease;
 }
 
 .nav-link:hover,
 .nav-link:focus-visible {
-  background-color: rgba(15, 23, 42, 0.06);
   color: #0f172a;
-  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12);
+  border-color: #1d4ed8;
 }
 
 .dark .nav-link {
@@ -525,9 +525,8 @@ h6 {
 
 .dark .nav-link:hover,
 .dark .nav-link:focus-visible {
-  background-color: rgba(248, 250, 252, 0.14);
   color: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(248, 250, 252, 0.35);
+  border-color: #7dd3fc;
 }
 
 footer .footer-link {

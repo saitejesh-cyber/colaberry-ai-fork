@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { fetchGlobalNavigation, GlobalNavigation } from "../lib/cms";
 
 const fallbackNavigation: GlobalNavigation = {
@@ -232,6 +232,9 @@ function mergeGlobalNavigation(primary: GlobalNavigation | null, fallback: Globa
 export default function Layout({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [globalNav, setGlobalNav] = useState<GlobalNavigation>(fallbackNavigation);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [discoveryOpen, setDiscoveryOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const logoSrc = theme === "dark" ? "/brand/colaberry-ai-logo-dark.svg" : "/brand/colaberry-ai-logo.svg";
 
   useEffect(() => {
@@ -258,11 +261,46 @@ export default function Layout({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!searchOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSearchOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    const focusTimer = window.setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 0);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+      window.clearTimeout(focusTimer);
+    };
+  }, [searchOpen]);
+
+  useEffect(() => {
+    const dismissed = window.localStorage.getItem("colaberry_discovery_prompt_dismissed");
+    if (dismissed) return;
+    const timer = window.setTimeout(() => {
+      setDiscoveryOpen(true);
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
     document.documentElement.classList.toggle("dark", next === "dark");
     window.localStorage.setItem("theme", next);
+  };
+  const openSearch = () => setSearchOpen(true);
+  const closeSearch = () => setSearchOpen(false);
+  const dismissDiscovery = () => {
+    setDiscoveryOpen(false);
+    window.localStorage.setItem("colaberry_discovery_prompt_dismissed", "true");
   };
 
   return (
@@ -327,7 +365,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     ) : null}
                   </Link>
                   {hasChildren ? (
-                    <div className="invisible absolute left-0 top-full z-40 mt-2 min-w-[12rem] rounded-2xl border border-slate-200/70 bg-white/95 p-2 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 dark:border-slate-700 dark:bg-slate-900/95">
+                    <div className="absolute left-0 top-full z-50 mt-2 min-w-[12rem] translate-y-2 rounded-xl border border-slate-200/70 bg-white/95 p-2 opacity-0 shadow-xl transition duration-150 group-hover:translate-y-0 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 group-focus-within:pointer-events-auto dark:border-slate-700 dark:bg-slate-900/95 pointer-events-none">
                       <div className="grid gap-1">
                         {link.children?.map((child) => (
                           <Link
@@ -348,48 +386,37 @@ export default function Layout({ children }: { children: ReactNode }) {
               );
             })}
 
-            <form className="ml-2 hidden items-center lg:flex" action="/search" method="get" role="search">
-              <label htmlFor="site-search" className="sr-only">
-                Search
-              </label>
-              <div className="relative group">
-                <input
-                  id="site-search"
-                  name="q"
-                  type="search"
-                  placeholder="Search what you need:"
-                  className="w-64 rounded-full border border-slate-300 bg-white/90 px-4 py-2 pr-12 text-sm text-slate-900 placeholder:text-slate-500 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
+            <button
+              type="button"
+              onClick={openSearch}
+              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/70 bg-white/90 text-slate-600 transition hover:border-brand-blue/40 hover:text-brand-blue dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:text-white"
+              aria-label="Open global search"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                <path
+                  d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
                 />
-                <button
-                  type="submit"
-                  aria-label="Run search"
-                  className="focus-ring pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-brand-teal opacity-0 transition group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
-                >
-                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
-                    <path
-                      d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M16.25 16.25 21 21"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </form>
+                <path
+                  d="M16.25 16.25 21 21"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
 
             <span className="mx-2 h-5 w-px bg-slate-200 dark:bg-slate-700" />
             <button
               type="button"
               onClick={toggleTheme}
-              className="focus-ring inline-flex items-center gap-2 rounded-full border border-slate-400 bg-white px-3 py-2 text-xs font-semibold text-slate-900 hover:bg-slate-100/90 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800/70"
-              aria-label="Toggle light and dark mode"
+              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-400 bg-white text-slate-900 hover:bg-slate-100/90 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800/70"
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {theme === "dark" ? "Dark" : "Light"}
+              <span className="sr-only">
+                {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              </span>
               <ThemeIcon isDark={theme === "dark"} />
             </button>
             {globalNav.cta ? (
@@ -397,96 +424,117 @@ export default function Layout({ children }: { children: ReactNode }) {
                 href={globalNav.cta.href}
                 target={globalNav.cta.target ?? undefined}
                 rel={getLinkRel(globalNav.cta.target)}
-                className="ml-1 inline-flex items-center justify-center rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2 text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+                className="ml-1 inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2 text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
               >
-                {globalNav.cta.label}
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
+                  <path
+                    d="M7 3v2M17 3v2M4 8h16M6 6h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M8.5 12.5h3M8.5 16h6.5"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span>{globalNav.cta.label}</span>
               </Link>
             ) : null}
           </nav>
 
-          <details className="relative lg:hidden">
-            <summary className="focus-ring list-none rounded-full border border-slate-200/60 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800/70">
-              Menu
-            </summary>
-            <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-slate-200/60 bg-white/90 p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900/90">
-              <form className="px-1 pb-2" action="/search" method="get" role="search">
-                <label htmlFor="site-search-mobile" className="sr-only">
-                  Search
-                </label>
-                <div className="relative group">
-                  <input
-                    id="site-search-mobile"
-                    name="q"
-                    type="search"
-                    placeholder="Search what you need:"
-                    className="w-full rounded-full border border-slate-200/60 bg-white px-3 py-2 pr-11 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
-                  />
-                  <button
-                    type="submit"
-                    aria-label="Run search"
-                    className="focus-ring pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-brand-teal opacity-0 transition group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
+          <div className="flex items-center gap-2 lg:hidden">
+            <button
+              type="button"
+              onClick={openSearch}
+              className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/70 bg-white/90 text-slate-600 transition hover:border-brand-blue/40 hover:text-brand-blue dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:text-white"
+              aria-label="Open global search"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                <path
+                  d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M16.25 16.25 21 21"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+
+            <details className="relative lg:hidden">
+              <summary className="focus-ring list-none rounded-full border border-slate-200/60 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800/70">
+                Menu
+              </summary>
+              <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-slate-200/60 bg-white/90 p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900/90">
+                {globalNav.headerLinks.map((link) => {
+                  const hasChildren = !!link.children?.length;
+                  return (
+                    <div key={`${link.label}-${link.href}`}>
+                      <MobileLink href={link.href} target={link.target}>
+                        {link.label}
+                      </MobileLink>
+                      {hasChildren ? (
+                        <div className="ml-3 grid gap-1">
+                          {link.children?.map((child) => (
+                            <MobileLink
+                              key={`${child.label}-${child.href}`}
+                              href={child.href}
+                              target={child.target}
+                              className="text-xs text-slate-600 dark:text-slate-300"
+                            >
+                              {child.label}
+                            </MobileLink>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="focus-ring mt-2 flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/70"
+                  aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                >
+                  <span className="sr-only">
+                    {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                  </span>
+                  <ThemeIcon isDark={theme === "dark"} />
+                </button>
+                <div className="my-2 h-px bg-slate-200 dark:bg-slate-700" />
+                {globalNav.cta ? (
+                  <Link
+                    href={globalNav.cta.href}
+                    target={globalNav.cta.target ?? undefined}
+                    rel={getLinkRel(globalNav.cta.target)}
+                    className="mt-1 flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-3 py-2 text-center text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
                   >
-                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
                       <path
-                        d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                        d="M7 3v2M17 3v2M4 8h16M6 6h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
                         stroke="currentColor"
-                        strokeWidth="2"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
                       />
                       <path
-                        d="M16.25 16.25 21 21"
+                        d="M8.5 12.5h3M8.5 16h6.5"
                         stroke="currentColor"
-                        strokeWidth="2"
+                        strokeWidth="1.6"
                         strokeLinecap="round"
                       />
                     </svg>
-                  </button>
-                </div>
-              </form>
-              {globalNav.headerLinks.map((link) => {
-                const hasChildren = !!link.children?.length;
-                return (
-                  <div key={`${link.label}-${link.href}`}>
-                    <MobileLink href={link.href} target={link.target}>
-                      {link.label}
-                    </MobileLink>
-                    {hasChildren ? (
-                      <div className="ml-3 grid gap-1">
-                        {link.children?.map((child) => (
-                          <MobileLink
-                            key={`${child.label}-${child.href}`}
-                            href={child.href}
-                            target={child.target}
-                            className="text-xs text-slate-600 dark:text-slate-300"
-                          >
-                            {child.label}
-                          </MobileLink>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="focus-ring mt-2 flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/70"
-              >
-                <span>Theme</span>
-                <span className="text-xs font-semibold">{theme === "dark" ? "Dark" : "Light"}</span>
-              </button>
-              <div className="my-2 h-px bg-slate-200 dark:bg-slate-700" />
-              {globalNav.cta ? (
-                <Link
-                  href={globalNav.cta.href}
-                  target={globalNav.cta.target ?? undefined}
-                  rel={getLinkRel(globalNav.cta.target)}
-                  className="mt-1 block rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-3 py-2 text-center text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
-                >
-                  {globalNav.cta.label}
-                </Link>
-              ) : null}
-            </div>
-          </details>
+                    <span>{globalNav.cta.label}</span>
+                  </Link>
+                ) : null}
+              </div>
+            </details>
+          </div>
         </div>
       </header>
 
@@ -575,6 +623,152 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         ) : null}
       </footer>
+      {searchOpen ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-start justify-center bg-slate-950/40 px-4 py-10 backdrop-blur-sm"
+          onClick={closeSearch}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="global-search-title"
+            className="w-full max-w-2xl rounded-3xl border border-slate-200/70 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-950"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  Global search
+                </div>
+                <h2 id="global-search-title" className="mt-1 text-2xl font-semibold text-slate-900 dark:text-white">
+                  Search the Colaberry catalog
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={closeSearch}
+                className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/70 bg-white text-slate-600 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+                aria-label="Close search"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                  <path
+                    d="M6 6 18 18M18 6 6 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <form action="/search" method="get" role="search" className="mt-5">
+              <label htmlFor="global-search-input" className="sr-only">
+                Search
+              </label>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="relative flex-1">
+                  <input
+                    ref={searchInputRef}
+                    id="global-search-input"
+                    name="q"
+                    type="search"
+                    placeholder="Search agents, MCP servers, resources, updates..."
+                    className="w-full rounded-full border border-slate-200 bg-white px-4 py-3 pr-12 text-sm text-slate-900 placeholder:text-slate-500 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                      <path
+                        d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                      <path
+                        d="M16.25 16.25 21 21"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {[
+                { label: "Agents catalog", href: "/aixcelerator/agents" },
+                { label: "MCP servers", href: "/aixcelerator/mcp" },
+                { label: "Solutions overview", href: "/solutions" },
+                { label: "Resources hub", href: "/resources" },
+                { label: "Industry playbooks", href: "/industries" },
+                { label: "News & updates", href: "/updates" },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="focus-ring rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:border-brand-blue/30 hover:text-brand-blue dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {discoveryOpen ? (
+        <div className="fixed bottom-4 left-4 right-4 z-40 sm:left-auto sm:right-6">
+          <div className="surface-panel border border-slate-200/70 bg-white/95 p-4 shadow-xl dark:border-slate-700 dark:bg-slate-950/90">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  Quick start
+                </div>
+                <div className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
+                  Explore the enterprise catalog
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={dismissDiscovery}
+                className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200/70 bg-white text-slate-500 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+                aria-label="Dismiss"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
+                  <path
+                    d="M6 6 18 18M18 6 6 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              Jump straight into the catalog or explore validated MCP infrastructure and resources.
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {[
+                { label: "Agents catalog", href: "/aixcelerator/agents" },
+                { label: "MCP servers", href: "/aixcelerator/mcp" },
+                { label: "Resources hub", href: "/resources" },
+                { label: "Industry playbooks", href: "/industries" },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="focus-ring rounded-xl border border-slate-200/70 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-brand-blue/30 hover:text-brand-blue dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
