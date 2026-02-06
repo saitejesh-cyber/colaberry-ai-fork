@@ -68,8 +68,9 @@ export default function PodcastTagPage({ tag, episodes }: { tag: string; episode
             <Link
               href={`/resources/podcasts/${e.slug}`}
               className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-deep hover:text-brand-blue"
+              aria-label={`View episode ${e.title}`}
             >
-              View →
+              View <span aria-hidden="true">→</span>
             </Link>
           </li>
         ))}

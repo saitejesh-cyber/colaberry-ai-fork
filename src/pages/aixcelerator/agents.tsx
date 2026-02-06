@@ -1,10 +1,12 @@
 import AgentCard from "../../components/AgentCard";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
-import { useMemo, useState } from "react";
+import MediaPanel from "../../components/MediaPanel";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { GetServerSideProps } from "next";
 import fallbackAgents from "../../data/agents.json";
 import { Agent, fetchAgents } from "../../lib/cms";
+import { useRouter } from "next/router";
 
 type AgentsPageProps = {
   agents: Agent[];
@@ -32,14 +34,43 @@ export const getServerSideProps: GetServerSideProps<AgentsPageProps> = async () 
 };
 
 export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
+  const router = useRouter();
   const [visibility, setVisibility] = useState<"all" | "public" | "private">(
     allowPrivate ? "all" : "public"
   );
+  const agentHighlights = [
+    {
+      title: "Ownership and lifecycle",
+      description: "Track owners, approval state, and lifecycle stage for every agent.",
+    },
+    {
+      title: "Readiness signals",
+      description: "Surface evaluation status, reliability notes, and rollout readiness.",
+    },
+    {
+      title: "Visibility control",
+      description: "Segment public and private listings with governance rules.",
+    },
+    {
+      title: "Industry alignment",
+      description: "Map agents to workflows and industry workspaces.",
+    },
+  ];
+  const agentSignals = ["Owner mapped", "Eval ready", "Private-aware", "LLM metadata"];
   const [search, setSearch] = useState("");
   const [industryFilter, setIndustryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
+  const pageSize = 24;
+  const [visibleCount, setVisibleCount] = useState(pageSize);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!router.isReady) return;
+    const raw = Array.isArray(router.query.q) ? router.query.q[0] : router.query.q;
+    const nextQuery = typeof raw === "string" ? raw : "";
+    setSearch((prev) => (prev === nextQuery ? prev : nextQuery));
+  }, [router.isReady, router.query.q]);
   const industries = useMemo(
     () =>
       Array.from(new Set(agents.map((a) => a.industry || "Other"))).filter(Boolean).sort(),
@@ -90,16 +121,74 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
         matchesFilters(agent, query, industryFilter, statusFilter, sourceFilter, tagFilter)
     );
   }, [allowPrivate, agents, industryFilter, search, sourceFilter, statusFilter, tagFilter, visibility]);
+  const shownCount = Math.min(visibleCount, filteredAgents.length);
+  const visibleAgents = useMemo(
+    () => filteredAgents.slice(0, shownCount),
+    [filteredAgents, shownCount]
+  );
+  const hasMore = shownCount < filteredAgents.length;
+
+  useEffect(() => {
+    setVisibleCount(pageSize);
+  }, [search, industryFilter, statusFilter, sourceFilter, tagFilter, visibility, allowPrivate, agents.length, pageSize]);
+
+  useEffect(() => {
+    if (!hasMore) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + pageSize, filteredAgents.length));
+        }
+      },
+      { rootMargin: "300px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [filteredAgents.length, hasMore, pageSize]);
 
   return (
     <Layout>
-      <div className="flex flex-col gap-3">
-        <SectionHeader
-          as="h1"
-          size="xl"
-          kicker="Agents catalog"
-          title="AI Agents"
-          description="A governed catalog of enterprise agents and assistants-aligned to teams, workflows, and industry context, with public and private listings."
+      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+        <div className="flex flex-col gap-3">
+          <SectionHeader
+            as="h1"
+            size="xl"
+            kicker="Agents catalog"
+            title="AI Agents"
+            description="A governed catalog of enterprise agents and assistants-aligned to teams, workflows, and industry context, with public and private listings."
+          />
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {agentHighlights.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm"
+              >
+                <div className="text-sm font-semibold text-slate-900">{item.title}</div>
+                <div className="mt-1 text-xs text-slate-600">{item.description}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
+            {agentSignals.map((signal) => (
+              <span
+                key={signal}
+                className="chip rounded-full border border-slate-200/80 bg-white px-3 py-1 font-semibold"
+              >
+                {signal}
+              </span>
+            ))}
+          </div>
+        </div>
+        <MediaPanel
+          kicker="Catalog preview"
+          title="Agent coverage at a glance"
+          description="Quickly see ownership, visibility, and readiness status."
+          image="/media/hero/hero-agents.png"
+          alt="Operators reviewing agent coverage"
+          aspect="wide"
+          fit="cover"
         />
       </div>
 
@@ -137,7 +226,7 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
             <label htmlFor="agent-search" className="sr-only">
               Search agents
             </label>
-            <div className="relative">
+            <div className="relative group">
               <input
                 id="agent-search"
                 name="agent-search"
@@ -145,12 +234,12 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
                 placeholder="Search agents, industries, tags..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
+                className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2 pr-11 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
               />
               <svg
                 aria-hidden="true"
                 viewBox="0 0 24 24"
-                className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-teal"
+                className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-teal opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100"
                 fill="none"
               >
                 <path
@@ -261,15 +350,32 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
             })}
           </div>
         )}
-        <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Showing {filteredAgents.length} of {agents.length}
+        <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500" aria-live="polite">
+          Showing {shownCount} of {filteredAgents.length} (total {agents.length})
         </div>
       </section>
 
       <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredAgents.map((a, i) => (
+        {visibleAgents.map((a, i) => (
           <AgentCard key={i} agent={a} />
         ))}
+      </div>
+
+      <div className="mt-6 flex flex-col items-center gap-3">
+        {hasMore ? (
+          <button
+            type="button"
+            onClick={() => setVisibleCount((prev) => Math.min(prev + pageSize, filteredAgents.length))}
+            className="rounded-full border border-slate-200/80 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-brand-blue/40 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+          >
+            Load more agents
+          </button>
+        ) : (
+          <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            End of results
+          </div>
+        )}
+        <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
       </div>
     </Layout>
   );

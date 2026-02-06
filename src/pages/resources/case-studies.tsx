@@ -1,6 +1,7 @@
 import Layout from "../../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../../components/SectionHeader";
+import MediaPanel from "../../components/MediaPanel";
 
 export default function CaseStudiesHub() {
   const industries = [
@@ -16,13 +17,24 @@ export default function CaseStudiesHub() {
 
   return (
     <Layout>
-      <div className="flex flex-col gap-3">
-        <SectionHeader
-          as="h1"
-          size="xl"
-          kicker="Resources"
-          title="Case studies"
-          description="Browse delivery outcomes by industry. Each industry page contains detailed case studies."
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <div className="flex flex-col gap-3">
+          <SectionHeader
+            as="h1"
+            size="xl"
+            kicker="Resources"
+            title="Case studies"
+            description="Browse delivery outcomes by industry. Each industry page contains detailed case studies."
+          />
+        </div>
+        <MediaPanel
+          kicker="Impact library"
+          title="Outcome snapshots"
+          description="Cross-industry delivery proof points."
+          image="/media/visuals/panel-case-studies.svg"
+          alt="Case study outcomes illustration"
+          aspect="wide"
+          fit="contain"
         />
       </div>
 
@@ -32,6 +44,7 @@ export default function CaseStudiesHub() {
             key={item.slug}
             href={`/industries/${item.slug}`}
             className="surface-panel surface-hover surface-interactive group border-t-4 border-brand-blue/20 p-5"
+            aria-label={`View ${item.name} case studies`}
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -39,7 +52,7 @@ export default function CaseStudiesHub() {
                 <div className="mt-1 text-sm text-slate-600">View case studies and outcomes.</div>
               </div>
               <div className="mt-0.5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
-                →
+                <span aria-hidden="true">→</span>
               </div>
             </div>
           </Link>

@@ -34,7 +34,7 @@ export default function MCPCard({ mcp }: { mcp: MCP }) {
   const href = mcp.slug ? `/aixcelerator/mcp/${mcp.slug}` : "/aixcelerator/mcp";
 
   return (
-    <Link href={href} className="group block">
+    <Link href={href} className="group block" aria-label={`View MCP server ${mcp.name} details`}>
       <div className="surface-panel border-t-4 border-brand-blue/20 p-5 transition hover:-translate-y-1 hover:shadow-lg">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">

@@ -3,6 +3,7 @@ import Layout from "../../components/Layout";
 import { getIndustryCaseStudies, getIndustryDisplayName } from "../../data/caseStudies";
 import Link from "next/link";
 import SectionHeader from "../../components/SectionHeader";
+import MediaPanel from "../../components/MediaPanel";
 
 export default function Industry() {
   const { industry } = useRouter().query;
@@ -51,6 +52,16 @@ export default function Industry() {
         </div>
 
         <div className="lg:col-span-5">
+          <MediaPanel
+            kicker="Workspace preview"
+            title={`${industryName} signals`}
+            description="Domain coverage mapped to governed AI delivery."
+            image="/media/visuals/panel-industry.svg"
+            alt="Industry workspace illustration"
+            aspect="wide"
+            fit="contain"
+            className="mb-6"
+          />
           <div className="surface-panel p-6">
             <div className="text-base font-semibold text-slate-900">Workspace summary</div>
             <div className="mt-1 text-sm text-slate-600">

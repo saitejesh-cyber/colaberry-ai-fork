@@ -139,7 +139,15 @@ function sortNavLinks(links: GlobalNavLink[]) {
 }
 
 function normalizeNavLinks(items: any): GlobalNavLink[] {
-  const data = Array.isArray(items?.data) ? items.data : items;
+  const data = Array.isArray(items?.data)
+    ? items.data
+    : Array.isArray(items)
+    ? items
+    : Array.isArray(items?.links)
+    ? items.links
+    : Array.isArray(items?.links?.data)
+    ? items.links.data
+    : [];
   if (!Array.isArray(data)) return [];
   const links = data.map(mapNavLink).filter((link) => link.label && link.href);
   return sortNavLinks(links);
@@ -353,13 +361,7 @@ export async function fetchPodcastEpisodes() {
 export async function fetchGlobalNavigation(): Promise<GlobalNavigation | null> {
   if (!CMS_URL) return null;
   const res = await fetch(
-    `${CMS_URL}/api/global-navigation` +
-      `?publicationState=live` +
-      `&populate[headerLinks][populate][children]=*` +
-      `&populate[footerColumns][populate][links][populate][children]=*` +
-      `&populate[cta]=*` +
-      `&populate[socialLinks]=*` +
-      `&populate[legalLinks]=*`,
+    `${CMS_URL}/api/global-navigation` + `?publicationState=live` + `&populate=*`,
     { cache: "no-store" }
   );
 

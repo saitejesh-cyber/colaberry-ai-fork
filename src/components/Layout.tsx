@@ -6,13 +6,65 @@ import { fetchGlobalNavigation, GlobalNavigation } from "../lib/cms";
 
 const fallbackNavigation: GlobalNavigation = {
   headerLinks: [
-    { label: "Platform", href: "/aixcelerator", order: 1, group: "header" },
-    { label: "Agents", href: "/aixcelerator/agents", order: 2, group: "header" },
-    { label: "MCP", href: "/aixcelerator/mcp", order: 3, group: "header" },
-    { label: "Industries", href: "/industries", order: 4, group: "header" },
-    { label: "Solutions", href: "/solutions", order: 5, group: "header" },
-    { label: "Resources", href: "/resources", order: 6, group: "header" },
-    { label: "Updates", href: "/updates", order: 7, group: "header" },
+    {
+      label: "Platform",
+      href: "/aixcelerator",
+      order: 1,
+      group: "header",
+      children: [
+        { label: "Overview", href: "/aixcelerator", order: 1 },
+        { label: "Agents", href: "/aixcelerator/agents", order: 2 },
+        { label: "MCP servers", href: "/aixcelerator/mcp", order: 3 },
+      ],
+    },
+    {
+      label: "Agents",
+      href: "/aixcelerator/agents",
+      order: 2,
+      group: "header",
+      children: [{ label: "Agents catalog", href: "/aixcelerator/agents", order: 1 }],
+    },
+    {
+      label: "MCP",
+      href: "/aixcelerator/mcp",
+      order: 3,
+      group: "header",
+      children: [{ label: "MCP servers", href: "/aixcelerator/mcp", order: 1 }],
+    },
+    {
+      label: "Industries",
+      href: "/industries",
+      order: 4,
+      group: "header",
+      children: [{ label: "All industries", href: "/industries", order: 1 }],
+    },
+    {
+      label: "Solutions",
+      href: "/solutions",
+      order: 5,
+      group: "header",
+      children: [{ label: "Solutions overview", href: "/solutions", order: 1 }],
+    },
+    {
+      label: "Resources",
+      href: "/resources",
+      order: 6,
+      group: "header",
+      children: [
+        { label: "Resources hub", href: "/resources", order: 1 },
+        { label: "Podcasts", href: "/resources/podcasts", order: 2 },
+        { label: "White papers", href: "/resources/white-papers", order: 3 },
+        { label: "Books", href: "/resources/books", order: 4 },
+        { label: "Case studies", href: "/resources/case-studies", order: 5 },
+      ],
+    },
+    {
+      label: "Updates",
+      href: "/updates",
+      order: 7,
+      group: "header",
+      children: [{ label: "News & product", href: "/updates", order: 1 }],
+    },
   ],
   footerColumns: [
     {
@@ -156,8 +208,20 @@ function getLinkRel(target?: string | null) {
 
 function mergeGlobalNavigation(primary: GlobalNavigation | null, fallback: GlobalNavigation): GlobalNavigation {
   if (!primary) return fallback;
+  const fallbackHeaderIndex = new Map(
+    fallback.headerLinks.map((link) => [`${link.label}|${link.href}`, link])
+  );
+  const headerLinks = primary.headerLinks.length
+    ? primary.headerLinks.map((link) => {
+        if (link.children?.length) return link;
+        const fallbackLink = fallbackHeaderIndex.get(`${link.label}|${link.href}`);
+        const fallbackChildren = fallbackLink?.children ?? [];
+        return fallbackChildren.length ? { ...link, children: fallbackChildren } : link;
+      })
+    : fallback.headerLinks;
+
   return {
-    headerLinks: primary.headerLinks.length ? primary.headerLinks : fallback.headerLinks,
+    headerLinks,
     footerColumns: primary.footerColumns.length ? primary.footerColumns : fallback.footerColumns,
     cta: primary.cta?.label && primary.cta?.href ? primary.cta : fallback.cta,
     socialLinks: primary.socialLinks.length ? primary.socialLinks : fallback.socialLinks,
@@ -284,39 +348,37 @@ export default function Layout({ children }: { children: ReactNode }) {
               );
             })}
 
-            <form
-              className="ml-2 hidden items-center lg:flex"
-              onSubmit={(event) => event.preventDefault()}
-            >
+            <form className="ml-2 hidden items-center lg:flex" action="/search" method="get" role="search">
               <label htmlFor="site-search" className="sr-only">
                 Search
               </label>
-              <div className="relative">
+              <div className="relative group">
                 <input
                   id="site-search"
                   name="q"
                   type="search"
                   placeholder="Search what you need:"
-                  className="w-64 rounded-full border border-slate-300 bg-white/90 px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-500 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
+                  className="w-64 rounded-full border border-slate-300 bg-white/90 px-4 py-2 pr-12 text-sm text-slate-900 placeholder:text-slate-500 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
                 />
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-teal"
-                  fill="none"
+                <button
+                  type="submit"
+                  aria-label="Run search"
+                  className="focus-ring pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-brand-teal opacity-0 transition group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
                 >
-                  <path
-                    d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M16.25 16.25 21 21"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                    <path
+                      d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M16.25 16.25 21 21"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
               </div>
             </form>
 
@@ -347,36 +409,37 @@ export default function Layout({ children }: { children: ReactNode }) {
               Menu
             </summary>
             <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-slate-200/60 bg-white/90 p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900/90">
-              <form className="px-1 pb-2" onSubmit={(event) => event.preventDefault()}>
-              <label htmlFor="site-search-mobile" className="sr-only">
-                Search
-              </label>
-              <div className="relative">
-                <input
-                  id="site-search-mobile"
-                  name="q"
-                  type="search"
-                  placeholder="Search what you need:"
-                  className="w-full rounded-full border border-slate-200/60 bg-white px-3 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
-                />
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-teal"
-                    fill="none"
+              <form className="px-1 pb-2" action="/search" method="get" role="search">
+                <label htmlFor="site-search-mobile" className="sr-only">
+                  Search
+                </label>
+                <div className="relative group">
+                  <input
+                    id="site-search-mobile"
+                    name="q"
+                    type="search"
+                    placeholder="Search what you need:"
+                    className="w-full rounded-full border border-slate-200/60 bg-white px-3 py-2 pr-11 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
+                  />
+                  <button
+                    type="submit"
+                    aria-label="Run search"
+                    className="focus-ring pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-brand-teal opacity-0 transition group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
                   >
-                    <path
-                      d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M16.25 16.25 21 21"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                      <path
+                        d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                      <path
+                        d="M16.25 16.25 21 21"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
                 </div>
               </form>
               {globalNav.headerLinks.map((link) => {

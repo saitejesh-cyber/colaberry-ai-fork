@@ -1,17 +1,29 @@
 import Layout from "../../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../../components/SectionHeader";
+import MediaPanel from "../../components/MediaPanel";
 
 export default function WhitePapers() {
   return (
     <Layout>
-      <div className="flex flex-col gap-3">
-        <SectionHeader
-          as="h1"
-          size="xl"
-          kicker="Resources"
-          title="White papers"
-          description="Technical deep-dives, POVs, and reference architectures."
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <div className="flex flex-col gap-3">
+          <SectionHeader
+            as="h1"
+            size="xl"
+            kicker="Resources"
+            title="White papers"
+            description="Technical deep-dives, POVs, and reference architectures."
+          />
+        </div>
+        <MediaPanel
+          kicker="Research"
+          title="Reference architectures"
+          description="Technical guidance with ready-to-use frameworks."
+          image="/media/visuals/panel-books.svg"
+          alt="Reference architecture illustration"
+          aspect="wide"
+          fit="contain"
         />
       </div>
 

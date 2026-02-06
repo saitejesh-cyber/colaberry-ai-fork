@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" fill="none">
+  <defs>
+    <linearGradient id="bg-knowledge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="55%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
+    </linearGradient>
+    <linearGradient id="accent-knowledge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1A8E9B"/>
+      <stop offset="100%" stop-color="#2F6FED"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" rx="48" fill="url(#bg-knowledge)"/>
+  <g opacity="0.3">
+    <circle cx="240" cy="220" r="140" fill="#e2e8f0"/>
+    <circle cx="980" cy="220" r="150" fill="#dbeafe"/>
+    <circle cx="920" cy="720" r="170" fill="#cffafe"/>
+  </g>
+  <g fill="#ffffff" stroke="#e2e8f0" stroke-width="2">
+    <rect x="140" y="280" width="330" height="440" rx="28"/>
+    <rect x="520" y="210" width="360" height="500" rx="30"/>
+    <rect x="900" y="320" width="210" height="380" rx="24"/>
+  </g>
+  <g stroke="#0f172a" stroke-opacity="0.25" stroke-width="2">
+    <path d="M190 350h230M190 400h230M190 450h180"/>
+    <path d="M570 300h260M570 350h260M570 400h220"/>
+    <path d="M940 380h130M940 430h130M940 480h110"/>
+  </g>
+  <g stroke="url(#accent-knowledge)" stroke-width="4" stroke-linecap="round" opacity="0.65">
+    <path d="M260 700c70-70 170-70 240 0"/>
+    <path d="M610 700c60-60 140-60 200 0"/>
+  </g>
+  <g fill="#1c3f86">
+    <circle cx="300" cy="680" r="10"/>
+    <circle cx="640" cy="680" r="10"/>
+    <circle cx="770" cy="680" r="10"/>
+  </g>
+</svg>

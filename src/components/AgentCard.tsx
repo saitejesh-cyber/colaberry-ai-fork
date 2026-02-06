@@ -44,7 +44,7 @@ export default function AgentCard({ agent }: { agent: Agent }) {
     : "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:ring-emerald-500/40";
 
   return (
-    <Link href={href} className="group block">
+    <Link href={href} className="group block" aria-label={`View agent ${agent.name} details`}>
       <div className="surface-panel border-t-4 border-brand-blue/20 p-5 transition hover:-translate-y-1 hover:shadow-lg">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">

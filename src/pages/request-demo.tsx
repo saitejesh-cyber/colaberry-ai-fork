@@ -1,6 +1,7 @@
 import Layout from "../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../components/SectionHeader";
+import MediaPanel from "../components/MediaPanel";
 
 export default function RequestDemo() {
   return (
@@ -55,6 +56,16 @@ export default function RequestDemo() {
         </div>
 
         <div className="lg:col-span-5">
+          <MediaPanel
+            kicker="Demo preview"
+            title="Walkthrough highlights"
+            description="See how agents, MCP, and modular layers connect end to end."
+            image="/media/visuals/panel-platform.svg"
+            alt="Platform walkthrough illustration"
+            aspect="wide"
+            fit="contain"
+            className="mb-6"
+          />
           <div className="surface-panel p-6">
             <div className="text-base font-semibold text-slate-900">Suggested demo flow</div>
             <div className="mt-1 text-sm text-slate-600">A clean, consistent walkthrough for stakeholders.</div>

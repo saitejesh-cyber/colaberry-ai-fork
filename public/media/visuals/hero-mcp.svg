@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" fill="none">
+  <defs>
+    <linearGradient id="bg-mcp" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e0f2fe"/>
+      <stop offset="55%" stop-color="#eff6ff"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <linearGradient id="accent-mcp" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22D3EE"/>
+      <stop offset="100%" stop-color="#2F6FED"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" rx="48" fill="url(#bg-mcp)"/>
+  <g opacity="0.35">
+    <circle cx="210" cy="220" r="140" fill="#bae6fd"/>
+    <circle cx="1020" cy="200" r="160" fill="#dbeafe"/>
+    <circle cx="980" cy="720" r="170" fill="#e0f2fe"/>
+  </g>
+  <g fill="#ffffff" stroke="#e2e8f0" stroke-width="2">
+    <rect x="150" y="520" width="300" height="210" rx="24"/>
+    <rect x="480" y="160" width="450" height="280" rx="30"/>
+    <rect x="620" y="540" width="380" height="240" rx="26"/>
+  </g>
+  <g stroke="#0f172a" stroke-opacity="0.3" stroke-width="3">
+    <path d="M300 620h180"/>
+    <path d="M560 300h250"/>
+    <path d="M700 640h180"/>
+  </g>
+  <g stroke="url(#accent-mcp)" stroke-width="4" stroke-linecap="round" opacity="0.75">
+    <path d="M360 540l180-140"/>
+    <path d="M720 450l140 100"/>
+    <path d="M520 640l120-80"/>
+  </g>
+  <g fill="#1c3f86">
+    <rect x="260" y="585" width="70" height="70" rx="18"/>
+    <rect x="640" y="260" width="70" height="70" rx="18"/>
+    <rect x="820" y="600" width="70" height="70" rx="18"/>
+  </g>
+  <g fill="#22d3ee" opacity="0.9">
+    <circle cx="300" cy="620" r="8"/>
+    <circle cx="675" cy="295" r="8"/>
+    <circle cx="855" cy="635" r="8"/>
+  </g>
+</svg>

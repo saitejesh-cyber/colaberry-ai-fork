@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
+import Image from "next/image";
 import Link from "next/link";
 import Head from "next/head";
 import SectionHeader from "../components/SectionHeader";
@@ -35,6 +37,53 @@ export default function Home() {
     "Use cases",
     "Playbooks",
     "Integrations",
+  ];
+
+  const heroSignals = [
+    {
+      title: "Governed rollout",
+      description: "Ownership, status, and readiness signals for every agent deployment.",
+      href: "/aixcelerator/agents",
+    },
+    {
+      title: "Connector-ready MCP",
+      description: "Standardized MCP servers mapped to tools and workflows.",
+      href: "/aixcelerator/mcp",
+    },
+    {
+      title: "Industry workspaces",
+      description: "Outcome-driven case studies and domain-aligned playbooks.",
+      href: "/industries",
+    },
+    {
+      title: "Knowledge signals",
+      description: "Podcasts, white papers, and updates in one discovery layer.",
+      href: "/resources",
+    },
+  ];
+
+  const heroSlides = [
+    {
+      eyebrow: "Agents",
+      title: "Agent operations radar",
+      description: "Track ownership, readiness, and evaluation signals in one view.",
+      image: "/media/hero/hero-agents.png",
+      highlight: "Ownership + evals",
+    },
+    {
+      eyebrow: "MCP",
+      title: "Integration surface map",
+      description: "Connect tools with standardized MCP server templates and patterns.",
+      image: "/media/hero/hero-mcp.png",
+      highlight: "Connector-ready",
+    },
+    {
+      eyebrow: "Knowledge",
+      title: "Unified knowledge signals",
+      description: "Podcasts, white papers, and updates organized for fast discovery.",
+      image: "/media/hero/hero-resources.png",
+      highlight: "Curated signals",
+    },
   ];
 
   const pillars = [
@@ -126,6 +175,25 @@ export default function Home() {
     },
   ];
 
+  const [activeSlide, setActiveSlide] = useState(0);
+  const slideCount = heroSlides.length;
+
+  useEffect(() => {
+    if (slideCount < 2) return;
+    const interval = window.setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % slideCount);
+    }, 6000);
+    return () => window.clearInterval(interval);
+  }, [slideCount]);
+
+  const handlePrevSlide = () => {
+    setActiveSlide((prev) => (prev - 1 + slideCount) % slideCount);
+  };
+
+  const handleNextSlide = () => {
+    setActiveSlide((prev) => (prev + 1) % slideCount);
+  };
+
   return (
     <Layout>
       <Head>
@@ -174,23 +242,24 @@ export default function Home() {
               <label htmlFor="catalog-search" className="sr-only">
                 Search
               </label>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <form action="/search" method="get" role="search" className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <input
                   id="catalog-search"
+                  name="q"
                   type="search"
                   placeholder="Search agents, MCP servers, podcasts, use cases..."
                   aria-describedby="catalog-search-help"
                   className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
                 />
                 <button
-                  type="button"
+                  type="submit"
                   className="focus-ring inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white shadow-sm hover:bg-slate-800"
                 >
                   Search
                 </button>
-              </div>
+              </form>
               <p id="catalog-search-help" className="mt-2 text-xs text-slate-500">
-                Search is rolling out-use tags or the catalog sections below for now.
+                Search spans agents, MCP servers, podcasts, and case studies.
               </p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
                 {heroTags.map((tag) => (
@@ -203,9 +272,42 @@ export default function Home() {
                 ))}
               </div>
             </div>
+
+            <section className="mt-6 surface-panel p-5">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Proof signals
+              </div>
+              <div className="mt-2 text-sm font-semibold text-slate-900">
+                What leaders see at a glance
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {heroSignals.map((signal) => (
+                  <Link
+                    key={signal.title}
+                    href={signal.href}
+                    className="group rounded-2xl border border-slate-200/80 bg-white/90 p-3 transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-sm"
+                    aria-label={`Explore ${signal.title}`}
+                  >
+                    <div className="text-sm font-semibold text-slate-900">{signal.title}</div>
+                    <div className="mt-1 text-xs text-slate-600">{signal.description}</div>
+                    <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-deep">
+                      Explore <span aria-hidden="true">→</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
           </div>
 
           <div className="grid gap-4">
+            <HeroCarousel
+              slides={heroSlides}
+              activeIndex={activeSlide}
+              onSelect={setActiveSlide}
+              onPrev={handlePrevSlide}
+              onNext={handleNextSlide}
+            />
+
             <div className="surface-strong p-5">
               <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Discovery layer
@@ -487,6 +589,7 @@ function CatalogCard({
     <Link
       href={href}
       className="surface-panel surface-hover surface-interactive group flex h-full flex-col border-t-4 border-brand-blue/20 p-5"
+      aria-label={`Open ${title}`}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -494,7 +597,7 @@ function CatalogCard({
           <div className="mt-1 text-sm text-slate-600">{description}</div>
         </div>
         <div className="mt-0.5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
-          →
+          <span aria-hidden="true">→</span>
         </div>
       </div>
       <div className="chip chip-muted mt-4 inline-flex w-fit items-center rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700">
@@ -514,14 +617,14 @@ function QuickLink({
   description: string;
 }) {
   return (
-    <Link href={href} className="surface-panel surface-hover surface-interactive group p-4">
+    <Link href={href} className="surface-panel surface-hover surface-interactive group p-4" aria-label={`Open ${title}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-sm font-semibold text-slate-900">{title}</div>
           <div className="mt-1 text-sm text-slate-600">{description}</div>
         </div>
         <div className="mt-0.5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
-          →
+          <span aria-hidden="true">→</span>
         </div>
       </div>
     </Link>
@@ -585,6 +688,137 @@ function MiniCard({ title, description }: { title: string; description: string }
   );
 }
 
+type HeroSlide = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  image: string;
+  highlight: string;
+};
+
+function HeroCarousel({
+  slides,
+  activeIndex,
+  onSelect,
+  onPrev,
+  onNext,
+}: {
+  slides: HeroSlide[];
+  activeIndex: number;
+  onSelect: (index: number) => void;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  const activeSlide = slides[activeIndex];
+
+  return (
+    <div className="surface-strong p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Platform preview
+          </div>
+          <div className="mt-2 text-base font-semibold text-slate-900">{activeSlide.title}</div>
+          <div className="mt-1 text-sm text-slate-600">{activeSlide.description}</div>
+        </div>
+        <span className="chip chip-brand rounded-full px-2.5 py-1 text-[11px] font-semibold">
+          {activeSlide.eyebrow}
+        </span>
+      </div>
+
+      <div className="relative mt-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/80 shadow-sm">
+        <div className="relative aspect-[4/3] w-full">
+          {slides.map((slide, index) => {
+            const isActive = index === activeIndex;
+            return (
+              <div
+                key={slide.title}
+                className={`absolute inset-0 transition-all duration-500 ease-out ${
+                  isActive ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
+                }`}
+                aria-hidden={!isActive}
+              >
+                <Image
+                  src={slide.image}
+                  alt={slide.title}
+                  fill
+                  sizes="(min-width: 1280px) 520px, (min-width: 1024px) 460px, 90vw"
+                  className="object-cover object-center dark:brightness-90"
+                  priority={index === 0}
+                />
+              </div>
+            );
+          })}
+        </div>
+        <div className="absolute bottom-3 left-3 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
+          {activeSlide.highlight}
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onPrev}
+            className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200/80 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+            aria-label="Previous slide"
+          >
+            <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
+              <path
+                d="M12.5 4.5 7 10l5.5 5.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+
+          <div className="flex items-center gap-1">
+            {slides.map((slide, index) => {
+              const isActive = index === activeIndex;
+              return (
+                <button
+                  key={slide.title}
+                  type="button"
+                  onClick={() => onSelect(index)}
+                  className={`h-2.5 w-2.5 rounded-full transition ${
+                    isActive ? "bg-brand-blue" : "bg-slate-300 hover:bg-slate-400"
+                  }`}
+                  aria-label={`Go to ${slide.eyebrow} slide`}
+                  aria-current={isActive ? "true" : undefined}
+                />
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={onNext}
+            className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200/80 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+            aria-label="Next slide"
+          >
+            <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
+              <path
+                d="M7.5 4.5 13 10l-5.5 5.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+        <div className="text-[11px] font-semibold text-slate-500">
+          {activeIndex + 1} / {slides.length}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type IndustryIcon = "leaf" | "tower" | "droplet" | "dna" | "factory" | "truck";
 
 function IndustryTile({
@@ -600,9 +834,10 @@ function IndustryTile({
     <Link
       href={href}
       className="surface-panel surface-hover surface-interactive group relative flex flex-col items-center gap-3 p-4 text-center"
+      aria-label={`View ${title} industry`}
     >
       <div className="absolute right-4 top-4 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
-        →
+        <span aria-hidden="true">→</span>
       </div>
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-700">
         <IndustryIconSvg icon={icon} />

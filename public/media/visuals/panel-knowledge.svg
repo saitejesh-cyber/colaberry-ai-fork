@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" fill="none">
+  <defs>
+    <linearGradient id="bg-knowledge-panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="60%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
+    </linearGradient>
+    <linearGradient id="accent-knowledge-panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2F6FED"/>
+      <stop offset="100%" stop-color="#1A8E9B"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" rx="72" fill="url(#bg-knowledge-panel)"/>
+  <g opacity="0.25">
+    <circle cx="260" cy="240" r="170" fill="#dbeafe"/>
+    <circle cx="940" cy="260" r="190" fill="#cffafe"/>
+    <circle cx="940" cy="960" r="200" fill="#e0e7ff"/>
+  </g>
+  <g fill="#ffffff" stroke="#e2e8f0" stroke-width="2">
+    <rect x="180" y="320" width="300" height="500" rx="30"/>
+    <rect x="500" y="260" width="340" height="620" rx="34"/>
+    <rect x="880" y="360" width="160" height="420" rx="28"/>
+  </g>
+  <g stroke="#0f172a" stroke-opacity="0.35" stroke-width="2">
+    <path d="M220 390h220M220 440h220M220 490h180"/>
+    <path d="M540 350h260M540 400h260M540 450h220"/>
+    <path d="M910 420h110M910 470h110M910 520h90"/>
+  </g>
+  <g stroke="url(#accent-knowledge-panel)" stroke-width="5" stroke-linecap="round" opacity="0.7">
+    <path d="M300 860c70-70 170-70 240 0"/>
+    <path d="M620 860c60-60 140-60 200 0"/>
+  </g>
+  <g fill="#1c3f86">
+    <circle cx="330" cy="840" r="12"/>
+    <circle cx="650" cy="840" r="12"/>
+    <circle cx="780" cy="840" r="12"/>
+  </g>
+</svg>

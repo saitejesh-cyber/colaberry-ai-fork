@@ -1,6 +1,7 @@
 import Layout from "../../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../../components/SectionHeader";
+import MediaPanel from "../../components/MediaPanel";
 
 export default function Solutions() {
   const solutions = [
@@ -29,19 +30,59 @@ export default function Solutions() {
       description: "Domain context and repeatable delivery patterns by industry.",
     },
   ];
+  const solutionHighlights = [
+    {
+      title: "Operational playbooks",
+      description: "Repeatable patterns ready for enterprise deployment.",
+    },
+    {
+      title: "Governance baked in",
+      description: "Approvals, ownership, and audit-ready delivery context.",
+    },
+    {
+      title: "Integration ready",
+      description: "MCP connectors and tool access with consistent patterns.",
+    },
+    {
+      title: "Outcome aligned",
+      description: "Mapped to industry outcomes and measurable value.",
+    },
+  ];
 
   return (
     <Layout>
-      <div className="flex flex-col gap-3">
-        <div className="chip chip-brand inline-flex w-fit items-center gap-2 rounded-full border border-brand-blue/20 bg-white py-1 pl-2 pr-3 text-xs text-brand-deep">
-          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
-          Modular layer
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <div className="flex flex-col gap-3">
+          <div className="chip chip-brand inline-flex w-fit items-center gap-2 rounded-full border border-brand-blue/20 bg-white py-1 pl-2 pr-3 text-xs text-brand-deep">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
+            Modular layer
+          </div>
+          <SectionHeader
+            as="h1"
+            size="xl"
+            title="Solutions"
+            description="Packaged offerings and reusable solution patterns-aligned to industries and delivery playbooks."
+          />
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {solutionHighlights.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm"
+              >
+                <div className="text-sm font-semibold text-slate-900">{item.title}</div>
+                <div className="mt-1 text-xs text-slate-600">{item.description}</div>
+              </div>
+            ))}
+          </div>
         </div>
-        <SectionHeader
-          as="h1"
-          size="xl"
-          title="Solutions"
-          description="Packaged offerings and reusable solution patterns-aligned to industries and delivery playbooks."
+        <MediaPanel
+          kicker="Solution preview"
+          title="Operational playbooks"
+          description="Repeatable solution patterns ready for deployment."
+          image="/media/hero/hero-solutions.png"
+          alt="Operational playbook overview"
+          aspect="wide"
+          fit="cover"
         />
       </div>
 

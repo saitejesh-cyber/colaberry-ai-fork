@@ -85,8 +85,9 @@ export default function PodcastCompanyPage({
             <Link
               href={`/resources/podcasts/${episode.slug}`}
               className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-deep hover:text-brand-blue"
+              aria-label={`View episode ${episode.title}`}
             >
-              View →
+              View <span aria-hidden="true">→</span>
             </Link>
           </li>
         ))}

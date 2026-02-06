@@ -1,17 +1,29 @@
 import Layout from "../../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../../components/SectionHeader";
+import MediaPanel from "../../components/MediaPanel";
 
 export default function Books() {
   return (
     <Layout>
-      <div className="flex flex-col gap-3">
-        <SectionHeader
-          as="h1"
-          size="xl"
-          kicker="Resources"
-          title="Books & artifacts"
-          description="Books and companion artifacts (templates, worksheets, code samples, and related assets)."
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <div className="flex flex-col gap-3">
+          <SectionHeader
+            as="h1"
+            size="xl"
+            kicker="Resources"
+            title="Books & artifacts"
+            description="Books and companion artifacts (templates, worksheets, code samples, and related assets)."
+          />
+        </div>
+        <MediaPanel
+          kicker="Artifacts"
+          title="Learning assets"
+          description="Curated books and reusable artifacts."
+          image="/media/visuals/panel-books.svg"
+          alt="Books and artifacts illustration"
+          aspect="wide"
+          fit="contain"
         />
       </div>
 

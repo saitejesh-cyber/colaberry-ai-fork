@@ -2,23 +2,65 @@ import Layout from "../../components/Layout";
 import Link from "next/link";
 import Head from "next/head";
 import SectionHeader from "../../components/SectionHeader";
+import MediaPanel from "../../components/MediaPanel";
 
 export default function Resources() {
+  const resourceHighlights = [
+    {
+      title: "Podcasts + transcripts",
+      description: "Searchable conversations tied to agents and MCP servers.",
+    },
+    {
+      title: "White papers + POVs",
+      description: "Technical guidance, frameworks, and executive summaries.",
+    },
+    {
+      title: "Case studies",
+      description: "Outcome stories with measurable impact and context.",
+    },
+    {
+      title: "Books + artifacts",
+      description: "Reference material, templates, and delivery assets.",
+    },
+  ];
+
   return (
     <Layout>
       <Head>
         <title>Resources | Colaberry AI</title>
       </Head>
-      <div className="flex flex-col gap-3">
-        <div className="chip chip-brand inline-flex w-fit items-center gap-2 rounded-full border border-brand-blue/25 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm">
-          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
-          Modular layer
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <div className="flex flex-col gap-3">
+          <div className="chip chip-brand inline-flex w-fit items-center gap-2 rounded-full border border-brand-blue/25 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
+            Modular layer
+          </div>
+          <SectionHeader
+            as="h1"
+            size="xl"
+            title="Resources"
+            description="A home for research, artifacts, and updates-built to support both internal publishing and curated external sources as we evolve."
+          />
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {resourceHighlights.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm"
+              >
+                <div className="text-sm font-semibold text-slate-900">{item.title}</div>
+                <div className="mt-1 text-xs text-slate-600">{item.description}</div>
+              </div>
+            ))}
+          </div>
         </div>
-        <SectionHeader
-          as="h1"
-          size="xl"
-          title="Resources"
-          description="A home for research, artifacts, and updates-built to support both internal publishing and curated external sources as we evolve."
+        <MediaPanel
+          kicker="Knowledge hub"
+          title="Research and artifacts"
+          description="Podcasts, books, white papers, and curated signals."
+          image="/media/hero/hero-resources.png"
+          alt="Research workspace overview"
+          aspect="wide"
+          fit="cover"
         />
       </div>
 
@@ -29,23 +71,24 @@ export default function Resources() {
         <label htmlFor="resource-search" className="sr-only">
           Search resources
         </label>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        <form action="/search" method="get" role="search" className="mt-3 flex flex-col gap-2 sm:flex-row">
           <input
             id="resource-search"
+            name="q"
             type="search"
             placeholder="Search podcasts, white papers, case studies..."
             aria-describedby="resource-search-help"
             className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
           />
           <button
-            type="button"
+            type="submit"
             className="focus-ring inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white shadow-sm hover:bg-slate-800"
           >
             Search
           </button>
-        </div>
+        </form>
         <p id="resource-search-help" className="mt-2 text-xs text-slate-500">
-          Search is rolling out-use the category cards below for now.
+          Search routes to the global catalog results page.
         </p>
         <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
           {["Podcasts", "White papers", "Case studies", "Updates", "Artifacts"].map((label) => (
@@ -136,6 +179,7 @@ function ResourceCard({
     <Link
       href={href}
       className="surface-panel surface-hover surface-interactive group border-t-4 border-brand-blue/20 p-5"
+      aria-label={`Open ${title}`}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -143,7 +187,7 @@ function ResourceCard({
           <div className="mt-1 text-sm text-slate-600">{description}</div>
         </div>
         <div className="mt-0.5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
-          →
+          <span aria-hidden="true">→</span>
         </div>
       </div>
       <div className="chip chip-muted mt-4 inline-flex items-center rounded-full border border-slate-200/80 bg-white/80 px-2.5 py-1 text-xs font-semibold text-slate-700">

@@ -6,6 +6,7 @@ import { GetServerSideProps } from "next";
 import { useMemo, useState } from "react";
 import SectionHeader from "../../../components/SectionHeader";
 import BuzzsproutPlayer from "../../../components/BuzzsproutPlayer";
+import MediaPanel from "../../../components/MediaPanel";
 import { fetchPodcastEpisodes, PodcastEpisode } from "../../../lib/cms";
 
 export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
@@ -44,13 +45,24 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
       <Head>
         <title>Podcasts | Colaberry AI</title>
       </Head>
-      <div className="flex flex-col gap-3">
-        <SectionHeader
-          as="h1"
-          size="xl"
-          kicker="Resources"
-          title="Podcasts"
-          description="Colaberry AI Podcast + curated external ai podcast."
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <div className="flex flex-col gap-3">
+          <SectionHeader
+            as="h1"
+            size="xl"
+            kicker="Resources"
+            title="Podcasts"
+            description="Colaberry AI Podcast + curated external ai podcast."
+          />
+        </div>
+        <MediaPanel
+          kicker="Audio library"
+          title="Signal-rich conversations"
+          description="Episodes and curated conversations across AI adoption."
+          image="/media/visuals/panel-podcast.svg"
+          alt="Podcast waveform illustration"
+          aspect="wide"
+          fit="contain"
         />
       </div>
 
@@ -65,7 +77,7 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
           <label htmlFor="company-search" className="sr-only">
             Search your company
           </label>
-          <div className="relative">
+          <div className="relative group">
             <input
               id="company-search"
               name="company-search"
@@ -73,12 +85,12 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
               placeholder="Search your company..."
               value={companyQuery}
               onChange={(event) => setCompanyQuery(event.target.value)}
-              className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
+              className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2 pr-11 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
             />
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-teal"
+              className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-teal opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100"
               fill="none"
             >
               <path
@@ -171,8 +183,9 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
                     logPodcastEvent("click", "list-internal", { slug: ep.slug, title: ep.title })
                   }
                   className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-deep hover:text-brand-blue"
+                  aria-label={`View episode ${ep.title}`}
                 >
-                  View episode →
+                  View episode <span aria-hidden="true">→</span>
                 </Link>
               </li>
             ))}
@@ -207,8 +220,9 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
                       logPodcastEvent("click", "list-external", { slug: ep.slug, title: ep.title })
                     }
                     className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-deep hover:text-brand-blue"
+                    aria-label={`View episode ${ep.title}`}
                   >
-                    View episode →
+                    View episode <span aria-hidden="true">→</span>
                   </Link>
                 </li>
               ))}
