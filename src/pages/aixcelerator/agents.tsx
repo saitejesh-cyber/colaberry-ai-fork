@@ -235,9 +235,7 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
                 Explore case studies
               </Link>
               <Link
-                href="https://github.com/colaberry/trust-before-intelligence-book"
-                target="_blank"
-                rel="noreferrer"
+                href="/resources/books#trust-before-intelligence"
                 className="inline-flex items-center justify-center rounded-full border border-brand-blue/20 bg-brand-blue/5 px-3 py-1.5 text-xs font-semibold text-brand-deep hover:bg-brand-blue/10"
               >
                 Read Trust Before Intelligence

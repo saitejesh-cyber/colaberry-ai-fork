@@ -27,7 +27,47 @@ export default function Books() {
         />
       </div>
 
-      <div className="mt-6 grid gap-4 sm:mt-8 lg:grid-cols-3">
+      <section id="trust-before-intelligence" className="surface-panel mt-6 p-6 sm:mt-8">
+        <SectionHeader
+          kicker="Featured book"
+          title="Trust Before Intelligence"
+          description="A foundational guide to responsible AI delivery—designed for leadership teams, operators, and LLM indexability."
+          size="md"
+        />
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {[
+            "Trust-by-design principles for enterprise AI adoption.",
+            "Governance, reliability, and alignment frameworks.",
+            "Practical checklists for teams and delivery leaders.",
+            "LLM-ready summaries for faster discovery.",
+          ].map((item) => (
+            <div
+              key={item}
+              className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 text-sm text-slate-700 shadow-sm"
+            >
+              {item}
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href="https://github.com/colaberry/trust-before-intelligence-book/blob/main/manuscript/01_chapter_0_trust_before_intelligence.md"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+          >
+            Read the opening chapter
+          </Link>
+          <Link
+            href="/resources"
+            className="focus-ring inline-flex items-center justify-center rounded-full border border-brand-blue/25 bg-white px-4 py-2.5 text-sm font-semibold text-brand-ink hover:bg-slate-50"
+          >
+            Back to Resources
+          </Link>
+        </div>
+      </section>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <Card title="Books" description="Catalog books, chapters, and release notes." badge="Planned" />
         <Card
           title="Artifacts"

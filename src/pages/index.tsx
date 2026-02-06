@@ -66,7 +66,7 @@ export default function Home() {
     {
       title: "Trust-first research",
       description: "Foundational principles that guide responsible AI delivery.",
-      href: "https://github.com/colaberry/trust-before-intelligence-book",
+      href: "/resources/books#trust-before-intelligence",
     },
   ];
 
@@ -621,7 +621,11 @@ export default function Home() {
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <QuickLink href="/solutions" title="Solutions" description="Packaged offerings and playbooks." />
           <QuickLink href="/resources/case-studies" title="Case studies" description="Outcomes and delivery stories." />
-          <QuickLink href="https://github.com/colaberry/trust-before-intelligence-book" title="Trust Before Intelligence" description="Foundational research on responsible AI." external />
+          <QuickLink
+            href="/resources/books#trust-before-intelligence"
+            title="Trust Before Intelligence"
+            description="Foundational research on responsible AI."
+          />
           <QuickLink href="/updates" title="News & product" description="Updates, announcements, and signals." />
         </div>
       </section>
