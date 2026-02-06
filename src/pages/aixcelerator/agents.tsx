@@ -7,6 +7,8 @@ import type { GetServerSideProps } from "next";
 import fallbackAgents from "../../data/agents.json";
 import { Agent, fetchAgents } from "../../lib/cms";
 import { useRouter } from "next/router";
+import Head from "next/head";
+import Link from "next/link";
 
 type AgentsPageProps = {
   agents: Agent[];
@@ -103,6 +105,29 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
     acc[key] = (acc[key] ?? 0) + 1;
     return acc;
   }, {});
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai";
+  const canonicalUrl = `${siteUrl}/aixcelerator/agents`;
+  const metaTitle = "AI Agents Catalog | Colaberry AI";
+  const metaDescription =
+    "Explore a governed marketplace of AI agents with ownership, lifecycle status, and LLM-ready metadata for enterprise discovery.";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Colaberry AI Agents Catalog",
+    url: canonicalUrl,
+    description: metaDescription,
+    itemListElement: agents.slice(0, 12).map((agent, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "SoftwareApplication",
+        name: agent.name,
+        description: agent.description || undefined,
+        applicationCategory: "AI Agent",
+        url: `${siteUrl}/aixcelerator/agents/${agent.slug || agent.id}`,
+      },
+    })),
+  };
   const filteredAgents = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!allowPrivate) {
@@ -150,6 +175,17 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
 
   return (
     <Layout>
+      <Head>
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalUrl} />
+        <link rel="canonical" href={canonicalUrl} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      </Head>
+
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
         <div className="flex flex-col gap-3">
           <SectionHeader
@@ -157,7 +193,7 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
             size="xl"
             kicker="Agents catalog"
             title="AI Agents"
-            description="A governed catalog of enterprise agents and assistants-aligned to teams, workflows, and industry context, with public and private listings."
+            description="A governed AI marketplace of enterprise agents and assistants-aligned to teams, workflows, and industry context, with public and private listings."
           />
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {agentHighlights.map((item) => (
@@ -179,6 +215,34 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
                 {signal}
               </span>
             ))}
+          </div>
+          <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Marketplace intent
+            </div>
+            <div className="mt-2 text-sm font-semibold text-slate-900">
+              SEO + LLM-ready discovery for trusted agents
+            </div>
+            <p className="mt-1 text-xs text-slate-600">
+              Each listing is structured with ownership, lifecycle state, and industry tags so
+              humans and LLMs can discover, compare, and trust deployments.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href="/resources/case-studies"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-brand-blue/30 hover:text-brand-deep"
+              >
+                Explore case studies
+              </Link>
+              <Link
+                href="https://github.com/colaberry/trust-before-intelligence-book"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-full border border-brand-blue/20 bg-brand-blue/5 px-3 py-1.5 text-xs font-semibold text-brand-deep hover:bg-brand-blue/10"
+              >
+                Read Trust Before Intelligence
+              </Link>
+            </div>
           </div>
         </div>
         <MediaPanel

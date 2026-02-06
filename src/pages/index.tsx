@@ -34,8 +34,11 @@ export default function Home() {
     "Agents",
     "MCP servers",
     "Podcasts",
+    "Case studies",
+    "Books",
     "Use cases",
     "Playbooks",
+    "Articles",
     "Integrations",
   ];
 
@@ -59,6 +62,11 @@ export default function Home() {
       title: "Knowledge signals",
       description: "Podcasts, white papers, and updates in one discovery layer.",
       href: "/resources",
+    },
+    {
+      title: "Trust-first research",
+      description: "Foundational principles that guide responsible AI delivery.",
+      href: "https://github.com/colaberry/trust-before-intelligence-book",
     },
   ];
 
@@ -129,10 +137,22 @@ export default function Home() {
       meta: "Solutions",
     },
     {
+      href: "/resources/case-studies",
+      title: "Case studies",
+      description: "Outcome stories with measurable impact and context.",
+      meta: "Outcomes",
+    },
+    {
       href: "/resources/podcasts",
       title: "Podcasts + narratives",
       description: "Audio insights, transcripts, and linked artifacts.",
       meta: "Resources",
+    },
+    {
+      href: "/resources/books",
+      title: "Books + artifacts",
+      description: "Reference material, templates, and delivery assets.",
+      meta: "Books",
     },
     {
       href: "/resources/white-papers",
@@ -175,6 +195,31 @@ export default function Home() {
     },
   ];
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai";
+  const metaDescription =
+    "Colaberry AI is a marketplace and destination for AI agents, MCP servers, podcasts, case studies, and trusted research-built for SEO and LLM indexing.";
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Colaberry AI",
+      url: siteUrl,
+      logo: `${siteUrl}/brand/colaberry-ai-logo.png`,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Colaberry AI",
+      url: siteUrl,
+      description: metaDescription,
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${siteUrl}/search?q={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ];
+
   const [activeSlide, setActiveSlide] = useState(0);
   const slideCount = heroSlides.length;
 
@@ -198,6 +243,13 @@ export default function Home() {
     <Layout>
       <Head>
         <title>Colaberry AI | The go-to destination for agents, MCPs, and AI knowledge</title>
+        <meta name="description" content={metaDescription} />
+        <meta property="og:title" content="Colaberry AI | The go-to destination for agents, MCPs, and AI knowledge" />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={siteUrl} />
+        <link rel="canonical" href={siteUrl} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
       <section className="hero-surface rise-in p-8 sm:p-10 lg:p-12">
         <div className="relative grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
@@ -212,8 +264,8 @@ export default function Home() {
             </h1>
 
             <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-600 sm:text-lg">
-              Colaberry AI unifies agents, MCP servers, podcasts, and use cases into a searchable,
-              categorized catalog that is readable by humans and LLMs-ready for automation.
+              Colaberry AI unifies agents, MCP servers, podcasts, case studies, and trusted research
+              into a searchable catalog designed for humans, SEO, and LLM indexing.
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -282,18 +334,44 @@ export default function Home() {
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {heroSignals.map((signal) => (
-                  <Link
-                    key={signal.title}
-                    href={signal.href}
-                    className="group rounded-2xl border border-slate-200/80 bg-white/90 p-3 transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-sm"
-                    aria-label={`Explore ${signal.title}`}
-                  >
-                    <div className="text-sm font-semibold text-slate-900">{signal.title}</div>
-                    <div className="mt-1 text-xs text-slate-600">{signal.description}</div>
-                    <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-deep">
-                      Explore <span aria-hidden="true">→</span>
-                    </div>
-                  </Link>
+                  (() => {
+                    const isExternal = signal.href.startsWith("http");
+                    const content = (
+                      <>
+                        <div className="text-sm font-semibold text-slate-900">{signal.title}</div>
+                        <div className="mt-1 text-xs text-slate-600">{signal.description}</div>
+                        <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-deep">
+                          Explore <span aria-hidden="true">→</span>
+                        </div>
+                      </>
+                    );
+
+                    if (isExternal) {
+                      return (
+                        <a
+                          key={signal.title}
+                          href={signal.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="group rounded-2xl border border-slate-200/80 bg-white/90 p-3 transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-sm"
+                          aria-label={`Explore ${signal.title}`}
+                        >
+                          {content}
+                        </a>
+                      );
+                    }
+
+                    return (
+                      <Link
+                        key={signal.title}
+                        href={signal.href}
+                        className="group rounded-2xl border border-slate-200/80 bg-white/90 p-3 transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-sm"
+                        aria-label={`Explore ${signal.title}`}
+                      >
+                        {content}
+                      </Link>
+                    );
+                  })()
                 ))}
               </div>
             </section>
@@ -398,7 +476,7 @@ export default function Home() {
           title="A structured destination for agents, MCPs, podcasts, and research"
           description="Give teams and LLMs a single place to discover, compare, and deploy intelligence."
         />
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {catalogs.map((catalog) => (
             <CatalogCard key={catalog.title} {...catalog} />
           ))}
@@ -540,9 +618,10 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <QuickLink href="/solutions" title="Solutions" description="Packaged offerings and playbooks." />
-          <QuickLink href="/resources/podcasts" title="Podcasts" description="Internal posts + external curation." />
+          <QuickLink href="/resources/case-studies" title="Case studies" description="Outcomes and delivery stories." />
+          <QuickLink href="https://github.com/colaberry/trust-before-intelligence-book" title="Trust Before Intelligence" description="Foundational research on responsible AI." external />
           <QuickLink href="/updates" title="News & product" description="Updates, announcements, and signals." />
         </div>
       </section>
@@ -611,22 +690,42 @@ function QuickLink({
   href,
   title,
   description,
+  external = false,
 }: {
   href: string;
   title: string;
   description: string;
+  external?: boolean;
 }) {
+  const content = (
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <div className="text-sm font-semibold text-slate-900">{title}</div>
+        <div className="mt-1 text-sm text-slate-600">{description}</div>
+      </div>
+      <div className="mt-0.5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
+        <span aria-hidden="true">→</span>
+      </div>
+    </div>
+  );
+
+  if (external) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className="surface-panel surface-hover surface-interactive group p-4"
+        aria-label={`Open ${title}`}
+      >
+        {content}
+      </a>
+    );
+  }
+
   return (
     <Link href={href} className="surface-panel surface-hover surface-interactive group p-4" aria-label={`Open ${title}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-slate-900">{title}</div>
-          <div className="mt-1 text-sm text-slate-600">{description}</div>
-        </div>
-        <div className="mt-0.5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
-          <span aria-hidden="true">→</span>
-        </div>
-      </div>
+      {content}
     </Link>
   );
 }

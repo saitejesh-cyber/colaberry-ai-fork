@@ -7,6 +7,8 @@ import type { GetServerSideProps } from "next";
 import fallbackMCPs from "../../data/mcps.json";
 import { fetchMCPServers, MCPServer } from "../../lib/cms";
 import { useRouter } from "next/router";
+import Head from "next/head";
+import Link from "next/link";
 
 type MCPPageProps = {
   mcps: MCPServer[];
@@ -103,6 +105,29 @@ export default function MCP({ mcps, allowPrivate }: MCPPageProps) {
     acc[key] = (acc[key] ?? 0) + 1;
     return acc;
   }, {});
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai";
+  const canonicalUrl = `${siteUrl}/aixcelerator/mcp`;
+  const metaTitle = "MCP Servers Catalog | Colaberry AI";
+  const metaDescription =
+    "Browse MCP servers with connector patterns, auth readiness, and industry alignment-structured for SEO and LLM discovery.";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Colaberry AI MCP Servers Catalog",
+    url: canonicalUrl,
+    description: metaDescription,
+    itemListElement: mcps.slice(0, 12).map((mcp, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "SoftwareApplication",
+        name: mcp.name,
+        description: mcp.description || undefined,
+        applicationCategory: "MCP Server",
+        url: `${siteUrl}/aixcelerator/mcp/${mcp.slug || mcp.id}`,
+      },
+    })),
+  };
   const filteredMCPs = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!allowPrivate) {
@@ -150,6 +175,17 @@ export default function MCP({ mcps, allowPrivate }: MCPPageProps) {
 
   return (
     <Layout>
+      <Head>
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalUrl} />
+        <link rel="canonical" href={canonicalUrl} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      </Head>
+
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
         <div className="flex flex-col gap-3">
           <SectionHeader
@@ -179,6 +215,32 @@ export default function MCP({ mcps, allowPrivate }: MCPPageProps) {
                 {signal}
               </span>
             ))}
+          </div>
+          <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Marketplace intent
+            </div>
+            <div className="mt-2 text-sm font-semibold text-slate-900">
+              Connector-ready, searchable, and LLM-friendly
+            </div>
+            <p className="mt-1 text-xs text-slate-600">
+              MCP servers are indexed with auth patterns, visibility, and industry coverage so
+              teams and LLMs can discover integrations faster.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href="/aixcelerator/agents"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-brand-blue/30 hover:text-brand-deep"
+              >
+                Explore agents
+              </Link>
+              <Link
+                href="/resources/white-papers"
+                className="inline-flex items-center justify-center rounded-full border border-brand-blue/20 bg-brand-blue/5 px-3 py-1.5 text-xs font-semibold text-brand-deep hover:bg-brand-blue/10"
+              >
+                Read integration guides
+              </Link>
+            </div>
           </div>
         </div>
         <MediaPanel
