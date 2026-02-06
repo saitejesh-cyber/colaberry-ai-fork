@@ -45,7 +45,8 @@ export default function MediaPanel({
             src={image}
             alt={alt}
             fill
-            sizes="(min-width: 1280px) 520px, (min-width: 1024px) 460px, 90vw"
+            sizes="(min-width: 1920px) 820px, (min-width: 1536px) 720px, (min-width: 1280px) 640px, (min-width: 1024px) 520px, 90vw"
+            quality={90}
             className={`${fitClass} transition duration-500 ease-out`}
           />
         </div>

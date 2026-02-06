@@ -742,7 +742,8 @@ function HeroCarousel({
                   src={slide.image}
                   alt={slide.title}
                   fill
-                  sizes="(min-width: 1280px) 520px, (min-width: 1024px) 460px, 90vw"
+                  sizes="(min-width: 1920px) 820px, (min-width: 1536px) 720px, (min-width: 1280px) 640px, (min-width: 1024px) 520px, 90vw"
+                  quality={90}
                   className="object-cover object-center dark:brightness-90"
                   priority={index === 0}
                 />
