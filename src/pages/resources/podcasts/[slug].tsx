@@ -95,6 +95,8 @@ export default function PodcastDetail({ episode }: any) {
     ? episode.transcriptSegments
     : [];
   const hasTimedTranscript = transcriptSegments.length > 0;
+  const hasTranscriptText = Boolean(episode.transcript && String(episode.transcript).trim());
+  const hasTranscriptContent = hasTimedTranscript || hasTranscriptText;
   const shouldForceNative = hasTimedTranscript && audioUrl;
   const subscribeLinks = (episode.platformLinks || []).filter((link: any) => link?.url);
 
@@ -222,7 +224,7 @@ export default function PodcastDetail({ episode }: any) {
                 >
                   Copy link
                 </button>
-                {episode.transcript && String(episode.transcript).trim() && (
+                {hasTranscriptContent && (
                   <button
                     type="button"
                     onClick={() => {
@@ -286,7 +288,13 @@ export default function PodcastDetail({ episode }: any) {
                 </div>
                 {episode.transcriptGeneratedAt ? (
                   <span className="text-xs text-slate-500">
-                    Updated {new Date(episode.transcriptGeneratedAt).toLocaleDateString()}
+                    Updated{" "}
+                    {new Date(episode.transcriptGeneratedAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      timeZone: "UTC",
+                    })}
                   </span>
                 ) : null}
               </div>
