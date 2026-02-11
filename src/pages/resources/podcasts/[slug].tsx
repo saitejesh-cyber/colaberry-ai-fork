@@ -54,8 +54,12 @@ export default function PodcastDetail({ episode }: any) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const transcriptRef = useRef<HTMLDivElement | null>(null);
+  const playerRef = useRef<HTMLDivElement | null>(null);
   const hasLoggedView = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -69,6 +73,40 @@ export default function PodcastDetail({ episode }: any) {
       logPodcastEvent("view", undefined, { slug: episode.slug, title: episode.title });
     }
   }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const syncTime = () => setCurrentTime(audio.currentTime || 0);
+    const syncDuration = () => {
+      const nextDuration = Number.isFinite(audio.duration) ? audio.duration : 0;
+      setDuration(nextDuration);
+    };
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => setIsPlaying(false);
+
+    syncTime();
+    syncDuration();
+    setIsPlaying(!audio.paused);
+
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+    audio.addEventListener("ended", handleEnded);
+    audio.addEventListener("timeupdate", syncTime);
+    audio.addEventListener("loadedmetadata", syncDuration);
+    audio.addEventListener("durationchange", syncDuration);
+
+    return () => {
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+      audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("timeupdate", syncTime);
+      audio.removeEventListener("loadedmetadata", syncDuration);
+      audio.removeEventListener("durationchange", syncDuration);
+    };
+  }, [audioUrl]);
 
   const resolvedShareUrl = useMemo(() => {
     if (shareUrl) {
@@ -98,6 +136,8 @@ export default function PodcastDetail({ episode }: any) {
   const hasTranscriptText = Boolean(episode.transcript && String(episode.transcript).trim());
   const hasTranscriptContent = hasTimedTranscript || hasTranscriptText;
   const shouldForceNative = hasTimedTranscript && audioUrl;
+  const usesNativePlayer = Boolean(audioUrl && (shouldForceNative || preferNative));
+  const showMiniPlayer = usesNativePlayer && (isPlaying || currentTime > 0);
   const subscribeLinks = (episode.platformLinks || []).filter((link: any) => link?.url);
 
   const publishedLabel = episode.publishedDate
@@ -107,6 +147,34 @@ export default function PodcastDetail({ episode }: any) {
         day: "numeric",
       })
     : null;
+
+  const formatTime = (value: number) => {
+    if (!Number.isFinite(value) || value <= 0) {
+      return "0:00";
+    }
+    const minutes = Math.floor(value / 60);
+    const seconds = Math.floor(value % 60);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  const handleTogglePlayback = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
+  };
+
+  const handleStopPlayback = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+    setCurrentTime(0);
+    setIsPlaying(false);
+  };
 
   return (
     <Layout>
@@ -142,7 +210,7 @@ export default function PodcastDetail({ episode }: any) {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6">
-          <div className="surface-panel border-t-4 border-brand-blue/20 p-6">
+          <div ref={playerRef} className="surface-panel border-t-4 border-brand-blue/20 p-6">
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
               Listen to the podcast
             </div>
@@ -385,6 +453,60 @@ export default function PodcastDetail({ episode }: any) {
           )}
         </aside>
       </div>
+
+      {showMiniPlayer && (
+        <div className="pointer-events-none fixed bottom-4 left-1/2 z-50 w-[min(100%-2rem,64rem)] -translate-x-1/2">
+          <div className="pointer-events-auto surface-panel border border-slate-200/80 bg-white/95 p-3 shadow-lg backdrop-blur">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleTogglePlayback}
+                  className="btn btn-secondary btn-icon"
+                  aria-label={isPlaying ? "Pause audio" : "Play audio"}
+                  aria-pressed={isPlaying}
+                >
+                  {isPlaying ? (
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                      <rect x="6" y="5" width="4" height="14" fill="currentColor" />
+                      <rect x="14" y="5" width="4" height="14" fill="currentColor" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                      <path d="M8 5v14l11-7-11-7Z" fill="currentColor" />
+                    </svg>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleStopPlayback}
+                  className="btn btn-ghost btn-icon"
+                  aria-label="Stop audio"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+                    <rect x="6" y="6" width="12" height="12" fill="currentColor" />
+                  </svg>
+                </button>
+              </div>
+              <span className="text-xs font-semibold tabular-nums text-slate-500">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
+              <div className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-slate-900">
+                  {episode.title}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                className="btn btn-ghost btn-compact"
+              >
+                Back to player
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
