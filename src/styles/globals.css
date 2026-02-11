@@ -493,6 +493,18 @@ h6 {
   box-shadow: var(--shadow-sm);
 }
 
+.shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadow-md {
+  box-shadow: var(--shadow-md);
+}
+
+.shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
 .surface-hover {
   transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }

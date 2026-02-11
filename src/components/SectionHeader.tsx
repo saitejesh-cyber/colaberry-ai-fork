@@ -36,7 +36,7 @@ export default function SectionHeader({
         <div className={`flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 ${kickerAlign}`}>
           <span
             aria-hidden="true"
-            className="h-[2px] w-10 rounded-full bg-gradient-to-r from-brand-blue to-brand-aqua"
+            className="h-[2px] w-10 rounded-full bg-gradient-to-r from-brand-ink to-brand-teal"
           />
           <span>{kicker}</span>
         </div>

@@ -53,6 +53,7 @@ export default function PodcastDetail({ episode }: any) {
   const [shareUrl, setShareUrl] = useState("");
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const [transcriptOpen, setTranscriptOpen] = useState(false);
+  const [playerPinned, setPlayerPinned] = useState(false);
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const hasLoggedView = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -142,7 +143,11 @@ export default function PodcastDetail({ episode }: any) {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6">
-          <div className="surface-panel border-t-4 border-brand-blue/20 p-6">
+          <div
+            className={`surface-panel border-t-4 border-brand-blue/20 p-6 ${
+              playerPinned ? "lg:sticky lg:top-[calc(var(--site-header-height)+1.25rem)] lg:z-20" : ""
+            }`}
+          >
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
               Listen to the podcast
             </div>
@@ -229,6 +234,7 @@ export default function PodcastDetail({ episode }: any) {
                     type="button"
                     onClick={() => {
                       setTranscriptOpen(true);
+                      setPlayerPinned(true);
                       setTimeout(() => {
                         transcriptRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                       }, 50);
