@@ -2,6 +2,7 @@ import Layout from "../../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
+import { heroImage } from "../../lib/media";
 
 export default function IndustriesIndex() {
   const industries = [
@@ -60,7 +61,7 @@ export default function IndustriesIndex() {
           kicker="Industry coverage"
           title="Service line coverage map"
           description="A quick view of industry-aligned AI service lines."
-          image="/media/hero/hero-industries.png"
+          image={heroImage("hero-industries.png")}
           alt="Industry landscape overview"
           aspect="wide"
           fit="cover"

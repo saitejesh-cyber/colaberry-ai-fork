@@ -2,6 +2,7 @@ import Layout from "../../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
+import { heroImage } from "../../lib/media";
 
 export default function Solutions() {
   const solutions = [
@@ -79,7 +80,7 @@ export default function Solutions() {
           kicker="Solution preview"
           title="Operational playbooks"
           description="Repeatable solution patterns ready for deployment."
-          image="/media/hero/hero-solutions.png"
+          image={heroImage("hero-solutions.png")}
           alt="Operational playbook overview"
           aspect="wide"
           fit="cover"

@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { GetServerSideProps } from "next";
 import fallbackAgents from "../../data/agents.json";
 import { Agent, fetchAgents } from "../../lib/cms";
+import { heroImage } from "../../lib/media";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
@@ -269,7 +270,7 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
           kicker="Catalog preview"
           title="Agent coverage at a glance"
           description="Quickly see ownership, visibility, and readiness status."
-          image="/media/hero/hero-agents.png"
+          image={heroImage("hero-agents.png")}
           alt="Operators reviewing agent coverage"
           aspect="wide"
           fit="cover"

@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { GetServerSideProps } from "next";
 import fallbackMCPs from "../../data/mcps.json";
 import { fetchMCPServers, MCPServer } from "../../lib/cms";
+import { heroImage } from "../../lib/media";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
@@ -269,7 +270,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
           kicker="Integration preview"
           title="Connector-ready surface"
           description="Standardize tool access with MCP server patterns and endpoints."
-          image="/media/hero/hero-mcp.png"
+          image={heroImage("hero-mcp.png")}
           alt="MCP integration network overview"
           aspect="wide"
           fit="cover"

@@ -1,6 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    localPatterns: [
+      {
+        pathname: "/media/hero/**",
+      },
+      {
+        pathname: "/media/hero/**",
+        search: "?v=*",
+      },
+    ],
+  },
   async rewrites() {
     return [
       { source: "/podcasts", destination: "/resources/podcasts" },

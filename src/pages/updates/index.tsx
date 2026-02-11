@@ -3,6 +3,7 @@ import Link from "next/link";
 import Head from "next/head";
 import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
+import { heroImage } from "../../lib/media";
 
 export default function Updates() {
   const updateHighlights = [
@@ -57,7 +58,7 @@ export default function Updates() {
           kicker="Signal feed"
           title="Updates and announcements"
           description="Product releases and ecosystem signals in one place."
-          image="/media/hero/hero-updates.png"
+          image={heroImage("hero-updates.png")}
           alt="City skyline highlighting update signals"
           aspect="wide"
           fit="cover"

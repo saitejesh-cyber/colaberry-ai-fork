@@ -3,6 +3,7 @@ import Link from "next/link";
 import Head from "next/head";
 import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
+import { heroImage } from "../../lib/media";
 
 export default function Resources() {
   const resourceHighlights = [
@@ -57,7 +58,7 @@ export default function Resources() {
           kicker="Knowledge hub"
           title="Research and artifacts"
           description="Podcasts, books, white papers, and curated signals."
-          image="/media/hero/hero-resources.png"
+          image={heroImage("hero-resources.png")}
           alt="Research workspace overview"
           aspect="wide"
           fit="cover"

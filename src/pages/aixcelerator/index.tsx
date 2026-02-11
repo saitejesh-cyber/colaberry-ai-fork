@@ -3,6 +3,7 @@ import Link from "next/link";
 import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
 import { coreCapabilities, modularLayers } from "../../data/platformCapabilities";
+import { heroImage } from "../../lib/media";
 
 export default function AIXcelerator() {
   return (
@@ -24,7 +25,7 @@ export default function AIXcelerator() {
           kicker="Platform preview"
           title="Governed delivery surface"
           description="A clean, visual surface for readiness, workflow alignment, and modular layers."
-          image="/media/hero/hero-platform.png"
+          image={heroImage("hero-platform.png")}
           alt="Governed delivery platform preview"
           aspect="wide"
           fit="cover"

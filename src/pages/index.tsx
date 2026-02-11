@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Head from "next/head";
 import SectionHeader from "../components/SectionHeader";
+import { heroImage } from "../lib/media";
 
 export default function Home() {
   const industries = [
@@ -75,21 +76,21 @@ export default function Home() {
       eyebrow: "Agents",
       title: "Agent operations radar",
       description: "Track ownership, readiness, and evaluation signals in one view.",
-      image: "/media/hero/hero-agents.png",
+      image: heroImage("hero-agents.png"),
       highlight: "Ownership + evals",
     },
     {
       eyebrow: "MCP",
       title: "Integration surface map",
       description: "Connect tools with standardized MCP server templates and patterns.",
-      image: "/media/hero/hero-mcp.png",
+      image: heroImage("hero-mcp.png"),
       highlight: "Connector-ready",
     },
     {
       eyebrow: "Knowledge",
       title: "Unified knowledge signals",
       description: "Podcasts, white papers, and updates organized for fast discovery.",
-      image: "/media/hero/hero-resources.png",
+      image: heroImage("hero-resources.png"),
       highlight: "Curated signals",
     },
   ];
