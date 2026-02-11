@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { GetServerSideProps } from "next";
 import Layout from "../components/Layout";
 import SectionHeader from "../components/SectionHeader";
+import StatePanel from "../components/StatePanel";
 import fallbackAgents from "../data/agents.json";
 import fallbackMcps from "../data/mcps.json";
 import caseStudies from "../data/caseStudies.json";
@@ -284,10 +285,7 @@ export default function SearchPage({ query, results }: SearchPageProps) {
               placeholder="Search agents, MCP servers, podcasts, case studies..."
               className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
             />
-            <button
-              type="submit"
-              className="focus-ring inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white shadow-sm hover:bg-slate-800"
-            >
+            <button type="submit" className="btn btn-primary btn-sm">
               Search
             </button>
           </form>
@@ -298,14 +296,22 @@ export default function SearchPage({ query, results }: SearchPageProps) {
       </div>
 
       {!query ? (
-        <div className="mt-8 surface-panel p-6 text-sm text-slate-600">
-          Enter a search term to explore the catalog.
+        <div className="mt-8">
+          <StatePanel
+            variant="empty"
+            title="Start with a search term"
+            description="Enter a keyword to explore agents, MCP servers, podcasts, and case studies."
+          />
         </div>
       ) : null}
 
       {query && !hasResults ? (
-        <div className="mt-8 surface-panel p-6 text-sm text-slate-600">
-          No results yet. Try a broader keyword or search by industry.
+        <div className="mt-8">
+          <StatePanel
+            variant="empty"
+            title="No results yet"
+            description="Try a broader keyword, check spelling, or search by industry."
+          />
         </div>
       ) : null}
 

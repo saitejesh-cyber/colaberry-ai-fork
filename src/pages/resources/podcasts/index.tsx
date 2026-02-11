@@ -7,9 +7,16 @@ import { useMemo, useState } from "react";
 import SectionHeader from "../../../components/SectionHeader";
 import BuzzsproutPlayer from "../../../components/BuzzsproutPlayer";
 import MediaPanel from "../../../components/MediaPanel";
+import StatePanel from "../../../components/StatePanel";
 import { fetchPodcastEpisodes, PodcastEpisode } from "../../../lib/cms";
 
-export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
+export default function Podcasts({
+  episodes,
+  fetchError,
+}: {
+  episodes: PodcastEpisode[];
+  fetchError: boolean;
+}) {
   const internalEpisodes = useMemo(
     () => episodes.filter((episode) => (episode.podcastType || "internal") === "internal"),
     [episodes]
@@ -45,6 +52,15 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
       <Head>
         <title>Podcasts | Colaberry AI</title>
       </Head>
+      {fetchError && (
+        <div className="mb-6">
+          <StatePanel
+            variant="error"
+            title="Podcast data is temporarily unavailable"
+            description="Showing cached results while we reconnect to the CMS."
+          />
+        </div>
+      )}
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
         <div className="flex flex-col gap-3">
           <SectionHeader
@@ -134,7 +150,13 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
           </div>
 
           {internalEpisodes.length === 0 && (
-            <p className="mt-3 text-sm text-slate-500">No podcasts yet.</p>
+            <div className="mt-3">
+              <StatePanel
+                variant="empty"
+                title="No internal podcasts yet"
+                description="Check back after new episodes are published to the CMS."
+              />
+            </div>
           )}
 
           <ul className="mt-4 grid gap-4">
@@ -198,6 +220,15 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
           <p className="mt-1 text-sm text-slate-600">
             Surface trusted public sources with a consistent listening experience.
           </p>
+          {externalEpisodes.length === 0 && (
+            <div className="mt-4">
+              <StatePanel
+                variant="empty"
+                title="No external podcast sources"
+                description="Add external feeds in the CMS to surface third-party episodes here."
+              />
+            </div>
+          )}
           {externalEpisodes.length > 0 && (
             <ul className="mt-4 grid gap-4">
               {externalEpisodes.map((ep) => (
@@ -236,8 +267,12 @@ export default function Podcasts({ episodes }: { episodes: PodcastEpisode[] }) {
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const episodes = await fetchPodcastEpisodes();
-  return { props: { episodes } };
+  try {
+    const episodes = await fetchPodcastEpisodes();
+    return { props: { episodes, fetchError: false } };
+  } catch {
+    return { props: { episodes: [], fetchError: true } };
+  }
 };
 
 async function logPodcastEvent(

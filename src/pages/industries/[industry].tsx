@@ -30,11 +30,11 @@ export default function Industry() {
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/request-demo"
-              className="inline-flex items-center justify-center rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+              className="btn btn-primary"
             >
               Book a demo
             </Link>
-            <button className="focus-ring inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 hover:bg-slate-50">
+            <button type="button" className="btn btn-secondary">
               Subscribe
             </button>
           </div>

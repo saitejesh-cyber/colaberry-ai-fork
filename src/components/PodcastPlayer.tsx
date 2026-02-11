@@ -105,13 +105,17 @@ export default function PodcastPlayer({
     return (
       <div className="relative">
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-300">
+          <div
+            role="status"
+            aria-live="polite"
+            className="absolute inset-0 flex items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-300"
+          >
             <span>Loading podcast player…</span>
             {!shouldLoad && (
               <button
                 type="button"
                 onClick={() => setShouldLoad(true)}
-                className="rounded-full border border-slate-200/80 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:text-brand-deep dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                className="btn btn-secondary btn-compact"
               >
                 Load now
               </button>

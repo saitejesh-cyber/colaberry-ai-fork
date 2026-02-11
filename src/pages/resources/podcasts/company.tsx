@@ -1,6 +1,7 @@
 import Layout from "../../../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../../../components/SectionHeader";
+import StatePanel from "../../../components/StatePanel";
 
 export async function getServerSideProps({ query }: any) {
   const slug = query?.slug;
@@ -9,54 +10,77 @@ export async function getServerSideProps({ query }: any) {
     return { notFound: true };
   }
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_CMS_URL}/api/podcast-episodes` +
-      `?filters[companies][slug][$eq]=${slug}` +
-      `&filters[podcastStatus][$eq]=published` +
-      `&publicationState=live` +
-      `&populate[companies][fields][0]=name` +
-      `&populate[companies][fields][1]=slug` +
-      `&populate[tags][fields][0]=name` +
-      `&populate[tags][fields][1]=slug`,
-    { cache: "no-store" }
-  );
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_CMS_URL}/api/podcast-episodes` +
+        `?filters[companies][slug][$eq]=${slug}` +
+        `&filters[podcastStatus][$eq]=published` +
+        `&publicationState=live` +
+        `&populate[companies][fields][0]=name` +
+        `&populate[companies][fields][1]=slug` +
+        `&populate[tags][fields][0]=name` +
+        `&populate[tags][fields][1]=slug`,
+      { cache: "no-store" }
+    );
 
-  const json = await res.json();
-  const episodes =
-    json?.data?.map((item: any) => {
-      const attrs = item.attributes ?? item;
-      return {
-        id: item.id,
-        title: attrs.title,
-        slug: attrs.slug,
-        tags: attrs.tags?.data ?? attrs.tags ?? [],
-        companies: attrs.companies?.data ?? attrs.companies ?? [],
-      };
-    }) || [];
+    const json = await res.json();
+    const episodes =
+      json?.data?.map((item: any) => {
+        const attrs = item.attributes ?? item;
+        return {
+          id: item.id,
+          title: attrs.title,
+          slug: attrs.slug,
+          tags: attrs.tags?.data ?? attrs.tags ?? [],
+          companies: attrs.companies?.data ?? attrs.companies ?? [],
+        };
+      }) || [];
 
-  const companyName =
-    episodes?.[0]?.companies?.[0]?.attributes?.name ??
-    episodes?.[0]?.companies?.[0]?.name ??
-    slug;
+    const companyName =
+      episodes?.[0]?.companies?.[0]?.attributes?.name ??
+      episodes?.[0]?.companies?.[0]?.name ??
+      slug;
 
-  return {
-    props: {
-      companySlug: slug,
-      companyName,
-      episodes,
-    },
-  };
+    return {
+      props: {
+        companySlug: slug,
+        companyName,
+        episodes,
+        fetchError: false,
+      },
+    };
+  } catch {
+    return {
+      props: {
+        companySlug: slug,
+        companyName: slug,
+        episodes: [],
+        fetchError: true,
+      },
+    };
+  }
 }
 
 export default function PodcastCompanyPage({
   companyName,
   episodes,
+  fetchError,
 }: {
   companyName: string;
   episodes: any[];
+  fetchError: boolean;
 }) {
   return (
     <Layout>
+      {fetchError && (
+        <div className="mb-6">
+          <StatePanel
+            variant="error"
+            title="Podcast data is temporarily unavailable"
+            description="Try again in a moment while we reconnect to the CMS."
+          />
+        </div>
+      )}
       <div className="flex flex-col gap-3">
         <SectionHeader
           as="h1"
@@ -92,10 +116,12 @@ export default function PodcastCompanyPage({
           </li>
         ))}
         {episodes.length === 0 && (
-          <li className="surface-panel border-t-4 border-brand-blue/20 p-4">
-            <div className="text-sm text-slate-600">
-              No episodes tagged for {companyName} yet.
-            </div>
+          <li>
+            <StatePanel
+              variant="empty"
+              title={`No episodes tagged for ${companyName}`}
+              description="Check back after new episodes are published."
+            />
           </li>
         )}
       </ul>

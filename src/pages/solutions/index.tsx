@@ -101,13 +101,13 @@ export default function Solutions() {
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Link
           href="/industries"
-          className="focus-ring inline-flex items-center justify-center rounded-full border border-brand-blue/25 bg-white px-4 py-2.5 text-sm font-semibold text-brand-ink hover:bg-slate-50"
+          className="btn btn-secondary"
         >
           View industries
         </Link>
         <Link
           href="/resources"
-          className="inline-flex items-center justify-center rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+          className="btn btn-primary"
         >
           Explore resources
         </Link>

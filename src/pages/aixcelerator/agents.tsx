@@ -2,6 +2,7 @@ import AgentCard from "../../components/AgentCard";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
+import StatePanel from "../../components/StatePanel";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GetServerSideProps } from "next";
 import fallbackAgents from "../../data/agents.json";
@@ -13,6 +14,7 @@ import Link from "next/link";
 type AgentsPageProps = {
   agents: Agent[];
   allowPrivate: boolean;
+  fetchError: boolean;
 };
 
 export const getServerSideProps: GetServerSideProps<AgentsPageProps> = async () => {
@@ -26,16 +28,16 @@ export const getServerSideProps: GetServerSideProps<AgentsPageProps> = async () 
       : (fallbackAgents as Agent[]).filter(
           (agent) => (agent.visibility || "public").toLowerCase() === "public"
         );
-    return { props: { agents: safeAgents, allowPrivate } };
+    return { props: { agents: safeAgents, allowPrivate, fetchError: false } };
   } catch {
     const safeAgents = (fallbackAgents as Agent[]).filter(
       (agent) => (agent.visibility || "public").toLowerCase() === "public"
     );
-    return { props: { agents: safeAgents, allowPrivate } };
+    return { props: { agents: safeAgents, allowPrivate, fetchError: true } };
   }
 };
 
-export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
+export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageProps) {
   const router = useRouter();
   const [visibility, setVisibility] = useState<"all" | "public" | "private">(
     allowPrivate ? "all" : "public"
@@ -152,6 +154,7 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
     [filteredAgents, shownCount]
   );
   const hasMore = shownCount < filteredAgents.length;
+  const hasResults = filteredAgents.length > 0;
 
   useEffect(() => {
     setVisibleCount(pageSize);
@@ -185,6 +188,25 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
         <link rel="canonical" href={canonicalUrl} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
+
+      {fetchError && (
+        <div className="mb-6">
+          <StatePanel
+            variant="error"
+            title="Live agent data is temporarily unavailable"
+            description="Showing cached catalog entries while we reconnect to the CMS."
+            action={
+              <button
+                type="button"
+                onClick={() => router.replace(router.asPath)}
+                className="btn btn-secondary btn-sm"
+              >
+                Retry
+              </button>
+            }
+          />
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
         <div className="flex flex-col gap-3">
@@ -402,7 +424,8 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
                   key={option}
                   type="button"
                   onClick={() => setVisibility(option)}
-                  className={`chip rounded-full px-3 py-1 text-xs font-semibold ${
+                  aria-pressed={active}
+                  className={`chip focus-ring rounded-full px-3 py-1 text-xs font-semibold ${
                     active ? "chip-brand" : "chip-muted"
                   }`}
                 >
@@ -423,20 +446,32 @@ export default function Agents({ agents, allowPrivate }: AgentsPageProps) {
         ))}
       </div>
 
+      {!hasResults && (
+        <div className="mt-6">
+          <StatePanel
+            variant="empty"
+            title="No agents match these filters"
+            description="Try clearing filters, switching visibility, or using a shorter search query."
+          />
+        </div>
+      )}
+
       <div className="mt-6 flex flex-col items-center gap-3">
-        {hasMore ? (
-          <button
-            type="button"
-            onClick={() => setVisibleCount((prev) => Math.min(prev + pageSize, filteredAgents.length))}
-            className="rounded-full border border-slate-200/80 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-brand-blue/40 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
-          >
-            Load more agents
-          </button>
-        ) : (
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            End of results
-          </div>
-        )}
+        {hasResults ? (
+          hasMore ? (
+            <button
+              type="button"
+              onClick={() => setVisibleCount((prev) => Math.min(prev + pageSize, filteredAgents.length))}
+              className="btn btn-secondary"
+            >
+              Load more agents
+            </button>
+          ) : (
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              End of results
+            </div>
+          )
+        ) : null}
         <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
       </div>
     </Layout>

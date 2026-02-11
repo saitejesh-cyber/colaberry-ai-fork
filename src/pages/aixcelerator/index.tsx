@@ -68,7 +68,7 @@ export default function AIXcelerator() {
           />
           <Link
             href="/resources"
-            className="mt-3 inline-flex items-center justify-center rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 sm:mt-0"
+            className="btn btn-primary mt-3 sm:mt-0"
           >
             Explore resource layers
           </Link>

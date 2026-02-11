@@ -71,7 +71,9 @@ export default function TranscriptTimeline({ segments, audioRef }: TranscriptTim
             key={`${segment.start}-${index}`}
             type="button"
             onClick={() => handleSeek(segment.start)}
-            className={`group flex w-full items-start gap-3 rounded-2xl border px-4 py-3 text-left transition ${
+            aria-label={`Jump to ${formatTime(segment.start)}`}
+            aria-current={isActive ? "true" : undefined}
+            className={`focus-ring group flex w-full items-start gap-3 rounded-2xl border px-4 py-3 text-left transition ${
               isActive
                 ? "border-brand-blue/50 bg-brand-blue/5"
                 : "border-slate-200/80 bg-white/80 hover:border-brand-blue/30"

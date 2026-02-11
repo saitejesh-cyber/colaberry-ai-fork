@@ -80,10 +80,7 @@ export default function Resources() {
             aria-describedby="resource-search-help"
             className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
           />
-          <button
-            type="submit"
-            className="focus-ring inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white shadow-sm hover:bg-slate-800"
-          >
+          <button type="submit" className="btn btn-primary btn-sm">
             Search
           </button>
         </form>

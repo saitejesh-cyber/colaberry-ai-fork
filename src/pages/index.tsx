@@ -271,13 +271,13 @@ export default function Home() {
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/request-demo"
-                className="inline-flex items-center justify-center rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+                className="btn btn-primary"
               >
                 Book a demo
               </Link>
               <Link
                 href="/resources"
-                className="focus-ring inline-flex items-center justify-center rounded-full border border-brand-blue/25 bg-white/90 px-5 py-2.5 text-sm font-semibold text-brand-ink shadow-sm hover:bg-white"
+                className="btn btn-secondary"
               >
                 Explore the catalog
               </Link>
@@ -303,10 +303,7 @@ export default function Home() {
                   aria-describedby="catalog-search-help"
                   className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
                 />
-                <button
-                  type="submit"
-                  className="focus-ring inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white shadow-sm hover:bg-slate-800"
-                >
+                <button type="submit" className="btn btn-primary btn-sm">
                   Search
                 </button>
               </form>
@@ -521,7 +518,7 @@ export default function Home() {
           </div>
           <Link
             href="/aixcelerator/mcp"
-            className="focus-ring mt-3 inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-50 sm:mt-0"
+            className="btn btn-secondary mt-3 sm:mt-0"
           >
             Explore MCP servers
           </Link>
@@ -563,13 +560,13 @@ export default function Home() {
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/aixcelerator"
-              className="focus-ring inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+              className="btn btn-primary"
             >
               Explore AIXcelerator
             </Link>
             <Link
               href="/industries/agriculture"
-              className="focus-ring inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+              className="btn btn-secondary"
             >
               View industries
             </Link>
@@ -612,7 +609,7 @@ export default function Home() {
           </div>
           <Link
             href="/resources"
-            className="mt-3 inline-flex items-center justify-center rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 sm:mt-0"
+            className="btn btn-primary mt-3 sm:mt-0"
           >
             Explore resources
           </Link>
@@ -864,7 +861,7 @@ function HeroCarousel({
           <button
             type="button"
             onClick={onPrev}
-            className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200/80 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+            className="btn btn-ghost btn-icon"
             aria-label="Previous slide"
           >
             <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
@@ -887,11 +884,12 @@ function HeroCarousel({
                   key={slide.title}
                   type="button"
                   onClick={() => onSelect(index)}
-                  className={`h-2.5 w-2.5 rounded-full transition ${
+                  className={`focus-ring h-2.5 w-2.5 rounded-full transition ${
                     isActive ? "bg-brand-blue" : "bg-slate-300 hover:bg-slate-400"
                   }`}
                   aria-label={`Go to ${slide.eyebrow} slide`}
                   aria-current={isActive ? "true" : undefined}
+                  aria-pressed={isActive}
                 />
               );
             })}
@@ -900,7 +898,7 @@ function HeroCarousel({
           <button
             type="button"
             onClick={onNext}
-            className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200/80 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+            className="btn btn-ghost btn-icon"
             aria-label="Next slide"
           >
             <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">

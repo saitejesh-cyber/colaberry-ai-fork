@@ -169,7 +169,7 @@ export default function PodcastDetail({ episode }: any) {
                   href={shareLinks.linkedin}
                   target="_blank"
                   rel="noreferrer"
-                  className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
+                  className="btn btn-ghost btn-icon"
                   aria-label="Share on LinkedIn"
                   onClick={() => logPodcastEvent("share", "linkedin", { slug: episode.slug, title: episode.title })}
                 >
@@ -186,7 +186,7 @@ export default function PodcastDetail({ episode }: any) {
                   href={shareLinks.x}
                   target="_blank"
                   rel="noreferrer"
-                  className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
+                  className="btn btn-ghost btn-icon"
                   aria-label="Share on X"
                   onClick={() => logPodcastEvent("share", "x", { slug: episode.slug, title: episode.title })}
                 >
@@ -201,7 +201,7 @@ export default function PodcastDetail({ episode }: any) {
                   href={shareLinks.facebook}
                   target="_blank"
                   rel="noreferrer"
-                  className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
+                  className="btn btn-ghost btn-icon"
                   aria-label="Share on Facebook"
                   onClick={() => logPodcastEvent("share", "facebook", { slug: episode.slug, title: episode.title })}
                 >
@@ -220,7 +220,7 @@ export default function PodcastDetail({ episode }: any) {
                       logPodcastEvent("share", "copy", { slug: episode.slug, title: episode.title });
                     }
                   }}
-                  className="focus-ring inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
+                  className="btn btn-ghost btn-compact"
                 >
                   Copy link
                 </button>
@@ -233,7 +233,7 @@ export default function PodcastDetail({ episode }: any) {
                         transcriptRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                       }, 50);
                     }}
-                    className="focus-ring inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
+                    className="btn btn-ghost btn-compact"
                   >
                     Transcript
                   </button>

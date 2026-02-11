@@ -401,7 +401,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={openSearch}
-              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/70 bg-white/90 text-slate-600 transition hover:border-brand-blue/40 hover:text-brand-blue dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:text-white"
+              className="btn btn-ghost btn-icon"
               aria-label="Open global search"
             >
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
@@ -423,7 +423,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={toggleTheme}
-              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-400 bg-white text-slate-900 hover:bg-slate-100/90 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800/70"
+              className="btn btn-ghost btn-icon"
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
               <span className="sr-only">
@@ -436,7 +436,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 href={globalNav.cta.href}
                 target={globalNav.cta.target ?? undefined}
                 rel={getLinkRel(globalNav.cta.target)}
-                className="ml-1 inline-flex h-9 items-center justify-center gap-2 rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+                className="btn btn-primary btn-sm ml-1"
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
                   <path
@@ -461,7 +461,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={openSearch}
-              className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/70 bg-white/90 text-slate-600 transition hover:border-brand-blue/40 hover:text-brand-blue dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:text-white"
+              className="btn btn-ghost btn-icon"
               aria-label="Open global search"
             >
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
@@ -511,7 +511,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   onClick={toggleTheme}
-                  className="focus-ring mt-2 flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800/70"
+                  className="btn btn-ghost btn-sm mt-2 w-full"
                   aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
                 >
                   <span className="sr-only">
@@ -525,8 +525,8 @@ export default function Layout({ children }: { children: ReactNode }) {
                     href={globalNav.cta.href}
                     target={globalNav.cta.target ?? undefined}
                     rel={getLinkRel(globalNav.cta.target)}
-                    className="mt-1 flex h-9 w-full items-center justify-center gap-2 rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-3 text-center text-xs font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
-                  >
+                  className="btn btn-primary btn-sm mt-1 w-full"
+                >
                     <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
                       <path
                         d="M7 3v2M17 3v2M4 8h16M6 6h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
@@ -659,7 +659,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={closeSearch}
-                className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/70 bg-white text-slate-600 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+                className="btn btn-ghost btn-icon"
                 aria-label="Close search"
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
@@ -704,7 +704,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 </div>
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+                  className="btn btn-primary"
                 >
                   Search
                 </button>
@@ -746,7 +746,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={dismissDiscovery}
-                className="focus-ring inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200/70 bg-white text-slate-500 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+                className="btn btn-ghost btn-icon"
                 aria-label="Dismiss"
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">

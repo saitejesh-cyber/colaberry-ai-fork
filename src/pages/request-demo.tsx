@@ -25,13 +25,13 @@ export default function RequestDemo() {
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <a
               href="mailto:info@colaberry.com?subject=Colaberry%20AI%20Demo%20Request"
-              className="inline-flex items-center justify-center rounded-full bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+              className="btn btn-primary"
             >
               Email to book a demo
             </a>
             <Link
               href="/aixcelerator"
-              className="focus-ring inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+              className="btn btn-secondary"
             >
               Explore AIXcelerator
             </Link>
