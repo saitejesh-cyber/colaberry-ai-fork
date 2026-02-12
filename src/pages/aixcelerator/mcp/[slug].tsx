@@ -31,6 +31,13 @@ export const getServerSideProps: GetServerSideProps<MCPDetailProps> = async ({ p
 export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
   const isPrivate = (mcp.visibility || "public").toLowerCase() === "private";
   const status = mcp.status || "Unknown";
+  const statusKey = status.toLowerCase();
+  const statusHint =
+    statusKey === "active" || statusKey === "live"
+      ? "Production-ready or actively deployed."
+      : statusKey === "beta"
+        ? "In pilot with limited availability."
+        : "Discovery or planning stage.";
   const source = mcp.source || "internal";
   const sourceLabel =
     source === "external" ? "External" : source === "partner" ? "Partner" : "Internal";
@@ -47,6 +54,7 @@ export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
   const canonicalUrl = `${siteUrl}/aixcelerator/mcp/${mcp.slug || mcp.id}`;
   const tagNames = (mcp.tags || []).map((tag) => tag.name || tag.slug).filter(Boolean);
   const companyNames = (mcp.companies || []).map((company) => company.name || company.slug).filter(Boolean);
+  const hasCoverImage = Boolean(mcp.coverImageUrl);
   const keywords = [mcp.industry, mcp.category, ...tagNames, ...companyNames].filter(Boolean).join(", ");
   const jsonLd = {
     "@context": "https://schema.org",
@@ -101,59 +109,162 @@ export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
       </nav>
 
       <div className="hero-surface mt-4 rounded-[32px] p-8 sm:p-10">
-        <SectionHeader
-          as="h1"
-          size="xl"
-          kicker="MCP profile"
-          title={mcp.name}
-          description={mcp.description || "Detailed overview coming soon."}
-        />
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          <span className="chip chip-brand rounded-full px-3 py-1 text-xs font-semibold">
-            {mcp.industry || "General"}
-          </span>
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-            {sourceDisplay}
-          </span>
-          {mcp.verified ? (
-            <span className="chip rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              Verified
-            </span>
-          ) : null}
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-            {isPrivate ? "Private" : "Public"}
-          </span>
-          {!allowPrivate && isPrivate ? (
-            <span className="text-xs text-slate-500">Private listings hidden</span>
-          ) : null}
+        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+          <div>
+            <SectionHeader
+              as="h1"
+              size="xl"
+              kicker="MCP profile"
+              title={mcp.name}
+              description={mcp.description || "Detailed overview coming soon."}
+            />
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <span className="chip chip-brand rounded-full px-3 py-1 text-xs font-semibold">
+                {mcp.industry || "General"}
+              </span>
+              {mcp.category ? (
+                <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
+                  {mcp.category}
+                </span>
+              ) : null}
+              <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </span>
+              <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
+                {sourceDisplay}
+              </span>
+              {mcp.verified ? (
+                <span className="chip rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  Verified
+                </span>
+              ) : null}
+              <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
+                {isPrivate ? "Private" : "Public"}
+              </span>
+              {!allowPrivate && isPrivate ? (
+                <span className="text-xs text-slate-500">Private listings hidden</span>
+              ) : null}
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {mcp.docsUrl ? (
+                <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
+                  View documentation
+                </a>
+              ) : (
+                <Link href="/request-demo" className="btn btn-primary">
+                  Book a demo
+                </Link>
+              )}
+              {mcp.sourceUrl ? (
+                <a href={mcp.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
+                  View source
+                </a>
+              ) : (
+                <Link href="/aixcelerator/mcp" className="btn btn-secondary">
+                  View all MCP servers
+                </Link>
+              )}
+            </div>
+          </div>
+
+          <div className="surface-panel overflow-hidden border border-slate-200/80 p-0">
+            <div className="relative aspect-[4/3] w-full">
+              {hasCoverImage ? (
+                <img
+                  src={mcp.coverImageUrl || ""}
+                  alt={mcp.coverImageAlt || mcp.name}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
+                  <div className="flex flex-col items-center gap-3 text-slate-400">
+                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                      <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden="true">
+                        <path
+                          d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7Zm5 2a2 2 0 0 0-2 2v4h2v-2h2v2h2v-4a2 2 0 0 0-2-2H9Zm6 0a2 2 0 0 0-2 2v4h2v-2h2v2h2v-4a2 2 0 0 0-2-2h-2Z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-semibold uppercase tracking-[0.2em]">
+                      MCP surface
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <section className="surface-panel mt-6 p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="LLM metadata"
-          title="Structured profile"
-          description="Structured metadata optimized for LLM retrieval and catalog indexing."
-        />
-        <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-          <MetadataRow label="Name" value={mcp.name} />
-          <MetadataRow label="Slug" value={mcp.slug || "Not provided"} />
-          <MetadataRow label="Industry" value={mcp.industry || "General"} />
-          <MetadataRow label="Category" value={mcp.category || "General"} />
-          <MetadataRow label="Status" value={status} />
-          <MetadataRow label="Visibility" value={isPrivate ? "Private" : "Public"} />
-          <MetadataRow label="Source" value={sourceDisplay} />
-          <MetadataRow label="Verified" value={mcp.verified ? "Yes" : "No"} />
-          <MetadataRow label="Tags" value={formatList(mcp.tags)} />
-          <MetadataRow label="Companies" value={formatList(mcp.companies)} />
-          <MetadataRow label="Documentation" value={mcp.docsUrl || "Not linked yet"} href={mcp.docsUrl || undefined} />
-          <MetadataRow label="Source URL" value={mcp.sourceUrl || "Not linked yet"} href={mcp.sourceUrl || undefined} />
-        </dl>
+      <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="Operational summary"
+            title="Readiness snapshot"
+            description="Deployment status, ownership signals, and documentation access."
+          />
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <DetailCard label="Status" value={status} description={statusHint} />
+            <DetailCard
+              label="Visibility"
+              value={isPrivate ? "Private" : "Public"}
+              description={isPrivate ? "Restricted access listing." : "Available for catalog discovery."}
+            />
+            <DetailCard
+              label="Verified"
+              value={mcp.verified ? "Yes" : "No"}
+              description={mcp.verified ? "Ownership and metadata reviewed." : "Verification pending."}
+            />
+            <DetailCard
+              label="Industry"
+              value={mcp.industry || "General"}
+              description="Primary domain alignment."
+            />
+            <DetailCard
+              label="Category"
+              value={mcp.category || "General"}
+              description="Integration classification."
+            />
+            <DetailCard
+              label="Signals"
+              value={`${tagNames.length} tags • ${companyNames.length} companies`}
+              description="Discovery metadata attached."
+            />
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <ListBlock label="Tags" items={tagNames} emptyLabel="No tags yet." />
+            <ListBlock label="Companies" items={companyNames} emptyLabel="No companies linked." />
+          </div>
+        </div>
+
+        <aside className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="LLM metadata"
+            title="Structured profile"
+            description="Fields optimized for catalog indexing and retrieval."
+          />
+          <dl className="mt-6 grid gap-4">
+            <MetadataRow label="Name" value={mcp.name} />
+            <MetadataRow label="Slug" value={mcp.slug || "Not provided"} />
+            <MetadataRow label="Industry" value={mcp.industry || "General"} />
+            <MetadataRow label="Category" value={mcp.category || "General"} />
+            <MetadataRow label="Status" value={status} />
+            <MetadataRow label="Visibility" value={isPrivate ? "Private" : "Public"} />
+            <MetadataRow label="Source" value={sourceDisplay} />
+            <MetadataRow label="Verified" value={mcp.verified ? "Yes" : "No"} />
+            <MetadataRow label="Tags" value={formatList(mcp.tags)} />
+            <MetadataRow label="Companies" value={formatList(mcp.companies)} />
+            <MetadataRow label="Documentation" value={mcp.docsUrl || "Not linked yet"} href={mcp.docsUrl || undefined} />
+            <MetadataRow label="Source URL" value={mcp.sourceUrl || "Not linked yet"} href={mcp.sourceUrl || undefined} />
+          </dl>
+        </aside>
       </section>
     </Layout>
   );
@@ -181,4 +292,52 @@ function formatList(items?: { name?: string; slug?: string }[]) {
     return "Not tagged yet";
   }
   return items.map((item) => item.name || item.slug || "").filter(Boolean).join(", ");
+}
+
+function DetailCard({
+  label,
+  value,
+  description,
+}: {
+  label: string;
+  value: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
+      <div className="mt-1 text-xs text-slate-600">{description}</div>
+    </div>
+  );
+}
+
+function ListBlock({
+  label,
+  items,
+  emptyLabel,
+}: {
+  label: string;
+  items: string[];
+  emptyLabel: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      {items.length ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {items.map((item) => (
+            <span
+              key={`${label}-${item}`}
+              className="chip chip-muted rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-2 text-xs text-slate-500">{emptyLabel}</p>
+      )}
+    </div>
+  );
 }

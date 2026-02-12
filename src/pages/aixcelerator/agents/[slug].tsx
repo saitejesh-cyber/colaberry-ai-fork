@@ -31,6 +31,13 @@ export const getServerSideProps: GetServerSideProps<AgentDetailProps> = async ({
 export default function AgentDetail({ agent, allowPrivate }: AgentDetailProps) {
   const isPrivate = (agent.visibility || "public").toLowerCase() === "private";
   const status = agent.status || "Unknown";
+  const statusKey = status.toLowerCase();
+  const statusHint =
+    statusKey === "active" || statusKey === "live"
+      ? "Production-ready or actively deployed."
+      : statusKey === "beta"
+        ? "In pilot with limited availability."
+        : "Discovery or planning stage.";
   const source = agent.source || "internal";
   const sourceLabel =
     source === "external" ? "External" : source === "partner" ? "Partner" : "Internal";
@@ -47,6 +54,7 @@ export default function AgentDetail({ agent, allowPrivate }: AgentDetailProps) {
   const canonicalUrl = `${siteUrl}/aixcelerator/agents/${agent.slug || agent.id}`;
   const tagNames = (agent.tags || []).map((tag) => tag.name || tag.slug).filter(Boolean);
   const companyNames = (agent.companies || []).map((company) => company.name || company.slug).filter(Boolean);
+  const hasCoverImage = Boolean(agent.coverImageUrl);
   const keywords = [agent.industry, ...tagNames, ...companyNames].filter(Boolean).join(", ");
   const jsonLd = {
     "@context": "https://schema.org",
@@ -100,61 +108,158 @@ export default function AgentDetail({ agent, allowPrivate }: AgentDetailProps) {
       </nav>
 
       <div className="hero-surface mt-4 rounded-[32px] p-8 sm:p-10">
-        <SectionHeader
-          as="h1"
-          size="xl"
-          kicker="Agent profile"
-          title={agent.name}
-          description={agent.description || "Detailed overview coming soon."}
-        />
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          <span className="chip chip-brand rounded-full px-3 py-1 text-xs font-semibold">
-            {agent.industry || "General"}
-          </span>
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-            {sourceDisplay}
-          </span>
-          {agent.verified ? (
-            <span className="chip rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              Verified
-            </span>
-          ) : null}
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-            {isPrivate ? "Private" : "Public"}
-          </span>
-          {!allowPrivate && isPrivate ? (
-            <span className="text-xs text-slate-500">Private listings hidden</span>
-          ) : null}
+        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+          <div>
+            <SectionHeader
+              as="h1"
+              size="xl"
+              kicker="Agent profile"
+              title={agent.name}
+              description={agent.description || "Detailed overview coming soon."}
+            />
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <span className="chip chip-brand rounded-full px-3 py-1 text-xs font-semibold">
+                {agent.industry || "General"}
+              </span>
+              <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </span>
+              <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
+                {sourceDisplay}
+              </span>
+              {agent.verified ? (
+                <span className="chip rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  Verified
+                </span>
+              ) : null}
+              <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
+                {isPrivate ? "Private" : "Public"}
+              </span>
+              {!allowPrivate && isPrivate ? (
+                <span className="text-xs text-slate-500">Private listings hidden</span>
+              ) : null}
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {agent.sourceUrl ? (
+                <a
+                  href={agent.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-primary"
+                >
+                  View source
+                </a>
+              ) : (
+                <Link href="/request-demo" className="btn btn-primary">
+                  Book a demo
+                </Link>
+              )}
+              <Link href="/aixcelerator/agents" className="btn btn-secondary">
+                View all agents
+              </Link>
+            </div>
+          </div>
+
+          <div className="surface-panel overflow-hidden border border-slate-200/80 p-0">
+            <div className="relative aspect-[4/3] w-full">
+              {hasCoverImage ? (
+                <img
+                  src={agent.coverImageUrl || ""}
+                  alt={agent.coverImageAlt || agent.name}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
+                  <div className="flex flex-col items-center gap-3 text-slate-400">
+                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                      <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden="true">
+                        <path
+                          d="M12 3a6 6 0 0 1 6 6v2h1a2 2 0 0 1 2 2v5a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-5a2 2 0 0 1 2-2h1V9a6 6 0 0 1 6-6Zm0 2a4 4 0 0 0-4 4v2h8V9a4 4 0 0 0-4-4Zm-4 9v4a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-4H8Z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-semibold uppercase tracking-[0.2em]">
+                      Agent surface
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <section className="surface-panel mt-6 p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="LLM metadata"
-          title="Structured profile"
-          description="Structured metadata optimized for LLM retrieval and catalog indexing."
-        />
-        <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-          <MetadataRow label="Name" value={agent.name} />
-          <MetadataRow label="Slug" value={agent.slug || "Not provided"} />
-          <MetadataRow label="Industry" value={agent.industry || "General"} />
-          <MetadataRow label="Status" value={status} />
-          <MetadataRow label="Visibility" value={isPrivate ? "Private" : "Public"} />
-          <MetadataRow label="Source" value={sourceDisplay} />
-          <MetadataRow label="Verified" value={agent.verified ? "Yes" : "No"} />
-          <MetadataRow label="Tags" value={formatList(agent.tags)} />
-          <MetadataRow label="Companies" value={formatList(agent.companies)} />
-          <MetadataRow
-            label="Source URL"
-            value={agent.sourceUrl || "Not linked yet"}
-            href={agent.sourceUrl || undefined}
+      <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="Operational summary"
+            title="Readiness snapshot"
+            description="Signals, provenance, and ownership context that help teams deploy with confidence."
           />
-        </dl>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <DetailCard label="Status" value={status} description={statusHint} />
+            <DetailCard
+              label="Visibility"
+              value={isPrivate ? "Private" : "Public"}
+              description={isPrivate ? "Restricted access listing." : "Available for catalog discovery."}
+            />
+            <DetailCard
+              label="Verified"
+              value={agent.verified ? "Yes" : "No"}
+              description={agent.verified ? "Ownership and metadata reviewed." : "Verification pending."}
+            />
+            <DetailCard
+              label="Industry"
+              value={agent.industry || "General"}
+              description="Primary domain alignment."
+            />
+            <DetailCard
+              label="Source"
+              value={sourceDisplay}
+              description="Origin and stewardship."
+            />
+            <DetailCard
+              label="Signals"
+              value={`${tagNames.length} tags • ${companyNames.length} companies`}
+              description="Discovery metadata attached."
+            />
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <ListBlock label="Tags" items={tagNames} emptyLabel="No tags yet." />
+            <ListBlock label="Companies" items={companyNames} emptyLabel="No companies linked." />
+          </div>
+        </div>
+
+        <aside className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="LLM metadata"
+            title="Structured profile"
+            description="Fields optimized for catalog indexing and retrieval."
+          />
+          <dl className="mt-6 grid gap-4">
+            <MetadataRow label="Name" value={agent.name} />
+            <MetadataRow label="Slug" value={agent.slug || "Not provided"} />
+            <MetadataRow label="Industry" value={agent.industry || "General"} />
+            <MetadataRow label="Status" value={status} />
+            <MetadataRow label="Visibility" value={isPrivate ? "Private" : "Public"} />
+            <MetadataRow label="Source" value={sourceDisplay} />
+            <MetadataRow label="Verified" value={agent.verified ? "Yes" : "No"} />
+            <MetadataRow label="Tags" value={formatList(agent.tags)} />
+            <MetadataRow label="Companies" value={formatList(agent.companies)} />
+            <MetadataRow
+              label="Source URL"
+              value={agent.sourceUrl || "Not linked yet"}
+              href={agent.sourceUrl || undefined}
+            />
+          </dl>
+        </aside>
       </section>
     </Layout>
   );
@@ -182,4 +287,52 @@ function formatList(items?: { name?: string; slug?: string }[]) {
     return "Not tagged yet";
   }
   return items.map((item) => item.name || item.slug || "").filter(Boolean).join(", ");
+}
+
+function DetailCard({
+  label,
+  value,
+  description,
+}: {
+  label: string;
+  value: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
+      <div className="mt-1 text-xs text-slate-600">{description}</div>
+    </div>
+  );
+}
+
+function ListBlock({
+  label,
+  items,
+  emptyLabel,
+}: {
+  label: string;
+  items: string[];
+  emptyLabel: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      {items.length ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {items.map((item) => (
+            <span
+              key={`${label}-${item}`}
+              className="chip chip-muted rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-2 text-xs text-slate-500">{emptyLabel}</p>
+      )}
+    </div>
+  );
 }
