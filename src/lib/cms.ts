@@ -104,6 +104,7 @@ export type MCPServer = {
   name: string;
   slug: string;
   description?: string | null;
+  registryName?: string | null;
   serverType?: string | null;
   primaryFunction?: string | null;
   openSource?: boolean | null;
@@ -362,6 +363,7 @@ function mapMCPServer(item: any): MCPServer {
     name: attrs?.name ?? "",
     slug: attrs?.slug ?? "",
     description: attrs?.description ?? null,
+    registryName: attrs?.registryName ?? null,
     serverType: attrs?.serverType ?? null,
     primaryFunction: attrs?.primaryFunction ?? null,
     openSource: typeof attrs?.openSource === "boolean" ? attrs.openSource : null,
