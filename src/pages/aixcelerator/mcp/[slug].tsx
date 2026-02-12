@@ -3,11 +3,14 @@ import Link from "next/link";
 import Head from "next/head";
 import Layout from "../../../components/Layout";
 import SectionHeader from "../../../components/SectionHeader";
-import { fetchMCPServerBySlug, MCPServer } from "../../../lib/cms";
+import MCPCard from "../../../components/MCPCard";
+import { fetchMCPServerBySlug, fetchMCPServers, MCPServer } from "../../../lib/cms";
+import type { ReactNode } from "react";
 
 type MCPDetailProps = {
   mcp: MCPServer;
   allowPrivate: boolean;
+  relatedServers: MCPServer[];
 };
 
 export const getServerSideProps: GetServerSideProps<MCPDetailProps> = async ({ params }) => {
@@ -22,13 +25,34 @@ export const getServerSideProps: GetServerSideProps<MCPDetailProps> = async ({ p
     if (!allowPrivate && (mcp.visibility || "public").toLowerCase() === "private") {
       return { notFound: true };
     }
-    return { props: { mcp, allowPrivate } };
+    let relatedServers: MCPServer[] = [];
+    try {
+      const visibilityFilter = allowPrivate ? undefined : "public";
+      const allServers = await fetchMCPServers(visibilityFilter);
+      const mcpTags = new Set((mcp.tags || []).map((tag) => tag.slug || tag.name).filter(Boolean));
+      relatedServers = allServers
+        .filter((candidate) => candidate.slug && candidate.slug !== mcp.slug)
+        .map((candidate) => {
+          const sharedTags = (candidate.tags || [])
+            .map((tag) => tag.slug || tag.name)
+            .filter((tag) => tag && mcpTags.has(tag)).length;
+          const sameIndustry = candidate.industry && candidate.industry === mcp.industry ? 3 : 0;
+          const sameCategory = candidate.category && candidate.category === mcp.category ? 2 : 0;
+          return { candidate, score: sharedTags + sameIndustry + sameCategory };
+        })
+        .sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
+        .map((entry) => entry.candidate)
+        .slice(0, 3);
+    } catch {
+      relatedServers = [];
+    }
+    return { props: { mcp, allowPrivate, relatedServers } };
   } catch {
     return { notFound: true };
   }
 };
 
-export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
+export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDetailProps) {
   const isPrivate = (mcp.visibility || "public").toLowerCase() === "private";
   const status = mcp.status || "Unknown";
   const statusKey = status.toLowerCase();
@@ -55,6 +79,21 @@ export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
   const tagNames = (mcp.tags || []).map((tag) => tag.name || tag.slug).filter(Boolean);
   const companyNames = (mcp.companies || []).map((company) => company.name || company.slug).filter(Boolean);
   const hasCoverImage = Boolean(mcp.coverImageUrl);
+  const lastUpdatedValue = mcp.lastUpdated ? new Date(mcp.lastUpdated) : null;
+  const lastUpdatedLabel = lastUpdatedValue
+    ? lastUpdatedValue.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "UTC",
+      })
+    : null;
+  const capabilities = parseList(mcp.capabilities);
+  const tools = parseList(mcp.tools);
+  const authMethods = parseList(mcp.authMethods);
+  const hostingOptions = parseList(mcp.hostingOptions);
+  const integrations = companyNames;
+  const pricingNotes = parseList(mcp.pricing);
   const keywords = [mcp.industry, mcp.category, ...tagNames, ...companyNames].filter(Boolean).join(", ");
   const jsonLd = {
     "@context": "https://schema.org",
@@ -127,6 +166,21 @@ export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
                   {mcp.category}
                 </span>
               ) : null}
+              {mcp.serverType ? (
+                <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
+                  {mcp.serverType}
+                </span>
+              ) : null}
+              {mcp.language ? (
+                <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
+                  {mcp.language}
+                </span>
+              ) : null}
+              {typeof mcp.openSource === "boolean" ? (
+                <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
+                  {mcp.openSource ? "Open source" : "Commercial"}
+                </span>
+              ) : null}
               <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
                 {status.charAt(0).toUpperCase() + status.slice(1)}
               </span>
@@ -145,6 +199,11 @@ export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
                 <span className="text-xs text-slate-500">Private listings hidden</span>
               ) : null}
             </div>
+            {lastUpdatedLabel ? (
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Last updated {lastUpdatedLabel}
+              </p>
+            ) : null}
             <div className="mt-6 flex flex-wrap gap-3">
               {mcp.docsUrl ? (
                 <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
@@ -237,8 +296,54 @@ export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <ListBlock label="Tags" items={tagNames} emptyLabel="No tags yet." />
-            <ListBlock label="Companies" items={companyNames} emptyLabel="No companies linked." />
+            <ListBlock label="Capabilities" items={tagNames} emptyLabel="Capabilities not tagged yet." />
+            <ListBlock
+              label="Integrations"
+              items={companyNames}
+              emptyLabel="No integrations linked yet."
+            />
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <GuidanceBlock
+              title="Deployment guidance"
+              items={[
+                statusKey === "active" || statusKey === "live"
+                  ? "Production-ready and actively deployed."
+                  : statusKey === "beta"
+                    ? "In pilot with limited availability."
+                    : "Discovery or planning stage.",
+                mcp.docsUrl ? "Documentation available for integration teams." : "Documentation not linked yet.",
+                mcp.verified ? "Verified metadata and ownership confirmed." : "Verification pending.",
+                isPrivate ? "Private listing with restricted access." : "Public listing for catalog discovery.",
+              ]}
+            />
+            <GuidanceBlock
+              title="Resources"
+              items={[
+                mcp.docsUrl ? "Docs link available for setup." : "Docs link pending.",
+                mcp.sourceUrl ? "Source repository available." : "Source link not provided yet.",
+              ]}
+              actions={
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {mcp.docsUrl ? (
+                    <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-compact">
+                      View docs
+                    </a>
+                  ) : null}
+                  {mcp.sourceUrl ? (
+                    <a href={mcp.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-ghost btn-compact">
+                      View source
+                    </a>
+                  ) : null}
+                  {!mcp.docsUrl && !mcp.sourceUrl ? (
+                    <Link href="/request-demo" className="btn btn-ghost btn-compact">
+                      Request access
+                    </Link>
+                  ) : null}
+                </div>
+              }
+            />
           </div>
         </div>
 
@@ -255,17 +360,177 @@ export default function MCPDetail({ mcp, allowPrivate }: MCPDetailProps) {
             <MetadataRow label="Slug" value={mcp.slug || "Not provided"} />
             <MetadataRow label="Industry" value={mcp.industry || "General"} />
             <MetadataRow label="Category" value={mcp.category || "General"} />
+            <MetadataRow label="Server type" value={mcp.serverType || "Not provided"} />
+            <MetadataRow label="Primary function" value={mcp.primaryFunction || "Not provided"} />
+            <MetadataRow label="Open source" value={mcp.openSource ? "Yes" : "No"} />
+            <MetadataRow label="Language" value={mcp.language || "Not provided"} />
             <MetadataRow label="Status" value={status} />
             <MetadataRow label="Visibility" value={isPrivate ? "Private" : "Public"} />
             <MetadataRow label="Source" value={sourceDisplay} />
             <MetadataRow label="Verified" value={mcp.verified ? "Yes" : "No"} />
+            <MetadataRow label="Last updated" value={lastUpdatedLabel || "Not provided"} />
             <MetadataRow label="Tags" value={formatList(mcp.tags)} />
             <MetadataRow label="Companies" value={formatList(mcp.companies)} />
             <MetadataRow label="Documentation" value={mcp.docsUrl || "Not linked yet"} href={mcp.docsUrl || undefined} />
             <MetadataRow label="Source URL" value={mcp.sourceUrl || "Not linked yet"} href={mcp.sourceUrl || undefined} />
+            <MetadataRow label="Compatibility" value={mcp.compatibility || "Not provided"} />
+            <MetadataRow label="Pricing" value={mcp.pricing || "Not provided"} />
+            <MetadataRow label="Try it now" value={mcp.tryItNowUrl || "Not linked yet"} href={mcp.tryItNowUrl || undefined} />
           </dl>
         </aside>
       </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="About"
+          title="Capabilities and scope"
+          description="Technical summary, primary function, and service characteristics."
+        />
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Summary</div>
+            <div className="mt-3 space-y-3 text-sm text-slate-700">
+              {mcp.primaryFunction ? (
+                <p>{mcp.primaryFunction}</p>
+              ) : (
+                <p>Describe the primary function and why this MCP server matters.</p>
+              )}
+              {mcp.description ? <p>{mcp.description}</p> : null}
+            </div>
+          </div>
+          <ListSection
+            title="Capabilities"
+            items={capabilities}
+            empty="Capabilities not documented yet."
+          />
+        </div>
+      </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Tools & endpoints"
+          title="Exposed actions"
+          description="Key actions, tools, or endpoints provided by this server."
+        />
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <ListSection title="Tools" items={tools} empty="Tools not documented yet." />
+          <ListSection title="Integrations" items={integrations} empty="Integrations not linked yet." />
+        </div>
+      </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Security"
+          title="Auth and credentials"
+          description="Credential types, access patterns, and control expectations."
+        />
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <ListSection title="Auth methods" items={authMethods} empty="Auth methods not documented yet." />
+          <ListSection title="Hosting options" items={hostingOptions} empty="Hosting options not documented yet." />
+        </div>
+      </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Compatibility"
+          title="Deployment requirements"
+          description="Protocol versions, environment expectations, and pricing signals."
+        />
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <ListSection
+            title="Compatibility"
+            items={parseList(mcp.compatibility)}
+            empty="Compatibility requirements not documented yet."
+          />
+          <ListSection
+            title="Pricing & usage limits"
+            items={pricingNotes}
+            empty="Pricing details not documented yet."
+          />
+        </div>
+      </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Resources"
+          title="Docs, source, and try it now"
+          description="Links for integration teams and evaluation."
+        />
+        <div className="mt-6 flex flex-wrap gap-3">
+          {mcp.docsUrl ? (
+            <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
+              View docs
+            </a>
+          ) : null}
+          {mcp.sourceUrl ? (
+            <a href={mcp.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-ghost">
+              View source
+            </a>
+          ) : null}
+          {mcp.tryItNowUrl ? (
+            <a href={mcp.tryItNowUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
+              Try it now
+            </a>
+          ) : null}
+          {!mcp.docsUrl && !mcp.sourceUrl && !mcp.tryItNowUrl ? (
+            <p className="text-sm text-slate-600">Resources not linked yet.</p>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Adoption"
+          title="Usage signals"
+          description="Signals to help teams evaluate readiness and adoption."
+        />
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <SignalStat
+            label="Usage"
+            value={mcp.usageCount ? mcp.usageCount.toLocaleString() : "—"}
+            note="Recorded runs or deployments."
+          />
+          <SignalStat
+            label="Rating"
+            value={mcp.rating ? `${mcp.rating.toFixed(1)} / 5` : "—"}
+            note="Internal or customer feedback."
+          />
+          <SignalStat
+            label="Open source"
+            value={mcp.openSource === true ? "Yes" : mcp.openSource === false ? "No" : "—"}
+            note="Licensing signal."
+          />
+        </div>
+      </section>
+
+      {relatedServers.length > 0 && (
+        <section className="surface-panel mt-6 p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="Related"
+            title="Similar MCP servers"
+            description="Servers with shared categories, industries, or tags."
+          />
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {relatedServers.map((related) => (
+              <MCPCard key={related.id} mcp={related} />
+            ))}
+          </div>
+        </section>
+      )}
     </Layout>
   );
 }
@@ -338,6 +603,74 @@ function ListBlock({
       ) : (
         <p className="mt-2 text-xs text-slate-500">{emptyLabel}</p>
       )}
+    </div>
+  );
+}
+
+function ListSection({ title, items, empty }: { title: string; items: string[]; empty: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</div>
+      {items.length ? (
+        <ul className="mt-3 space-y-2 text-sm text-slate-700">
+          {items.map((item, index) => (
+            <li key={`${title}-${index}`} className="flex gap-2">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 text-sm text-slate-600">{empty}</p>
+      )}
+    </div>
+  );
+}
+
+function SignalStat({ label, value, note }: { label: string; value: string; note: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
+      <div className="mt-1 text-xs text-slate-600">{note}</div>
+    </div>
+  );
+}
+
+function parseList(value?: string | null): string[] {
+  if (!value) return [];
+  const parts = value
+    .split(/\r?\n|•|\u2022/)
+    .map((item) => item.replace(/^[-•\u2022]\s*/, "").trim())
+    .filter(Boolean);
+  if (parts.length > 1) return parts;
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function GuidanceBlock({
+  title,
+  items,
+  actions,
+}: {
+  title: string;
+  items: string[];
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</div>
+      <ul className="mt-3 space-y-2 text-sm text-slate-700">
+        {items.map((item, index) => (
+          <li key={`${title}-${index}`} className="flex gap-2">
+            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+      {actions ? actions : null}
     </div>
   );
 }

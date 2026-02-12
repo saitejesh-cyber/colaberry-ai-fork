@@ -71,6 +71,21 @@ export type Agent = {
   name: string;
   slug: string;
   description?: string | null;
+  whatItDoes?: string | null;
+  outcomes?: string | null;
+  coreTasks?: string | null;
+  inputs?: string | null;
+  outputs?: string | null;
+  tools?: string | null;
+  executionModes?: string | null;
+  orchestration?: string | null;
+  securityCompliance?: string | null;
+  docsUrl?: string | null;
+  demoUrl?: string | null;
+  changelogUrl?: string | null;
+  usageCount?: number | null;
+  rating?: number | null;
+  lastUpdated?: string | null;
   status?: string | null;
   visibility?: "public" | "private" | string | null;
   source?: "internal" | "external" | "partner" | string | null;
@@ -89,6 +104,20 @@ export type MCPServer = {
   name: string;
   slug: string;
   description?: string | null;
+  serverType?: string | null;
+  primaryFunction?: string | null;
+  openSource?: boolean | null;
+  language?: string | null;
+  capabilities?: string | null;
+  tools?: string | null;
+  authMethods?: string | null;
+  hostingOptions?: string | null;
+  compatibility?: string | null;
+  pricing?: string | null;
+  tryItNowUrl?: string | null;
+  usageCount?: number | null;
+  rating?: number | null;
+  lastUpdated?: string | null;
   status?: string | null;
   visibility?: "public" | "private" | string | null;
   source?: "internal" | "external" | "partner" | string | null;
@@ -286,6 +315,21 @@ function mapAgent(item: any): Agent {
     name: attrs?.name ?? "",
     slug: attrs?.slug ?? "",
     description: attrs?.description ?? null,
+    whatItDoes: attrs?.whatItDoes ?? null,
+    outcomes: attrs?.outcomes ?? null,
+    coreTasks: attrs?.coreTasks ?? null,
+    inputs: attrs?.inputs ?? null,
+    outputs: attrs?.outputs ?? null,
+    tools: attrs?.tools ?? null,
+    executionModes: attrs?.executionModes ?? null,
+    orchestration: attrs?.orchestration ?? null,
+    securityCompliance: attrs?.securityCompliance ?? null,
+    docsUrl: attrs?.docsUrl ?? null,
+    demoUrl: attrs?.demoUrl ?? null,
+    changelogUrl: attrs?.changelogUrl ?? null,
+    usageCount: typeof attrs?.usageCount === "number" ? attrs.usageCount : null,
+    rating: typeof attrs?.rating === "number" ? attrs.rating : null,
+    lastUpdated: attrs?.lastUpdated ?? attrs?.updatedAt ?? null,
     status: attrs?.status ?? null,
     visibility: attrs?.visibility ?? null,
     source: attrs?.source ?? null,
@@ -318,6 +362,20 @@ function mapMCPServer(item: any): MCPServer {
     name: attrs?.name ?? "",
     slug: attrs?.slug ?? "",
     description: attrs?.description ?? null,
+    serverType: attrs?.serverType ?? null,
+    primaryFunction: attrs?.primaryFunction ?? null,
+    openSource: typeof attrs?.openSource === "boolean" ? attrs.openSource : null,
+    language: attrs?.language ?? null,
+    capabilities: attrs?.capabilities ?? null,
+    tools: attrs?.tools ?? null,
+    authMethods: attrs?.authMethods ?? null,
+    hostingOptions: attrs?.hostingOptions ?? null,
+    compatibility: attrs?.compatibility ?? null,
+    pricing: attrs?.pricing ?? null,
+    tryItNowUrl: attrs?.tryItNowUrl ?? null,
+    usageCount: typeof attrs?.usageCount === "number" ? attrs.usageCount : null,
+    rating: typeof attrs?.rating === "number" ? attrs.rating : null,
+    lastUpdated: attrs?.lastUpdated ?? attrs?.updatedAt ?? null,
     status: attrs?.status ?? null,
     visibility: attrs?.visibility ?? null,
     source: attrs?.source ?? null,

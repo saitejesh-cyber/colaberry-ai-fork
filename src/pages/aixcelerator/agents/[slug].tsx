@@ -3,11 +3,14 @@ import Link from "next/link";
 import Head from "next/head";
 import Layout from "../../../components/Layout";
 import SectionHeader from "../../../components/SectionHeader";
-import { Agent, fetchAgentBySlug } from "../../../lib/cms";
+import AgentCard from "../../../components/AgentCard";
+import { Agent, fetchAgentBySlug, fetchAgents } from "../../../lib/cms";
+import type { ReactNode } from "react";
 
 type AgentDetailProps = {
   agent: Agent;
   allowPrivate: boolean;
+  relatedAgents: Agent[];
 };
 
 export const getServerSideProps: GetServerSideProps<AgentDetailProps> = async ({ params }) => {
@@ -22,13 +25,34 @@ export const getServerSideProps: GetServerSideProps<AgentDetailProps> = async ({
     if (!allowPrivate && (agent.visibility || "public").toLowerCase() === "private") {
       return { notFound: true };
     }
-    return { props: { agent, allowPrivate } };
+    let relatedAgents: Agent[] = [];
+    try {
+      const visibilityFilter = allowPrivate ? undefined : "public";
+      const allAgents = await fetchAgents(visibilityFilter);
+      const agentTags = new Set((agent.tags || []).map((tag) => tag.slug || tag.name).filter(Boolean));
+      relatedAgents = allAgents
+        .filter((candidate) => candidate.slug && candidate.slug !== agent.slug)
+        .map((candidate) => {
+          const sharedTags = (candidate.tags || [])
+            .map((tag) => tag.slug || tag.name)
+            .filter((tag) => tag && agentTags.has(tag)).length;
+          const sameIndustry = candidate.industry && candidate.industry === agent.industry ? 3 : 0;
+          const sameSource = candidate.source && candidate.source === agent.source ? 1 : 0;
+          return { candidate, score: sharedTags + sameIndustry + sameSource };
+        })
+        .sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
+        .map((entry) => entry.candidate)
+        .slice(0, 3);
+    } catch {
+      relatedAgents = [];
+    }
+    return { props: { agent, allowPrivate, relatedAgents } };
   } catch {
     return { notFound: true };
   }
 };
 
-export default function AgentDetail({ agent, allowPrivate }: AgentDetailProps) {
+export default function AgentDetail({ agent, allowPrivate, relatedAgents }: AgentDetailProps) {
   const isPrivate = (agent.visibility || "public").toLowerCase() === "private";
   const status = agent.status || "Unknown";
   const statusKey = status.toLowerCase();
@@ -55,6 +79,23 @@ export default function AgentDetail({ agent, allowPrivate }: AgentDetailProps) {
   const tagNames = (agent.tags || []).map((tag) => tag.name || tag.slug).filter(Boolean);
   const companyNames = (agent.companies || []).map((company) => company.name || company.slug).filter(Boolean);
   const hasCoverImage = Boolean(agent.coverImageUrl);
+  const lastUpdatedValue = agent.lastUpdated ? new Date(agent.lastUpdated) : null;
+  const lastUpdatedLabel = lastUpdatedValue
+    ? lastUpdatedValue.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "UTC",
+      })
+    : null;
+  const coreTasks = parseList(agent.coreTasks);
+  const outcomes = parseList(agent.outcomes);
+  const inputs = parseList(agent.inputs);
+  const outputs = parseList(agent.outputs);
+  const tools = parseList(agent.tools);
+  const executionModes = parseList(agent.executionModes);
+  const orchestrationSteps = parseList(agent.orchestration);
+  const securityItems = parseList(agent.securityCompliance);
   const keywords = [agent.industry, ...tagNames, ...companyNames].filter(Boolean).join(", ");
   const jsonLd = {
     "@context": "https://schema.org",
@@ -139,6 +180,11 @@ export default function AgentDetail({ agent, allowPrivate }: AgentDetailProps) {
                 <span className="text-xs text-slate-500">Private listings hidden</span>
               ) : null}
             </div>
+            {lastUpdatedLabel ? (
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Last updated {lastUpdatedLabel}
+              </p>
+            ) : null}
             <div className="mt-6 flex flex-wrap gap-3">
               {agent.sourceUrl ? (
                 <a
@@ -230,8 +276,47 @@ export default function AgentDetail({ agent, allowPrivate }: AgentDetailProps) {
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <ListBlock label="Tags" items={tagNames} emptyLabel="No tags yet." />
-            <ListBlock label="Companies" items={companyNames} emptyLabel="No companies linked." />
+            <ListBlock label="Capabilities" items={tagNames} emptyLabel="Capabilities not tagged yet." />
+            <ListBlock
+              label="Integrations"
+              items={companyNames}
+              emptyLabel="No integrations linked yet."
+            />
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <GuidanceBlock
+              title="Deployment guidance"
+              items={[
+                statusKey === "active" || statusKey === "live"
+                  ? "Production-ready and actively deployed."
+                  : statusKey === "beta"
+                    ? "In pilot with limited availability."
+                    : "Discovery or planning stage.",
+                agent.verified ? "Verified metadata and ownership confirmed." : "Verification pending.",
+                isPrivate ? "Private listing with restricted access." : "Public listing for catalog discovery.",
+                sourceDisplay ? `Stewardship: ${sourceDisplay}.` : "Stewardship details pending.",
+              ]}
+            />
+            <GuidanceBlock
+              title="Resources"
+              items={[
+                agent.sourceUrl ? "Source repository or docs available." : "Source link not provided yet.",
+                "Contact Colaberry for enablement, rollout, or evaluation support.",
+              ]}
+              actions={
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {agent.sourceUrl ? (
+                    <a href={agent.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-compact">
+                      View source
+                    </a>
+                  ) : null}
+                  <Link href="/request-demo" className="btn btn-ghost btn-compact">
+                    Request enablement
+                  </Link>
+                </div>
+              }
+            />
           </div>
         </div>
 
@@ -251,6 +336,7 @@ export default function AgentDetail({ agent, allowPrivate }: AgentDetailProps) {
             <MetadataRow label="Visibility" value={isPrivate ? "Private" : "Public"} />
             <MetadataRow label="Source" value={sourceDisplay} />
             <MetadataRow label="Verified" value={agent.verified ? "Yes" : "No"} />
+            <MetadataRow label="Last updated" value={lastUpdatedLabel || "Not provided"} />
             <MetadataRow label="Tags" value={formatList(agent.tags)} />
             <MetadataRow label="Companies" value={formatList(agent.companies)} />
             <MetadataRow
@@ -261,6 +347,182 @@ export default function AgentDetail({ agent, allowPrivate }: AgentDetailProps) {
           </dl>
         </aside>
       </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="What it does"
+          title="Overview and outcomes"
+          description="Clear positioning, expected outcomes, and where this agent fits."
+        />
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Overview</div>
+            {agent.whatItDoes ? (
+              <div className="mt-3 space-y-3 text-sm text-slate-700">
+                {renderParagraphs(agent.whatItDoes)}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-slate-600">
+                Add a concise overview describing what this agent does, the problem it solves,
+                and how teams use it.
+              </p>
+            )}
+          </div>
+          <ListSection
+            title="Outcomes"
+            items={outcomes}
+            empty="Outcomes not documented yet."
+          />
+        </div>
+      </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Core tasks"
+          title="Use cases and workflows"
+          description="Primary tasks, repeatable workflows, and where the agent delivers value."
+        />
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <ListSection title="Core tasks" items={coreTasks} empty="Core tasks not listed yet." />
+          <ListSection
+            title="Execution modes"
+            items={executionModes}
+            empty="Execution modes not documented yet."
+          />
+        </div>
+      </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Inputs & outputs"
+          title="Data in, actions out"
+          description="Clarify the data required and the artifacts or actions produced."
+        />
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <ListSection title="Inputs" items={inputs} empty="Inputs not documented yet." />
+          <ListSection title="Outputs" items={outputs} empty="Outputs not documented yet." />
+        </div>
+      </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Orchestration"
+          title="How it runs"
+          description="Operational flow, orchestration steps, and governance checks."
+        />
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <ListSection
+            title="Orchestration steps"
+            items={orchestrationSteps}
+            empty="Orchestration steps not documented yet."
+          />
+          <ListSection
+            title="Security & compliance"
+            items={securityItems}
+            empty="Security and compliance details not documented yet."
+          />
+        </div>
+      </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Tools & integrations"
+          title="Systems connected"
+          description="Internal systems, APIs, or tools used by this agent."
+        />
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <ListSection title="Tools" items={tools} empty="Tools not documented yet." />
+          <ListSection
+            title="Integrations"
+            items={companyNames}
+            empty="Integrations not documented yet."
+          />
+        </div>
+      </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Resources"
+          title="Docs, demo, and changelog"
+          description="Material for enablement, onboarding, and release tracking."
+        />
+        <div className="mt-6 flex flex-wrap gap-3">
+          {agent.docsUrl ? (
+            <a href={agent.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
+              View docs
+            </a>
+          ) : null}
+          {agent.demoUrl ? (
+            <a href={agent.demoUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
+              View demo
+            </a>
+          ) : null}
+          {agent.changelogUrl ? (
+            <a href={agent.changelogUrl} target="_blank" rel="noreferrer" className="btn btn-ghost">
+              Changelog
+            </a>
+          ) : null}
+          {!agent.docsUrl && !agent.demoUrl && !agent.changelogUrl ? (
+            <p className="text-sm text-slate-600">Resources not linked yet.</p>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Adoption"
+          title="Usage signals"
+          description="Signals to help teams evaluate readiness and adoption."
+        />
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <SignalStat
+            label="Usage"
+            value={agent.usageCount ? agent.usageCount.toLocaleString() : "—"}
+            note="Recorded runs or deployments."
+          />
+          <SignalStat
+            label="Rating"
+            value={agent.rating ? `${agent.rating.toFixed(1)} / 5` : "—"}
+            note="Internal or customer feedback."
+          />
+          <SignalStat
+            label="Verification"
+            value={agent.verified ? "Verified" : "Pending"}
+            note="Ownership and metadata review."
+          />
+        </div>
+      </section>
+
+      {relatedAgents.length > 0 && (
+        <section className="surface-panel mt-6 p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="Related"
+            title="Similar agents"
+            description="Other agents with shared industry alignment or tags."
+          />
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {relatedAgents.map((related) => (
+              <AgentCard key={related.id} agent={related} />
+            ))}
+          </div>
+        </section>
+      )}
     </Layout>
   );
 }
@@ -335,4 +597,84 @@ function ListBlock({
       )}
     </div>
   );
+}
+
+function GuidanceBlock({
+  title,
+  items,
+  actions,
+}: {
+  title: string;
+  items: string[];
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</div>
+      <ul className="mt-3 space-y-2 text-sm text-slate-700">
+        {items.map((item, index) => (
+          <li key={`${title}-${index}`} className="flex gap-2">
+            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+      {actions ? actions : null}
+    </div>
+  );
+}
+
+function ListSection({ title, items, empty }: { title: string; items: string[]; empty: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</div>
+      {items.length ? (
+        <ul className="mt-3 space-y-2 text-sm text-slate-700">
+          {items.map((item, index) => (
+            <li key={`${title}-${index}`} className="flex gap-2">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 text-sm text-slate-600">{empty}</p>
+      )}
+    </div>
+  );
+}
+
+function SignalStat({ label, value, note }: { label: string; value: string; note: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
+      <div className="mt-1 text-xs text-slate-600">{note}</div>
+    </div>
+  );
+}
+
+function parseList(value?: string | null): string[] {
+  if (!value) return [];
+  const parts = value
+    .split(/\r?\n|•|\u2022/)
+    .map((item) => item.replace(/^[-•\u2022]\s*/, "").trim())
+    .filter(Boolean);
+  if (parts.length > 1) return parts;
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function renderParagraphs(value: string): ReactNode[] {
+  return value
+    .split(/\r?\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, index) => (
+      <p key={`${line}-${index}`} className="text-sm text-slate-700">
+        {line}
+      </p>
+    ));
 }
