@@ -6,6 +6,27 @@ type CacheEntry<T> = {
   data: T;
 };
 
+type CMSPagination = {
+  page: number;
+  pageSize: number;
+  pageCount: number;
+  total: number;
+};
+
+type CMSMeta = {
+  pagination?: CMSPagination;
+};
+
+type CMSCollectionResponse<T = any> = {
+  data?: T[];
+  meta?: CMSMeta;
+};
+
+type CMSSingleResponse<T = any> = {
+  data?: T | null;
+  meta?: CMSMeta;
+};
+
 const cmsCache = new Map<string, CacheEntry<any>>();
 const cmsInflight = new Map<string, Promise<any>>();
 
@@ -470,7 +491,7 @@ function mapMCPServer(item: any): MCPServer {
 }
 
 export async function fetchPodcastEpisodes() {
-  const json = await fetchCMSJson(
+  const json = await fetchCMSJson<CMSCollectionResponse>(
     `${CMS_URL}/api/podcast-episodes` +
       `?sort=publishedDate:desc` +
       `&filters[podcastStatus][$eq]=published` +
@@ -489,7 +510,7 @@ export async function fetchPodcastEpisodes() {
 
 export async function fetchGlobalNavigation(): Promise<GlobalNavigation | null> {
   if (!CMS_URL) return null;
-  const json = await fetchCMSJson(
+  const json = await fetchCMSJson<CMSSingleResponse>(
     `${CMS_URL}/api/global-navigation` + `?publicationState=live` + `&populate=*`,
     { cacheMs: CMS_CACHE_TTL_MS, allowStaleOnError: true }
   );
@@ -497,7 +518,7 @@ export async function fetchGlobalNavigation(): Promise<GlobalNavigation | null> 
 }
 
 export async function fetchPodcastBySlug(slug: string) {
-  const json = await fetchCMSJson(
+  const json = await fetchCMSJson<CMSCollectionResponse>(
     `${CMS_URL}/api/podcast-episodes` +
       `?filters[slug][$eq]=${slug}` +
       `&filters[podcastStatus][$eq]=published` +
@@ -521,7 +542,7 @@ export async function fetchAgents(visibility?: "public" | "private") {
   const results: ReturnType<typeof mapAgent>[] = [];
 
   while (true) {
-    const json = await fetchCMSJson(
+    const json = await fetchCMSJson<CMSCollectionResponse>(
       `${CMS_URL}/api/agents` +
         `?sort=name:asc` +
         `${visibilityFilter}` +
@@ -556,7 +577,7 @@ export async function fetchMCPServers(visibility?: "public" | "private") {
   const results: ReturnType<typeof mapMCPServer>[] = [];
 
   while (true) {
-    const json = await fetchCMSJson(
+    const json = await fetchCMSJson<CMSCollectionResponse>(
       `${CMS_URL}/api/mcp-servers` +
         `?sort=name:asc` +
         `${visibilityFilter}` +
@@ -585,7 +606,7 @@ export async function fetchMCPServers(visibility?: "public" | "private") {
 }
 
 export async function fetchAgentBySlug(slug: string) {
-  const json = await fetchCMSJson(
+  const json = await fetchCMSJson<CMSCollectionResponse>(
     `${CMS_URL}/api/agents` +
       `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
       `&publicationState=live` +
@@ -601,7 +622,7 @@ export async function fetchAgentBySlug(slug: string) {
 }
 
 export async function fetchMCPServerBySlug(slug: string) {
-  const json = await fetchCMSJson(
+  const json = await fetchCMSJson<CMSCollectionResponse>(
     `${CMS_URL}/api/mcp-servers` +
       `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
       `&publicationState=live` +
