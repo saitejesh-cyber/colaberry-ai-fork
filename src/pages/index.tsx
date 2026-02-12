@@ -77,6 +77,7 @@ export default function Home() {
       description: "Track ownership, readiness, and evaluation signals in one view.",
       image: heroImage("hero-agents.png"),
       highlight: "Ownership + evals",
+      href: "/aixcelerator/agents",
     },
     {
       eyebrow: "MCP",
@@ -84,6 +85,7 @@ export default function Home() {
       description: "Connect tools with standardized MCP server templates and patterns.",
       image: heroImage("hero-mcp.png"),
       highlight: "Connector-ready",
+      href: "/aixcelerator/mcp",
     },
     {
       eyebrow: "Knowledge",
@@ -91,6 +93,7 @@ export default function Home() {
       description: "Podcasts, white papers, and updates organized for fast discovery.",
       image: heroImage("hero-resources.png"),
       highlight: "Curated signals",
+      href: "/resources",
     },
   ];
 
@@ -233,7 +236,7 @@ export default function Home() {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
       <section className="hero-surface rise-in p-8 sm:p-10 lg:p-12">
-        <div className="relative grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="relative grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
@@ -355,7 +358,7 @@ export default function Home() {
             </section>
           </div>
 
-          <HeroPreviewGrid slides={heroSlides} />
+          <HeroEnterprisePanel slides={heroSlides} />
         </div>
       </section>
 
@@ -682,11 +685,17 @@ type HeroSlide = {
   description: string;
   image: string;
   highlight: string;
+  href: string;
 };
 
-function HeroPreviewGrid({ slides }: { slides: HeroSlide[] }) {
+function HeroEnterprisePanel({ slides }: { slides: HeroSlide[] }) {
+  const primary = slides[0];
+  const secondary = slides.slice(1);
+
+  if (!primary) return null;
+
   return (
-    <div className="surface-strong p-5">
+    <aside className="surface-strong p-5">
       <div className="flex items-center justify-between">
         <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
           Platform preview
@@ -695,43 +704,106 @@ function HeroPreviewGrid({ slides }: { slides: HeroSlide[] }) {
           Explore platform →
         </Link>
       </div>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        {slides.map((slide, index) => (
-          <div
-            key={slide.title}
-            className={`rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm ${
-              index === slides.length - 1 ? "sm:col-span-2" : ""
-            }`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold text-slate-900">{slide.title}</div>
-                <div className="mt-1 text-xs text-slate-600">{slide.description}</div>
-              </div>
-              <span className="chip chip-brand rounded-full px-2.5 py-1 text-[11px] font-semibold">
-                {slide.eyebrow}
-              </span>
-            </div>
-            <div className="relative mt-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/80">
-              <div className="relative aspect-[16/9] w-full">
-                <Image
-                  src={slide.image}
-                  alt={slide.title}
-                  fill
-                  sizes="(min-width: 1920px) 820px, (min-width: 1536px) 720px, (min-width: 1280px) 640px, (min-width: 1024px) 520px, 90vw"
-                  quality={90}
-                  className="object-cover object-center dark:brightness-90"
-                  priority={index === 0}
-                />
-              </div>
-              <div className="absolute bottom-3 left-3 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
-                {slide.highlight}
-              </div>
-            </div>
+      <Link
+        href={primary.href}
+        className="group mt-4 block rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-md"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-slate-900">{primary.title}</div>
+            <div className="mt-1 text-xs text-slate-600">{primary.description}</div>
           </div>
+          <span className="rounded-full border border-brand-blue/30 bg-brand-blue/5 px-2.5 py-1 text-[11px] font-semibold text-brand-deep">
+            {primary.eyebrow}
+          </span>
+        </div>
+        <div className="relative mt-4 overflow-hidden rounded-xl border border-slate-200/80 bg-white/80">
+          <div className="relative aspect-[16/9] w-full">
+            <Image
+              src={primary.image}
+              alt={primary.title}
+              fill
+              sizes="(min-width: 1920px) 820px, (min-width: 1536px) 720px, (min-width: 1280px) 640px, (min-width: 1024px) 520px, 90vw"
+              quality={90}
+              className="object-cover object-center transition duration-300 group-hover:scale-[1.01] dark:brightness-90"
+              priority
+            />
+          </div>
+          <div className="absolute bottom-3 left-3 rounded-md border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm">
+            {primary.highlight}
+          </div>
+        </div>
+      </Link>
+
+      <div className="mt-3 grid gap-3">
+        {secondary.map((slide) => (
+          <Link
+            key={slide.title}
+            href={slide.href}
+            className="group flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white/90 p-3 transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-sm"
+          >
+            <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border border-slate-200/80 bg-slate-100">
+              <Image
+                src={slide.image}
+                alt={slide.title}
+                fill
+                sizes="96px"
+                quality={85}
+                className="object-cover object-center"
+              />
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-slate-900">{slide.title}</div>
+              <div className="mt-0.5 line-clamp-2 text-xs text-slate-600">{slide.description}</div>
+            </div>
+            <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              {slide.eyebrow}
+            </span>
+          </Link>
         ))}
       </div>
-    </div>
+
+      <div className="mt-3 rounded-xl border border-slate-200/80 bg-white/90 p-3">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+          Enterprise focus
+        </div>
+        <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-700">
+          <span className="rounded-md border border-slate-200/80 bg-white px-2 py-1 font-semibold">Governance</span>
+          <span className="rounded-md border border-slate-200/80 bg-white px-2 py-1 font-semibold">Observability</span>
+          <span className="rounded-md border border-slate-200/80 bg-white px-2 py-1 font-semibold">Security</span>
+          <span className="rounded-md border border-slate-200/80 bg-white px-2 py-1 font-semibold">Scalability</span>
+        </div>
+      </div>
+
+      <div className="mt-3 rounded-xl border border-slate-200/80 bg-white/90 p-3">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+          Go-to destinations
+        </div>
+        <div className="mt-2 grid gap-2">
+          <Link
+            href="/industries"
+            className="group flex items-center justify-between rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-800 transition hover:border-brand-blue/30 hover:text-brand-deep"
+          >
+            <span>Industries</span>
+            <span className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">→</span>
+          </Link>
+          <Link
+            href="/resources"
+            className="group flex items-center justify-between rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-800 transition hover:border-brand-blue/30 hover:text-brand-deep"
+          >
+            <span>Resources</span>
+            <span className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">→</span>
+          </Link>
+          <Link
+            href="/updates"
+            className="group flex items-center justify-between rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-800 transition hover:border-brand-blue/30 hover:text-brand-deep"
+          >
+            <span>Updates</span>
+            <span className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">→</span>
+          </Link>
+        </div>
+      </div>
+    </aside>
   );
 }
 
