@@ -1,4 +1,55 @@
 const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL!;
+const CMS_CACHE_TTL_MS = Number(process.env.NEXT_PUBLIC_CMS_CACHE_TTL_MS || 300000);
+
+type CacheEntry<T> = {
+  expiresAt: number;
+  data: T;
+};
+
+const cmsCache = new Map<string, CacheEntry<any>>();
+const cmsInflight = new Map<string, Promise<any>>();
+
+async function fetchCMSJson<T>(
+  url: string,
+  options: { cacheMs?: number; allowStaleOnError?: boolean } = {}
+): Promise<T> {
+  const cacheMs = Number.isFinite(options.cacheMs) ? Number(options.cacheMs) : CMS_CACHE_TTL_MS;
+  const now = Date.now();
+  const cached = cmsCache.get(url);
+
+  if (cached && cached.expiresAt > now) {
+    return cached.data as T;
+  }
+
+  const inflight = cmsInflight.get(url);
+  if (inflight) {
+    return inflight as Promise<T>;
+  }
+
+  const request = fetch(url, { cache: "no-store" })
+    .then(async (res) => {
+      if (!res.ok) {
+        throw new Error(`CMS request failed: ${res.status}`);
+      }
+      const json = (await res.json()) as T;
+      if (cacheMs > 0) {
+        cmsCache.set(url, { data: json, expiresAt: now + cacheMs });
+      }
+      return json;
+    })
+    .catch((error) => {
+      if (options.allowStaleOnError && cached) {
+        return cached.data as T;
+      }
+      throw error;
+    })
+    .finally(() => {
+      cmsInflight.delete(url);
+    });
+
+  cmsInflight.set(url, request);
+  return request;
+}
 
 export type Tag = {
   name: string;
@@ -71,6 +122,12 @@ export type Agent = {
   name: string;
   slug: string;
   description?: string | null;
+  longDescription?: string | null;
+  keyBenefits?: string | null;
+  useCases?: string | null;
+  limitations?: string | null;
+  requirements?: string | null;
+  exampleWorkflow?: string | null;
   whatItDoes?: string | null;
   outcomes?: string | null;
   coreTasks?: string | null;
@@ -104,6 +161,12 @@ export type MCPServer = {
   name: string;
   slug: string;
   description?: string | null;
+  longDescription?: string | null;
+  keyBenefits?: string | null;
+  useCases?: string | null;
+  limitations?: string | null;
+  requirements?: string | null;
+  exampleWorkflow?: string | null;
   registryName?: string | null;
   serverType?: string | null;
   primaryFunction?: string | null;
@@ -316,6 +379,12 @@ function mapAgent(item: any): Agent {
     name: attrs?.name ?? "",
     slug: attrs?.slug ?? "",
     description: attrs?.description ?? null,
+    longDescription: attrs?.longDescription ?? null,
+    keyBenefits: attrs?.keyBenefits ?? null,
+    useCases: attrs?.useCases ?? null,
+    limitations: attrs?.limitations ?? null,
+    requirements: attrs?.requirements ?? null,
+    exampleWorkflow: attrs?.exampleWorkflow ?? null,
     whatItDoes: attrs?.whatItDoes ?? null,
     outcomes: attrs?.outcomes ?? null,
     coreTasks: attrs?.coreTasks ?? null,
@@ -363,6 +432,12 @@ function mapMCPServer(item: any): MCPServer {
     name: attrs?.name ?? "",
     slug: attrs?.slug ?? "",
     description: attrs?.description ?? null,
+    longDescription: attrs?.longDescription ?? null,
+    keyBenefits: attrs?.keyBenefits ?? null,
+    useCases: attrs?.useCases ?? null,
+    limitations: attrs?.limitations ?? null,
+    requirements: attrs?.requirements ?? null,
+    exampleWorkflow: attrs?.exampleWorkflow ?? null,
     registryName: attrs?.registryName ?? null,
     serverType: attrs?.serverType ?? null,
     primaryFunction: attrs?.primaryFunction ?? null,
@@ -395,7 +470,7 @@ function mapMCPServer(item: any): MCPServer {
 }
 
 export async function fetchPodcastEpisodes() {
-  const res = await fetch(
+  const json = await fetchCMSJson(
     `${CMS_URL}/api/podcast-episodes` +
       `?sort=publishedDate:desc` +
       `&filters[podcastStatus][$eq]=published` +
@@ -407,34 +482,22 @@ export async function fetchPodcastEpisodes() {
       `&populate[coverImage][fields][0]=url` +
       `&populate[coverImage][fields][1]=alternativeText` +
       `&populate[platformLinks]=*`,
-    { cache: "no-store" }
+    { cacheMs: CMS_CACHE_TTL_MS }
   );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch podcast episodes");
-  }
-
-  const json = await res.json();
   return json?.data?.map(mapEpisode) || [];
 }
 
 export async function fetchGlobalNavigation(): Promise<GlobalNavigation | null> {
   if (!CMS_URL) return null;
-  const res = await fetch(
+  const json = await fetchCMSJson(
     `${CMS_URL}/api/global-navigation` + `?publicationState=live` + `&populate=*`,
-    { cache: "no-store" }
+    { cacheMs: CMS_CACHE_TTL_MS, allowStaleOnError: true }
   );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch global navigation");
-  }
-
-  const json = await res.json();
   return normalizeGlobalNavigation(json);
 }
 
 export async function fetchPodcastBySlug(slug: string) {
-  const res = await fetch(
+  const json = await fetchCMSJson(
     `${CMS_URL}/api/podcast-episodes` +
       `?filters[slug][$eq]=${slug}` +
       `&filters[podcastStatus][$eq]=published` +
@@ -446,10 +509,8 @@ export async function fetchPodcastBySlug(slug: string) {
       `&populate[coverImage][fields][0]=url` +
       `&populate[coverImage][fields][1]=alternativeText` +
       `&populate[platformLinks]=*`,
-    { cache: "no-store" }
+    { cacheMs: CMS_CACHE_TTL_MS }
   );
-
-  const json = await res.json();
   return json?.data?.[0] ? mapEpisode(json.data[0]) : null;
 }
 
@@ -460,7 +521,7 @@ export async function fetchAgents(visibility?: "public" | "private") {
   const results: ReturnType<typeof mapAgent>[] = [];
 
   while (true) {
-    const res = await fetch(
+    const json = await fetchCMSJson(
       `${CMS_URL}/api/agents` +
         `?sort=name:asc` +
         `${visibilityFilter}` +
@@ -473,14 +534,8 @@ export async function fetchAgents(visibility?: "public" | "private") {
         `&populate[companies][fields][1]=slug` +
         `&populate[coverImage][fields][0]=url` +
         `&populate[coverImage][fields][1]=alternativeText`,
-      { cache: "no-store" }
+      { cacheMs: CMS_CACHE_TTL_MS }
     );
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch agents");
-    }
-
-    const json = await res.json();
     const data = json?.data || [];
     results.push(...data.map(mapAgent));
 
@@ -501,7 +556,7 @@ export async function fetchMCPServers(visibility?: "public" | "private") {
   const results: ReturnType<typeof mapMCPServer>[] = [];
 
   while (true) {
-    const res = await fetch(
+    const json = await fetchCMSJson(
       `${CMS_URL}/api/mcp-servers` +
         `?sort=name:asc` +
         `${visibilityFilter}` +
@@ -514,14 +569,8 @@ export async function fetchMCPServers(visibility?: "public" | "private") {
         `&populate[companies][fields][1]=slug` +
         `&populate[coverImage][fields][0]=url` +
         `&populate[coverImage][fields][1]=alternativeText`,
-      { cache: "no-store" }
+      { cacheMs: CMS_CACHE_TTL_MS }
     );
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch MCP servers");
-    }
-
-    const json = await res.json();
     const data = json?.data || [];
     results.push(...data.map(mapMCPServer));
 
@@ -536,7 +585,7 @@ export async function fetchMCPServers(visibility?: "public" | "private") {
 }
 
 export async function fetchAgentBySlug(slug: string) {
-  const res = await fetch(
+  const json = await fetchCMSJson(
     `${CMS_URL}/api/agents` +
       `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
       `&publicationState=live` +
@@ -546,19 +595,13 @@ export async function fetchAgentBySlug(slug: string) {
       `&populate[companies][fields][1]=slug` +
       `&populate[coverImage][fields][0]=url` +
       `&populate[coverImage][fields][1]=alternativeText`,
-    { cache: "no-store" }
+    { cacheMs: CMS_CACHE_TTL_MS }
   );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch agent");
-  }
-
-  const json = await res.json();
   return json?.data?.[0] ? mapAgent(json.data[0]) : null;
 }
 
 export async function fetchMCPServerBySlug(slug: string) {
-  const res = await fetch(
+  const json = await fetchCMSJson(
     `${CMS_URL}/api/mcp-servers` +
       `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
       `&publicationState=live` +
@@ -568,13 +611,7 @@ export async function fetchMCPServerBySlug(slug: string) {
       `&populate[companies][fields][1]=slug` +
       `&populate[coverImage][fields][0]=url` +
       `&populate[coverImage][fields][1]=alternativeText`,
-    { cache: "no-store" }
+    { cacheMs: CMS_CACHE_TTL_MS }
   );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch MCP server");
-  }
-
-  const json = await res.json();
   return json?.data?.[0] ? mapMCPServer(json.data[0]) : null;
 }

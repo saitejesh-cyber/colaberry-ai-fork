@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import Image from "next/image";
 import Link from "next/link";
@@ -221,25 +220,6 @@ export default function Home() {
     },
   ];
 
-  const [activeSlide, setActiveSlide] = useState(0);
-  const slideCount = heroSlides.length;
-
-  useEffect(() => {
-    if (slideCount < 2) return;
-    const interval = window.setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % slideCount);
-    }, 6000);
-    return () => window.clearInterval(interval);
-  }, [slideCount]);
-
-  const handlePrevSlide = () => {
-    setActiveSlide((prev) => (prev - 1 + slideCount) % slideCount);
-  };
-
-  const handleNextSlide = () => {
-    setActiveSlide((prev) => (prev + 1) % slideCount);
-  };
-
   return (
     <Layout>
       <Head>
@@ -375,74 +355,7 @@ export default function Home() {
             </section>
           </div>
 
-          <div className="grid gap-4">
-            <HeroCarousel
-              slides={heroSlides}
-              activeIndex={activeSlide}
-              onSelect={setActiveSlide}
-              onPrev={handlePrevSlide}
-              onNext={handleNextSlide}
-            />
-
-            <div className="surface-strong p-5">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Discovery layer
-              </div>
-              <div className="mt-3 grid gap-3">
-                <MiniCard
-                  title="Agents catalog"
-                  description="Ownership, evaluations, and workflow alignment."
-                />
-                <MiniCard
-                  title="MCP server registry"
-                  description="Standardized tool access with ready connectors."
-                />
-                <MiniCard
-                  title="Knowledge signals"
-                  description="Podcasts, white papers, and updates in one feed."
-                />
-              </div>
-            </div>
-
-            <div className="surface-strong p-5">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Operational readiness
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <Metric label="Governance" value="Policy controls" />
-                <Metric label="Reliability" value="SLO alignment" />
-                <Metric label="Security" value="Audit trails" />
-                <Metric label="Scale" value="Multi-workspace" />
-              </div>
-              <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/80 p-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                  Security posture
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-700">
-                  <Badge>SSO-ready</Badge>
-                  <Badge>Role-based access</Badge>
-                  <Badge>Audit logging</Badge>
-                  <Badge>Data boundaries</Badge>
-                </div>
-              </div>
-            </div>
-
-            <div className="surface-strong p-5">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Industry roots
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-700">
-                {rootIndustries.map((industry) => (
-                  <span
-                    key={industry}
-                    className="chip rounded-full border border-slate-200/80 bg-white px-3 py-1 font-semibold"
-                  >
-                    {industry}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
+          <HeroPreviewGrid slides={heroSlides} />
         </div>
       </section>
 
@@ -743,23 +656,6 @@ function FeatureCard({ title, description }: { title: string; description: strin
 
  
 
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-slate-200/80 bg-white/80 p-3">
-      <div className="text-xs font-medium text-slate-600">{label}</div>
-      <div className="mt-1 text-sm font-semibold text-slate-900">{value}</div>
-    </div>
-  );
-}
-
-function Badge({ children }: { children: string }) {
-  return (
-    <span className="chip chip-muted rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700">
-      {children}
-    </span>
-  );
-}
-
 function Stat({
   title,
   value,
@@ -780,15 +676,6 @@ function Stat({
   );
 }
 
-function MiniCard({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3">
-      <div className="text-sm font-semibold text-slate-900">{title}</div>
-      <div className="mt-1 text-xs text-slate-600">{description}</div>
-    </div>
-  );
-}
-
 type HeroSlide = {
   eyebrow: string;
   title: string;
@@ -797,48 +684,36 @@ type HeroSlide = {
   highlight: string;
 };
 
-function HeroCarousel({
-  slides,
-  activeIndex,
-  onSelect,
-  onPrev,
-  onNext,
-}: {
-  slides: HeroSlide[];
-  activeIndex: number;
-  onSelect: (index: number) => void;
-  onPrev: () => void;
-  onNext: () => void;
-}) {
-  const activeSlide = slides[activeIndex];
-
+function HeroPreviewGrid({ slides }: { slides: HeroSlide[] }) {
   return (
     <div className="surface-strong p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Platform preview
-          </div>
-          <div className="mt-2 text-base font-semibold text-slate-900">{activeSlide.title}</div>
-          <div className="mt-1 text-sm text-slate-600">{activeSlide.description}</div>
+      <div className="flex items-center justify-between">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+          Platform preview
         </div>
-        <span className="chip chip-brand rounded-full px-2.5 py-1 text-[11px] font-semibold">
-          {activeSlide.eyebrow}
-        </span>
+        <Link href="/aixcelerator" className="text-xs font-semibold text-brand-deep hover:text-brand-blue">
+          Explore platform →
+        </Link>
       </div>
-
-      <div className="relative mt-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/80 shadow-sm">
-        <div className="relative aspect-[4/3] w-full">
-          {slides.map((slide, index) => {
-            const isActive = index === activeIndex;
-            return (
-              <div
-                key={slide.title}
-                className={`absolute inset-0 transition-all duration-500 ease-out ${
-                  isActive ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
-                }`}
-                aria-hidden={!isActive}
-              >
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        {slides.map((slide, index) => (
+          <div
+            key={slide.title}
+            className={`rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm ${
+              index === slides.length - 1 ? "sm:col-span-2" : ""
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-slate-900">{slide.title}</div>
+                <div className="mt-1 text-xs text-slate-600">{slide.description}</div>
+              </div>
+              <span className="chip chip-brand rounded-full px-2.5 py-1 text-[11px] font-semibold">
+                {slide.eyebrow}
+              </span>
+            </div>
+            <div className="relative mt-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/80">
+              <div className="relative aspect-[16/9] w-full">
                 <Image
                   src={slide.image}
                   alt={slide.title}
@@ -849,74 +724,12 @@ function HeroCarousel({
                   priority={index === 0}
                 />
               </div>
-            );
-          })}
-        </div>
-        <div className="absolute bottom-3 left-3 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
-          {activeSlide.highlight}
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onPrev}
-            className="btn btn-ghost btn-icon"
-            aria-label="Previous slide"
-          >
-            <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
-              <path
-                d="M12.5 4.5 7 10l5.5 5.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-
-          <div className="flex items-center gap-1">
-            {slides.map((slide, index) => {
-              const isActive = index === activeIndex;
-              return (
-                <button
-                  key={slide.title}
-                  type="button"
-                  onClick={() => onSelect(index)}
-                  className={`focus-ring h-2.5 w-2.5 rounded-full transition ${
-                    isActive ? "bg-brand-blue" : "bg-slate-300 hover:bg-slate-400"
-                  }`}
-                  aria-label={`Go to ${slide.eyebrow} slide`}
-                  aria-current={isActive ? "true" : undefined}
-                  aria-pressed={isActive}
-                />
-              );
-            })}
+              <div className="absolute bottom-3 left-3 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
+                {slide.highlight}
+              </div>
+            </div>
           </div>
-
-          <button
-            type="button"
-            onClick={onNext}
-            className="btn btn-ghost btn-icon"
-            aria-label="Next slide"
-          >
-            <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
-              <path
-                d="M7.5 4.5 13 10l-5.5 5.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
-        <div className="text-[11px] font-semibold text-slate-500">
-          {activeIndex + 1} / {slides.length}
-        </div>
+        ))}
       </div>
     </div>
   );

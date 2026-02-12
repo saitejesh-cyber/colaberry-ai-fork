@@ -1,6 +1,7 @@
 import type { GetServerSideProps } from "next";
 import Link from "next/link";
 import Head from "next/head";
+import sanitizeHtml from "sanitize-html";
 import Layout from "../../../components/Layout";
 import SectionHeader from "../../../components/SectionHeader";
 import MCPCard from "../../../components/MCPCard";
@@ -94,6 +95,10 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
   const hostingOptions = parseList(mcp.hostingOptions);
   const integrations = companyNames;
   const pricingNotes = parseList(mcp.pricing);
+  const keyBenefits = parseList(mcp.keyBenefits);
+  const useCases = parseList(mcp.useCases);
+  const limitations = parseList(mcp.limitations);
+  const requirements = parseList(mcp.requirements);
   const keywords = [mcp.industry, mcp.category, ...tagNames, ...companyNames].filter(Boolean).join(", ");
   const jsonLd = {
     "@context": "https://schema.org",
@@ -348,12 +353,12 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
             </div>
           </div>
 
-          <section className="surface-panel p-6">
-            <SectionHeader
-              as="h2"
-              size="md"
-              kicker="About"
-              title="Capabilities and scope"
+      <section className="surface-panel p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="About"
+          title="Capabilities and scope"
               description="Technical summary, primary function, and service characteristics."
             />
             <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -367,18 +372,89 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
                   )}
                   {mcp.description ? <p>{mcp.description}</p> : null}
                 </div>
+                {mcp.longDescription ? (
+                  <div className="mt-4">{renderRichText(mcp.longDescription)}</div>
+                ) : null}
               </div>
-              <ListSection
-                title="Capabilities"
-                items={capabilities}
-                empty="Capabilities not documented yet."
-              />
-            </div>
-          </section>
+          <ListSection
+            title="Capabilities"
+            items={capabilities}
+            empty="Capabilities not documented yet."
+          />
+        </div>
+      </section>
 
-          <section className="surface-panel p-6">
-            <SectionHeader
-              as="h2"
+      <section className="surface-panel p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Value"
+          title="Benefits and constraints"
+          description="Key benefits plus known limitations and tradeoffs."
+        />
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <ListSection
+            title="Key benefits"
+            items={keyBenefits}
+            empty="Key benefits not documented yet."
+          />
+          <ListSection
+            title="Limitations"
+            items={limitations}
+            empty="Limitations not documented yet."
+          />
+        </div>
+      </section>
+
+      <section className="surface-panel p-6">
+        <SectionHeader
+          as="h2"
+          size="md"
+          kicker="Execution"
+          title="Use cases and workflow"
+          description="Where the server is used and how it runs end-to-end."
+        />
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <ListSection
+            title="Use cases"
+            items={useCases}
+            empty="Use cases not documented yet."
+          />
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Example workflow
+            </div>
+            {mcp.exampleWorkflow ? (
+              <div className="mt-3 space-y-3 text-sm text-slate-700">
+                {renderParagraphs(mcp.exampleWorkflow)}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-slate-600">
+                Example workflow not documented yet.
+              </p>
+            )}
+            <div className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Requirements
+            </div>
+            {requirements.length ? (
+              <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                {requirements.map((item, index) => (
+                  <li key={`req-${index}`} className="flex gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-sm text-slate-600">Requirements not documented yet.</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="surface-panel p-6">
+        <SectionHeader
+          as="h2"
               size="md"
               kicker="Tools & endpoints"
               title="Exposed actions"
@@ -650,6 +726,35 @@ function parseList(value?: string | null): string[] {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function renderRichText(value?: string | null): ReactNode {
+  if (!value) return null;
+  const clean = sanitizeHtml(value, {
+    allowedTags: ["p", "br", "strong", "em", "b", "i", "u", "ul", "ol", "li", "a"],
+    allowedAttributes: {
+      a: ["href", "target", "rel"],
+    },
+  });
+  if (!clean.trim()) return null;
+  return (
+    <div
+      className="text-sm text-slate-700 [&_p]:mt-3 first:[&_p]:mt-0 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:mt-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-brand-deep [&_a]:underline"
+      dangerouslySetInnerHTML={{ __html: clean }}
+    />
+  );
+}
+
+function renderParagraphs(value: string): ReactNode[] {
+  return value
+    .split(/\r?\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, index) => (
+      <p key={`${line}-${index}`} className="text-sm text-slate-700">
+        {line}
+      </p>
+    ));
 }
 
 function GuidanceBlock({
