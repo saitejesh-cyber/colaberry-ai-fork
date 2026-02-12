@@ -257,97 +257,251 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
         </div>
       </div>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="surface-panel p-6">
-          <SectionHeader
-            as="h2"
-            size="md"
-            kicker="Operational summary"
-            title="Readiness snapshot"
-            description="Deployment status, ownership signals, and documentation access."
-          />
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <DetailCard label="Status" value={status} description={statusHint} />
-            <DetailCard
-              label="Visibility"
-              value={isPrivate ? "Private" : "Public"}
-              description={isPrivate ? "Restricted access listing." : "Available for catalog discovery."}
+      <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+        <div className="grid gap-6">
+          <div className="surface-panel p-6">
+            <SectionHeader
+              as="h2"
+              size="md"
+              kicker="Operational summary"
+              title="Readiness snapshot"
+              description="Deployment status, ownership signals, and documentation access."
             />
-            <DetailCard
-              label="Verified"
-              value={mcp.verified ? "Yes" : "No"}
-              description={mcp.verified ? "Ownership and metadata reviewed." : "Verification pending."}
-            />
-            <DetailCard
-              label="Industry"
-              value={mcp.industry || "General"}
-              description="Primary domain alignment."
-            />
-            <DetailCard
-              label="Category"
-              value={mcp.category || "General"}
-              description="Integration classification."
-            />
-            <DetailCard
-              label="Signals"
-              value={`${tagNames.length} tags • ${companyNames.length} companies`}
-              description="Discovery metadata attached."
-            />
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <DetailCard label="Status" value={status} description={statusHint} />
+              <DetailCard
+                label="Visibility"
+                value={isPrivate ? "Private" : "Public"}
+                description={isPrivate ? "Restricted access listing." : "Available for catalog discovery."}
+              />
+              <DetailCard
+                label="Verified"
+                value={mcp.verified ? "Yes" : "No"}
+                description={mcp.verified ? "Ownership and metadata reviewed." : "Verification pending."}
+              />
+              <DetailCard
+                label="Industry"
+                value={mcp.industry || "General"}
+                description="Primary domain alignment."
+              />
+              <DetailCard
+                label="Category"
+                value={mcp.category || "General"}
+                description="Integration classification."
+              />
+              <DetailCard
+                label="Signals"
+                value={`${tagNames.length} tags • ${companyNames.length} companies`}
+                description="Discovery metadata attached."
+              />
+            </div>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <ListBlock label="Capabilities" items={tagNames} emptyLabel="Capabilities not tagged yet." />
+              <ListBlock
+                label="Integrations"
+                items={companyNames}
+                emptyLabel="No integrations linked yet."
+              />
+            </div>
+
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              <GuidanceBlock
+                title="Deployment guidance"
+                items={[
+                  statusKey === "active" || statusKey === "live"
+                    ? "Production-ready and actively deployed."
+                    : statusKey === "beta"
+                      ? "In pilot with limited availability."
+                      : "Discovery or planning stage.",
+                  mcp.docsUrl ? "Documentation available for integration teams." : "Documentation not linked yet.",
+                  mcp.verified ? "Verified metadata and ownership confirmed." : "Verification pending.",
+                  isPrivate ? "Private listing with restricted access." : "Public listing for catalog discovery.",
+                ]}
+              />
+              <GuidanceBlock
+                title="Resources"
+                items={[
+                  mcp.docsUrl ? "Docs link available for setup." : "Docs link pending.",
+                  mcp.sourceUrl ? "Source repository available." : "Source link not provided yet.",
+                ]}
+                actions={
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {mcp.docsUrl ? (
+                      <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-compact">
+                        View docs
+                      </a>
+                    ) : null}
+                    {mcp.sourceUrl ? (
+                      <a href={mcp.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-ghost btn-compact">
+                        View source
+                      </a>
+                    ) : null}
+                    {!mcp.docsUrl && !mcp.sourceUrl ? (
+                      <Link href="/request-demo" className="btn btn-ghost btn-compact">
+                        Request access
+                      </Link>
+                    ) : null}
+                  </div>
+                }
+              />
+            </div>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <ListBlock label="Capabilities" items={tagNames} emptyLabel="Capabilities not tagged yet." />
-            <ListBlock
-              label="Integrations"
-              items={companyNames}
-              emptyLabel="No integrations linked yet."
+          <section className="surface-panel p-6">
+            <SectionHeader
+              as="h2"
+              size="md"
+              kicker="About"
+              title="Capabilities and scope"
+              description="Technical summary, primary function, and service characteristics."
             />
-          </div>
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <GuidanceBlock
-              title="Deployment guidance"
-              items={[
-                statusKey === "active" || statusKey === "live"
-                  ? "Production-ready and actively deployed."
-                  : statusKey === "beta"
-                    ? "In pilot with limited availability."
-                    : "Discovery or planning stage.",
-                mcp.docsUrl ? "Documentation available for integration teams." : "Documentation not linked yet.",
-                mcp.verified ? "Verified metadata and ownership confirmed." : "Verification pending.",
-                isPrivate ? "Private listing with restricted access." : "Public listing for catalog discovery.",
-              ]}
-            />
-            <GuidanceBlock
-              title="Resources"
-              items={[
-                mcp.docsUrl ? "Docs link available for setup." : "Docs link pending.",
-                mcp.sourceUrl ? "Source repository available." : "Source link not provided yet.",
-              ]}
-              actions={
-                <div className="mt-4 flex flex-wrap gap-3">
-                  {mcp.docsUrl ? (
-                    <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-compact">
-                      View docs
-                    </a>
-                  ) : null}
-                  {mcp.sourceUrl ? (
-                    <a href={mcp.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-ghost btn-compact">
-                      View source
-                    </a>
-                  ) : null}
-                  {!mcp.docsUrl && !mcp.sourceUrl ? (
-                    <Link href="/request-demo" className="btn btn-ghost btn-compact">
-                      Request access
-                    </Link>
-                  ) : null}
+            <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Summary</div>
+                <div className="mt-3 space-y-3 text-sm text-slate-700">
+                  {mcp.primaryFunction ? (
+                    <p>{mcp.primaryFunction}</p>
+                  ) : (
+                    <p>Describe the primary function and why this MCP server matters.</p>
+                  )}
+                  {mcp.description ? <p>{mcp.description}</p> : null}
                 </div>
-              }
+              </div>
+              <ListSection
+                title="Capabilities"
+                items={capabilities}
+                empty="Capabilities not documented yet."
+              />
+            </div>
+          </section>
+
+          <section className="surface-panel p-6">
+            <SectionHeader
+              as="h2"
+              size="md"
+              kicker="Tools & endpoints"
+              title="Exposed actions"
+              description="Key actions, tools, or endpoints provided by this server."
             />
-          </div>
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <ListSection title="Tools" items={tools} empty="Tools not documented yet." />
+              <ListSection title="Integrations" items={integrations} empty="Integrations not linked yet." />
+            </div>
+          </section>
+
+          <section className="surface-panel p-6">
+            <SectionHeader
+              as="h2"
+              size="md"
+              kicker="Security"
+              title="Auth and credentials"
+              description="Credential types, access patterns, and control expectations."
+            />
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <ListSection title="Auth methods" items={authMethods} empty="Auth methods not documented yet." />
+              <ListSection title="Hosting options" items={hostingOptions} empty="Hosting options not documented yet." />
+            </div>
+          </section>
+
+          <section className="surface-panel p-6">
+            <SectionHeader
+              as="h2"
+              size="md"
+              kicker="Compatibility"
+              title="Deployment requirements"
+              description="Protocol versions, environment expectations, and pricing signals."
+            />
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <ListSection
+                title="Compatibility"
+                items={parseList(mcp.compatibility)}
+                empty="Compatibility requirements not documented yet."
+              />
+              <ListSection
+                title="Pricing & usage limits"
+                items={pricingNotes}
+                empty="Pricing details not documented yet."
+              />
+            </div>
+          </section>
+
+          <section className="surface-panel p-6">
+            <SectionHeader
+              as="h2"
+              size="md"
+              kicker="Resources"
+              title="Docs, source, and try it now"
+              description="Links for integration teams and evaluation."
+            />
+            <div className="mt-6 flex flex-wrap gap-3">
+              {mcp.docsUrl ? (
+                <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
+                  View docs
+                </a>
+              ) : null}
+              {mcp.sourceUrl ? (
+                <a href={mcp.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-ghost">
+                  View source
+                </a>
+              ) : null}
+              {mcp.tryItNowUrl ? (
+                <a href={mcp.tryItNowUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
+                  Try it now
+                </a>
+              ) : null}
+              {!mcp.docsUrl && !mcp.sourceUrl && !mcp.tryItNowUrl ? (
+                <p className="text-sm text-slate-600">Resources not linked yet.</p>
+              ) : null}
+            </div>
+          </section>
+
+          <section className="surface-panel p-6">
+            <SectionHeader
+              as="h2"
+              size="md"
+              kicker="Adoption"
+              title="Usage signals"
+              description="Signals to help teams evaluate readiness and adoption."
+            />
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <SignalStat
+                label="Usage"
+                value={mcp.usageCount ? mcp.usageCount.toLocaleString() : "—"}
+                note="Recorded runs or deployments."
+              />
+              <SignalStat
+                label="Rating"
+                value={mcp.rating ? `${mcp.rating.toFixed(1)} / 5` : "—"}
+                note="Internal or customer feedback."
+              />
+              <SignalStat
+                label="Open source"
+                value={mcp.openSource === true ? "Yes" : mcp.openSource === false ? "No" : "—"}
+                note="Licensing signal."
+              />
+            </div>
+          </section>
+
+          {relatedServers.length > 0 && (
+            <section className="surface-panel p-6">
+              <SectionHeader
+                as="h2"
+                size="md"
+                kicker="Related"
+                title="Similar MCP servers"
+                description="Servers with shared categories, industries, or tags."
+              />
+              <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                {relatedServers.map((related) => (
+                  <MCPCard key={related.id} mcp={related} />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
 
-        <aside className="surface-panel p-6">
+        <aside className="surface-panel p-6 lg:sticky lg:top-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -379,158 +533,6 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
           </dl>
         </aside>
       </section>
-
-      <section className="surface-panel mt-6 p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="About"
-          title="Capabilities and scope"
-          description="Technical summary, primary function, and service characteristics."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Summary</div>
-            <div className="mt-3 space-y-3 text-sm text-slate-700">
-              {mcp.primaryFunction ? (
-                <p>{mcp.primaryFunction}</p>
-              ) : (
-                <p>Describe the primary function and why this MCP server matters.</p>
-              )}
-              {mcp.description ? <p>{mcp.description}</p> : null}
-            </div>
-          </div>
-          <ListSection
-            title="Capabilities"
-            items={capabilities}
-            empty="Capabilities not documented yet."
-          />
-        </div>
-      </section>
-
-      <section className="surface-panel mt-6 p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Tools & endpoints"
-          title="Exposed actions"
-          description="Key actions, tools, or endpoints provided by this server."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <ListSection title="Tools" items={tools} empty="Tools not documented yet." />
-          <ListSection title="Integrations" items={integrations} empty="Integrations not linked yet." />
-        </div>
-      </section>
-
-      <section className="surface-panel mt-6 p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Security"
-          title="Auth and credentials"
-          description="Credential types, access patterns, and control expectations."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <ListSection title="Auth methods" items={authMethods} empty="Auth methods not documented yet." />
-          <ListSection title="Hosting options" items={hostingOptions} empty="Hosting options not documented yet." />
-        </div>
-      </section>
-
-      <section className="surface-panel mt-6 p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Compatibility"
-          title="Deployment requirements"
-          description="Protocol versions, environment expectations, and pricing signals."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <ListSection
-            title="Compatibility"
-            items={parseList(mcp.compatibility)}
-            empty="Compatibility requirements not documented yet."
-          />
-          <ListSection
-            title="Pricing & usage limits"
-            items={pricingNotes}
-            empty="Pricing details not documented yet."
-          />
-        </div>
-      </section>
-
-      <section className="surface-panel mt-6 p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Resources"
-          title="Docs, source, and try it now"
-          description="Links for integration teams and evaluation."
-        />
-        <div className="mt-6 flex flex-wrap gap-3">
-          {mcp.docsUrl ? (
-            <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
-              View docs
-            </a>
-          ) : null}
-          {mcp.sourceUrl ? (
-            <a href={mcp.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-ghost">
-              View source
-            </a>
-          ) : null}
-          {mcp.tryItNowUrl ? (
-            <a href={mcp.tryItNowUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
-              Try it now
-            </a>
-          ) : null}
-          {!mcp.docsUrl && !mcp.sourceUrl && !mcp.tryItNowUrl ? (
-            <p className="text-sm text-slate-600">Resources not linked yet.</p>
-          ) : null}
-        </div>
-      </section>
-
-      <section className="surface-panel mt-6 p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Adoption"
-          title="Usage signals"
-          description="Signals to help teams evaluate readiness and adoption."
-        />
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <SignalStat
-            label="Usage"
-            value={mcp.usageCount ? mcp.usageCount.toLocaleString() : "—"}
-            note="Recorded runs or deployments."
-          />
-          <SignalStat
-            label="Rating"
-            value={mcp.rating ? `${mcp.rating.toFixed(1)} / 5` : "—"}
-            note="Internal or customer feedback."
-          />
-          <SignalStat
-            label="Open source"
-            value={mcp.openSource === true ? "Yes" : mcp.openSource === false ? "No" : "—"}
-            note="Licensing signal."
-          />
-        </div>
-      </section>
-
-      {relatedServers.length > 0 && (
-        <section className="surface-panel mt-6 p-6">
-          <SectionHeader
-            as="h2"
-            size="md"
-            kicker="Related"
-            title="Similar MCP servers"
-            description="Servers with shared categories, industries, or tags."
-          />
-          <div className="mt-6 grid gap-4 lg:grid-cols-3">
-            {relatedServers.map((related) => (
-              <MCPCard key={related.id} mcp={related} />
-            ))}
-          </div>
-        </section>
-      )}
     </Layout>
   );
 }

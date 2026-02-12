@@ -237,7 +237,8 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
         </div>
       </div>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+        <div className="grid gap-6">
         <div className="surface-panel p-6">
           <SectionHeader
             as="h2"
@@ -320,35 +321,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
           </div>
         </div>
 
-        <aside className="surface-panel p-6">
-          <SectionHeader
-            as="h2"
-            size="md"
-            kicker="LLM metadata"
-            title="Structured profile"
-            description="Fields optimized for catalog indexing and retrieval."
-          />
-          <dl className="mt-6 grid gap-4">
-            <MetadataRow label="Name" value={agent.name} />
-            <MetadataRow label="Slug" value={agent.slug || "Not provided"} />
-            <MetadataRow label="Industry" value={agent.industry || "General"} />
-            <MetadataRow label="Status" value={status} />
-            <MetadataRow label="Visibility" value={isPrivate ? "Private" : "Public"} />
-            <MetadataRow label="Source" value={sourceDisplay} />
-            <MetadataRow label="Verified" value={agent.verified ? "Yes" : "No"} />
-            <MetadataRow label="Last updated" value={lastUpdatedLabel || "Not provided"} />
-            <MetadataRow label="Tags" value={formatList(agent.tags)} />
-            <MetadataRow label="Companies" value={formatList(agent.companies)} />
-            <MetadataRow
-              label="Source URL"
-              value={agent.sourceUrl || "Not linked yet"}
-              href={agent.sourceUrl || undefined}
-            />
-          </dl>
-        </aside>
-      </section>
-
-      <section className="surface-panel mt-6 p-6">
+      <section className="surface-panel p-6">
         <SectionHeader
           as="h2"
           size="md"
@@ -378,7 +351,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
         </div>
       </section>
 
-      <section className="surface-panel mt-6 p-6">
+      <section className="surface-panel p-6">
         <SectionHeader
           as="h2"
           size="md"
@@ -396,7 +369,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
         </div>
       </section>
 
-      <section className="surface-panel mt-6 p-6">
+      <section className="surface-panel p-6">
         <SectionHeader
           as="h2"
           size="md"
@@ -410,7 +383,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
         </div>
       </section>
 
-      <section className="surface-panel mt-6 p-6">
+      <section className="surface-panel p-6">
         <SectionHeader
           as="h2"
           size="md"
@@ -432,7 +405,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
         </div>
       </section>
 
-      <section className="surface-panel mt-6 p-6">
+      <section className="surface-panel p-6">
         <SectionHeader
           as="h2"
           size="md"
@@ -450,7 +423,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
         </div>
       </section>
 
-      <section className="surface-panel mt-6 p-6">
+      <section className="surface-panel p-6">
         <SectionHeader
           as="h2"
           size="md"
@@ -480,7 +453,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
         </div>
       </section>
 
-      <section className="surface-panel mt-6 p-6">
+      <section className="surface-panel p-6">
         <SectionHeader
           as="h2"
           size="md"
@@ -508,7 +481,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
       </section>
 
       {relatedAgents.length > 0 && (
-        <section className="surface-panel mt-6 p-6">
+        <section className="surface-panel p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -523,6 +496,35 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
           </div>
         </section>
       )}
+        </div>
+
+        <aside className="surface-panel p-6 lg:sticky lg:top-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="LLM metadata"
+            title="Structured profile"
+            description="Fields optimized for catalog indexing and retrieval."
+          />
+          <dl className="mt-6 grid gap-4">
+            <MetadataRow label="Name" value={agent.name} />
+            <MetadataRow label="Slug" value={agent.slug || "Not provided"} />
+            <MetadataRow label="Industry" value={agent.industry || "General"} />
+            <MetadataRow label="Status" value={status} />
+            <MetadataRow label="Visibility" value={isPrivate ? "Private" : "Public"} />
+            <MetadataRow label="Source" value={sourceDisplay} />
+            <MetadataRow label="Verified" value={agent.verified ? "Yes" : "No"} />
+            <MetadataRow label="Last updated" value={lastUpdatedLabel || "Not provided"} />
+            <MetadataRow label="Tags" value={formatList(agent.tags)} />
+            <MetadataRow label="Companies" value={formatList(agent.companies)} />
+            <MetadataRow
+              label="Source URL"
+              value={agent.sourceUrl || "Not linked yet"}
+              href={agent.sourceUrl || undefined}
+            />
+          </dl>
+        </aside>
+      </section>
     </Layout>
   );
 }
