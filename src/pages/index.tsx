@@ -2,6 +2,7 @@ import Layout from "../components/Layout";
 import Image from "next/image";
 import Link from "next/link";
 import Head from "next/head";
+import { useEffect, useState } from "react";
 import SectionHeader from "../components/SectionHeader";
 import { heroImage } from "../lib/media";
 
@@ -261,43 +262,19 @@ export default function Home() {
         <link rel="canonical" href={siteUrl} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
-      <section className="hero-surface rise-in p-8 sm:p-10 lg:p-12">
-        <div className="relative grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
-              AI operations platform
+      <section className="hero-surface rise-in p-6 sm:p-8 lg:p-10">
+        <HeroBannerSlider slides={heroSlides} rootIndustries={rootIndustries} />
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+          <section className="surface-panel p-5 lg:p-6">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
+              Operational snapshot
+            </div>
+            <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Enterprise readiness at a glance
             </div>
 
-            <h1 className="font-display mt-6 text-4xl font-semibold leading-[1.03] tracking-[-0.03em] text-slate-900 dark:text-slate-100 sm:text-5xl lg:text-6xl">
-              The go-to destination for discoverable agents, MCPs, and AI knowledge
-            </h1>
-
-            <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-300 sm:text-lg">
-              Colaberry AI unifies agents, MCP servers, podcasts, case studies, and trusted research
-              into a searchable catalog designed for humans, SEO, and LLM indexing.
-            </p>
-
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/request-demo"
-                className="btn btn-primary"
-              >
-                Book a demo
-              </Link>
-              <Link
-                href="/resources"
-                className="btn btn-secondary"
-              >
-                Explore the catalog
-              </Link>
-            </div>
-
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-              Rooted in {rootIndustries.join(" • ")}
-            </p>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid gap-3">
               {heroKpis.map((kpi) => (
                 <div
                   key={kpi.label}
@@ -312,7 +289,18 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm dark:border-slate-700/80">
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <Link href="/request-demo" className="btn btn-primary">
+                Book a demo
+              </Link>
+              <Link href="/resources" className="btn btn-secondary">
+                Explore the catalog
+              </Link>
+            </div>
+          </section>
+
+          <div className="space-y-6">
+            <section className="surface-panel p-5 lg:p-6">
               <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
                 Search the catalog
               </div>
@@ -345,9 +333,9 @@ export default function Home() {
                   </span>
                 ))}
               </div>
-            </div>
+            </section>
 
-            <section className="mt-6 surface-panel p-5">
+            <section className="surface-panel p-5 lg:p-6">
               <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
                 Proof signals
               </div>
@@ -398,8 +386,6 @@ export default function Home() {
               </div>
             </section>
           </div>
-
-          <HeroEnterprisePanel slides={heroSlides} />
         </div>
       </section>
 
@@ -747,145 +733,123 @@ type HeroSlide = {
   href: string;
 };
 
-function HeroEnterprisePanel({ slides }: { slides: HeroSlide[] }) {
-  const primary = slides[0];
-  const secondary = slides.slice(1, 3);
-  const controlSignals = [
-    { label: "Catalog", value: "Indexed", note: "Search-ready entities" },
-    { label: "Security", value: "Policy aware", note: "Role and ownership context" },
-    { label: "Ops", value: "Deployment fit", note: "Readiness and trust signals" },
-  ];
-  const destinations = [
-    {
-      title: "Industries",
-      href: "/industries",
-      note: "Domain-aligned playbooks",
-    },
-    {
-      title: "Resources",
-      href: "/resources",
-      note: "Podcasts, books, and research",
-    },
-    {
-      title: "Updates",
-      href: "/updates",
-      note: "AI news and product signals",
-    },
-  ];
+function HeroBannerSlider({ slides, rootIndustries }: { slides: HeroSlide[]; rootIndustries: string[] }) {
+  const slideCount = slides.length;
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  if (!primary) return null;
+  useEffect(() => {
+    if (slideCount < 2) return;
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % slideCount);
+    }, 6200);
+    return () => window.clearInterval(timer);
+  }, [slideCount]);
+
+  if (slideCount === 0) return null;
+
+  const activeSlide = slides[activeIndex] ?? slides[0];
+  const goToSlide = (nextIndex: number) => {
+    const bounded = (nextIndex + slideCount) % slideCount;
+    setActiveIndex(bounded);
+  };
 
   return (
-    <aside className="surface-strong p-5 lg:p-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
-          Platform control tower
-        </div>
-        <Link href="/aixcelerator" className="text-xs font-semibold text-brand-deep hover:text-brand-blue">
-          Explore platform <span aria-hidden="true">→</span>
-        </Link>
-      </div>
-      <Link
-        href={primary.href}
-        className="group mt-4 block rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-blue/40 hover:shadow-md dark:border-slate-700/80"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
-              {primary.eyebrow}
-            </div>
-            <div className="mt-1 text-base font-semibold text-slate-900 dark:text-slate-100">{primary.title}</div>
-            <div className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">{primary.description}</div>
-          </div>
-          <span className="rounded-full border border-brand-blue/30 bg-brand-blue/5 px-2.5 py-1 text-[11px] font-semibold text-brand-deep">
-            Live
-          </span>
-        </div>
-        <div className="media-premium-frame relative mt-4 overflow-hidden rounded-xl border border-slate-200/80 bg-white/80">
-          <div className="relative aspect-[16/10] w-full">
-            <Image
-              src={primary.image}
-              alt={primary.title}
-              fill
-              sizes="(min-width: 1920px) 820px, (min-width: 1536px) 720px, (min-width: 1280px) 640px, (min-width: 1024px) 520px, 90vw"
-              quality={90}
-              className="media-premium-image object-cover object-center"
-              priority
-            />
-          </div>
-          <div className="media-premium-overlay" />
-          <div className="absolute bottom-3 left-3 rounded-md border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm">
-            {primary.highlight}
-          </div>
-          <div className="absolute bottom-3 right-3 rounded-md border border-slate-200/80 bg-slate-900/85 px-2.5 py-1 text-xs font-semibold text-white">
-            Control view
-          </div>
-        </div>
-      </Link>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-        {controlSignals.map((signal) => (
+    <section className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-slate-950 shadow-[0_34px_72px_rgba(2,6,23,0.46)]">
+      <div className="absolute inset-0">
+        {slides.map((slide, index) => (
           <div
-            key={signal.label}
-            className="rounded-xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/80"
+            key={slide.title}
+            className={`absolute inset-0 transition-opacity duration-700 ${index === activeIndex ? "opacity-100" : "opacity-0"}`}
+            aria-hidden={index !== activeIndex}
           >
-            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
-              {signal.label}
-            </div>
-            <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{signal.value}</div>
-            <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">{signal.note}</div>
+            <Image
+              src={slide.image}
+              alt={slide.title}
+              fill
+              sizes="100vw"
+              priority={index === 0}
+              quality={92}
+              className="media-premium-image object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/88 via-slate-950/58 to-slate-900/25" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/82 via-slate-950/20 to-transparent" />
           </div>
         ))}
       </div>
 
-      {secondary.length > 0 ? (
-        <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-3.5 dark:border-slate-700/80">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
-            Active surfaces
+      <div className="relative z-10 flex min-h-[440px] flex-col justify-between p-7 sm:min-h-[520px] sm:p-10 lg:min-h-[560px] lg:p-12">
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/30 bg-slate-950/45 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-100 shadow-sm backdrop-blur">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
+            AI operations platform
           </div>
-          <div className="mt-3 grid gap-2">
-            {secondary.map((slide) => (
-              <Link
-                key={slide.title}
-                href={slide.href}
-                className="group flex items-start justify-between gap-3 rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 transition hover:border-brand-blue/35 hover:shadow-sm dark:border-slate-700/80"
-              >
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{slide.title}</div>
-                  <div className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">{slide.description}</div>
-                </div>
-                <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
-                  {slide.eyebrow}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      ) : null}
 
-      <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-3.5 dark:border-slate-700/80">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
-          Go-to destinations
-        </div>
-        <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-          {destinations.map((item) => (
-            <Link
-              key={item.title}
-              href={item.href}
-              className="group rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 transition hover:border-brand-blue/35 hover:shadow-sm dark:border-slate-700/80"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{item.title}</span>
-                <span className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
-                  →
-                </span>
-              </div>
-              <div className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">{item.note}</div>
+          <h1 className="font-display mt-6 text-4xl font-semibold leading-[1.03] tracking-[-0.03em] text-white sm:text-5xl lg:text-6xl">
+            The go-to destination for discoverable agents, MCPs, and AI knowledge
+          </h1>
+
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-200 sm:text-lg">
+            {activeSlide.description}
+          </p>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Link href="/request-demo" className="btn btn-primary">
+              Book a demo
             </Link>
-          ))}
+            <Link
+              href={activeSlide.href}
+              className="btn border border-white/35 bg-white/90 text-slate-900 hover:bg-white"
+            >
+              Explore {activeSlide.eyebrow}
+            </Link>
+          </div>
+
+          <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
+            Rooted in {rootIndustries.join(" • ")}
+          </p>
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-slate-950/45 px-3 py-2 text-xs font-semibold text-slate-100 backdrop-blur">
+            <span className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-slate-200">
+              {activeSlide.eyebrow}
+            </span>
+            <span>{activeSlide.title}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/28 bg-slate-950/45 text-white transition hover:border-sky-300/60"
+              onClick={() => goToSlide(activeIndex - 1)}
+              aria-label="Show previous hero slide"
+            >
+              <span aria-hidden="true">←</span>
+            </button>
+            {slides.map((slide, index) => (
+              <button
+                key={`${slide.title}-${index}`}
+                type="button"
+                onClick={() => goToSlide(index)}
+                className={`h-2.5 rounded-full transition ${
+                  index === activeIndex ? "w-7 bg-brand-aqua" : "w-2.5 bg-white/40 hover:bg-white/70"
+                }`}
+                aria-label={`Go to hero slide ${index + 1}`}
+                aria-current={index === activeIndex ? "true" : undefined}
+              />
+            ))}
+            <button
+              type="button"
+              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/28 bg-slate-950/45 text-white transition hover:border-sky-300/60"
+              onClick={() => goToSlide(activeIndex + 1)}
+              aria-label="Show next hero slide"
+            >
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
         </div>
       </div>
-    </aside>
+    </section>
   );
 }
 
