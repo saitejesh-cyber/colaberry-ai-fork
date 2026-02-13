@@ -258,6 +258,22 @@ select:disabled {
   color: #93c5fd;
 }
 
+.brand-logo-light {
+  display: block;
+}
+
+.brand-logo-dark {
+  display: none;
+}
+
+.dark .brand-logo-light {
+  display: none;
+}
+
+.dark .brand-logo-dark {
+  display: block;
+}
+
 body::before {
   content: "";
   position: fixed;
@@ -377,6 +393,14 @@ h6 {
   background-color: rgba(248, 250, 252, 0.82);
 }
 
+.bg-white\/82 {
+  background-color: rgba(248, 250, 252, 0.84);
+}
+
+.bg-white\/85 {
+  background-color: rgba(248, 250, 252, 0.87);
+}
+
 .bg-white\/90 {
   background-color: rgba(248, 250, 252, 0.9);
 }
@@ -428,6 +452,14 @@ h6 {
 
 .dark .bg-white\/80 {
   background-color: rgba(15, 23, 42, 0.85);
+}
+
+.dark .bg-white\/82 {
+  background-color: rgba(15, 23, 42, 0.88);
+}
+
+.dark .bg-white\/85 {
+  background-color: rgba(15, 23, 42, 0.9);
 }
 
 .dark .bg-white\/90 {
@@ -710,6 +742,18 @@ button:focus-visible {
 .dark .nav-dropdown-link-active {
   background: rgba(30, 58, 138, 0.35);
   color: #bae6fd;
+}
+
+.footer-surface {
+  background:
+    radial-gradient(760px 320px at 12% -8%, rgba(47, 111, 237, 0.08), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(241, 245, 249, 0.96) 100%);
+}
+
+.dark .footer-surface {
+  background:
+    radial-gradient(760px 320px at 12% -8%, rgba(59, 130, 246, 0.18), transparent 72%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.95) 0%, rgba(10, 17, 32, 0.93) 100%);
 }
 
 footer .footer-link {

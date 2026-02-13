@@ -35,19 +35,19 @@ export default function MediaPanel({
       <div className="flex items-start justify-between gap-3">
         <div>
           {kicker ? (
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/20 bg-white/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-deep">
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/20 bg-white/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-deep dark:border-brand-teal/30 dark:text-brand-ice">
               <span className="h-1.5 w-1.5 rounded-full bg-brand-aqua" />
               {kicker}
             </div>
           ) : null}
-          <div className="mt-2 text-base font-semibold text-slate-900">{title}</div>
-          {description ? <div className="mt-1 text-sm text-slate-600">{description}</div> : null}
+          <div className="mt-2 text-base font-semibold text-slate-900 dark:text-slate-100">{title}</div>
+          {description ? <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{description}</div> : null}
         </div>
-        <span className="rounded-full border border-slate-200/80 bg-white/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+        <span className="rounded-full border border-slate-200/80 bg-white/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:border-slate-700/80 dark:text-slate-300">
           Preview
         </span>
       </div>
-      <div className="relative mt-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/80 shadow-sm">
+      <div className="relative mt-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/80 shadow-sm dark:border-slate-700/80">
         <div className={`relative ${aspectClass}`}>
           <Image
             src={image}

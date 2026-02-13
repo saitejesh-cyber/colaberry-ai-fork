@@ -293,13 +293,13 @@ export default function Home() {
               {heroKpis.map((kpi) => (
                 <div
                   key={kpi.label}
-                  className="rounded-2xl border border-slate-200/80 bg-white/85 p-3 shadow-sm"
+                  className="rounded-2xl border border-slate-200/80 bg-white/85 p-3 shadow-sm dark:border-slate-700/80"
                 >
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-300">
                     {kpi.label}
                   </div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">{kpi.value}</div>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-600">{kpi.note}</p>
+                  <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{kpi.value}</div>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">{kpi.note}</p>
                 </div>
               ))}
             </div>

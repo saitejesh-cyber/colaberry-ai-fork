@@ -270,7 +270,6 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const logoSrc = theme === "dark" ? "/brand/colaberry-ai-logo-dark.svg" : "/brand/colaberry-ai-logo.svg";
   const currentPath = normalizePath(router.asPath || "/");
   const headerNavPaths = globalNav.headerLinks
     .map((link) => normalizePath(link.href))
@@ -386,12 +385,20 @@ export default function Layout({ children }: { children: ReactNode }) {
             <Link href="/" className="flex min-w-0 items-center gap-2">
               <span className="inline-flex items-center justify-center px-1">
                 <Image
-                  src={logoSrc}
+                  src="/brand/colaberry-ai-logo.svg"
                   alt="Colaberry.AI"
                   width={260}
                   height={60}
                   priority
-                  className="h-8 w-auto sm:h-9 lg:h-10"
+                  className="brand-logo-light h-8 w-auto sm:h-9 lg:h-10"
+                />
+                <Image
+                  src="/brand/colaberry-ai-logo-dark.svg"
+                  alt="Colaberry.AI"
+                  width={260}
+                  height={60}
+                  priority
+                  className="brand-logo-dark h-8 w-auto sm:h-9 lg:h-10"
                 />
               </span>
               <div className="hidden leading-tight sm:block">
@@ -408,10 +415,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               const childNavPaths = (link.children || [])
                 .map((child) => normalizePath(child.href))
                 .filter((href) => !isExternalHref(href));
-              const dropdownSurfaceClass =
-                theme === "dark"
-                  ? "border-slate-700 bg-slate-950/95 text-slate-100"
-                  : "border-slate-200/80 bg-white/95 text-slate-900";
+              const dropdownSurfaceClass = "border-slate-200/80 bg-white/95 text-slate-900 dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-100";
               return (
                 <div key={`${link.label}-${link.href}`} className="relative group">
                   <Link
@@ -499,12 +503,10 @@ export default function Layout({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={toggleTheme}
                 className="btn btn-ghost btn-icon"
-                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                aria-label="Toggle color mode"
               >
-                <span className="sr-only">
-                  {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-                </span>
-                <ThemeIcon isDark={theme === "dark"} />
+                <span className="sr-only">Toggle color mode</span>
+                <ThemeIcon />
               </button>
             </div>
             {globalNav.cta ? (
@@ -558,9 +560,9 @@ export default function Layout({ children }: { children: ReactNode }) {
               type="button"
               onClick={toggleTheme}
               className="btn btn-ghost btn-icon"
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label="Toggle color mode"
             >
-              <ThemeIcon isDark={theme === "dark"} />
+              <ThemeIcon />
             </button>
             <button
               type="button"
@@ -660,10 +662,10 @@ export default function Layout({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={toggleTheme}
                 className="btn btn-ghost btn-sm mt-2 w-full justify-center"
-                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                aria-label="Toggle color mode"
               >
-                <ThemeIcon isDark={theme === "dark"} />
-                <span>{theme === "dark" ? "Use light mode" : "Use dark mode"}</span>
+                <ThemeIcon />
+                <span>Toggle color mode</span>
               </button>
               {globalNav.cta ? (
                 <Link
@@ -699,7 +701,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         {children}
       </main>
 
-      <footer className="mt-10 border-t border-slate-200/70 bg-gradient-to-b from-white/95 to-slate-50/95 dark:border-slate-800/70 dark:from-slate-950/90 dark:to-slate-950/75">
+      <footer className="footer-surface mt-10 border-t border-slate-200/70 dark:border-slate-800/70">
         <div className="grid w-full grid-cols-1 gap-8 px-4 py-10 text-sm text-slate-800 dark:text-slate-200 sm:px-6 lg:grid-cols-[1.35fr_1fr_1fr_auto] lg:px-8">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-deep dark:border-brand-teal/30 dark:bg-slate-900/70">
@@ -708,11 +710,18 @@ export default function Layout({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center justify-center px-1">
                 <Image
-                  src={logoSrc}
+                  src="/brand/colaberry-ai-logo.svg"
                   alt="Colaberry.AI"
                   width={260}
                   height={60}
-                  className="h-9 w-auto"
+                  className="brand-logo-light h-9 w-auto"
+                />
+                <Image
+                  src="/brand/colaberry-ai-logo-dark.svg"
+                  alt="Colaberry.AI"
+                  width={260}
+                  height={60}
+                  className="brand-logo-dark h-9 w-auto"
                 />
               </span>
             </div>
@@ -1027,21 +1036,22 @@ function FooterLink({
   );
 }
 
-function ThemeIcon({ isDark }: { isDark: boolean }) {
-  return isDark ? (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="currentColor">
-      <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5Z" />
-    </svg>
-  ) : (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="none">
-      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
+function ThemeIcon() {
+  return (
+    <>
+      <svg viewBox="0 0 24 24" className="h-4 w-4 dark:hidden" aria-hidden="true" fill="none">
+        <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.6" />
+        <path
+          d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+      </svg>
+      <svg viewBox="0 0 24 24" className="hidden h-4 w-4 dark:block" aria-hidden="true" fill="currentColor">
+        <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5Z" />
+      </svg>
+    </>
   );
 }
 
