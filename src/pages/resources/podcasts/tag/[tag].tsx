@@ -81,7 +81,7 @@ export default function PodcastTagPage({
 
       <ul className="mt-6 grid gap-4">
         {episodes.map((e: any) => (
-          <li key={e.id} className="surface-panel border-t-4 border-brand-blue/20 p-4">
+          <li key={e.id} className="surface-panel border border-slate-200/80 bg-white/90 p-4">
             <div className="text-sm font-semibold text-slate-900">{e.title}</div>
             <div className="mt-3 flex flex-wrap gap-2">
               {e.companies?.map((company: any) => (

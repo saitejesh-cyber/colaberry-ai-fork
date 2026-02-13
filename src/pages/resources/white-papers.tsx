@@ -53,7 +53,7 @@ export default function WhitePapers() {
 
 function Card({ title, description }: { title: string; description: string }) {
   return (
-    <div className="surface-panel border-t-4 border-brand-blue/20 p-6">
+    <div className="surface-panel border border-slate-200/80 bg-white/90 p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-base font-semibold text-slate-900">{title}</div>

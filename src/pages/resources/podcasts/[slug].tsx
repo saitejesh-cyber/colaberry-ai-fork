@@ -210,7 +210,7 @@ export default function PodcastDetail({ episode }: any) {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6">
-          <div ref={playerRef} className="surface-panel border-t-4 border-brand-blue/20 p-6">
+          <div ref={playerRef} className="surface-panel border border-slate-200/80 bg-white/90 p-6">
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
               Listen to the podcast
             </div>
@@ -331,7 +331,7 @@ export default function PodcastDetail({ episode }: any) {
             </div>
           </div>
 
-          <div className="surface-panel border-t-4 border-brand-blue/20 p-6">
+          <div className="surface-panel border border-slate-200/80 bg-white/90 p-6">
             <div className="prose max-w-none">
               {episode.description ? (
                 <RichText blocks={episode.description} />
@@ -345,7 +345,7 @@ export default function PodcastDetail({ episode }: any) {
             <div
               ref={transcriptRef}
               id="transcript"
-              className="surface-panel border-t-4 border-brand-blue/20 p-6"
+              className="surface-panel border border-slate-200/80 bg-white/90 p-6"
             >
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -376,7 +376,7 @@ export default function PodcastDetail({ episode }: any) {
             <div
               ref={transcriptRef}
               id="transcript"
-              className="surface-panel border-t-4 border-brand-blue/20 p-6"
+              className="surface-panel border border-slate-200/80 bg-white/90 p-6"
             >
               <details
                 open={transcriptOpen}
@@ -398,7 +398,7 @@ export default function PodcastDetail({ episode }: any) {
         </div>
 
         <aside className="flex flex-col gap-4">
-          <div className="surface-panel border-t-4 border-brand-blue/20 p-5">
+          <div className="surface-panel border border-slate-200/80 bg-white/90 p-5">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
               Listen on
             </div>
@@ -434,7 +434,7 @@ export default function PodcastDetail({ episode }: any) {
           </div>
 
           {episode.companies?.length > 0 && (
-            <div className="surface-panel border-t-4 border-brand-blue/20 p-5">
+            <div className="surface-panel border border-slate-200/80 bg-white/90 p-5">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Company tags
               </div>

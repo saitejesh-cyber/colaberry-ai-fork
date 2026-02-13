@@ -65,7 +65,7 @@ export default function Resources() {
         />
       </div>
 
-      <div className="surface-panel mt-6 border-t-4 border-brand-blue/20 p-4 sm:mt-8">
+      <div className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-4 sm:mt-8">
         <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
           Search resources
         </div>
@@ -176,7 +176,7 @@ function ResourceCard({
   return (
     <Link
       href={href}
-      className="surface-panel surface-hover surface-interactive group border-t-4 border-brand-blue/20 p-5"
+      className="surface-panel surface-hover surface-interactive group border border-slate-200/80 bg-white/90 p-5"
       aria-label={`Open ${title}`}
     >
       <div className="flex items-start justify-between gap-4">

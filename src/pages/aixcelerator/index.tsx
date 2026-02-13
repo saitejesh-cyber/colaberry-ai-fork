@@ -126,7 +126,7 @@ function NavCard({
   return (
     <Link
       href={href}
-      className="surface-panel surface-hover surface-interactive group border-t-4 border-brand-blue/20 p-5"
+      className="surface-panel surface-hover surface-interactive group border border-slate-200/80 bg-white/90 p-5"
       aria-label={`Open ${title}`}
     >
       <div className="flex items-start justify-between gap-4">

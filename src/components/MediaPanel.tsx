@@ -31,14 +31,22 @@ export default function MediaPanel({
   const fitClass = fit === "contain" ? "object-contain p-3 sm:p-4" : "object-cover";
 
   return (
-    <div className={`surface-panel p-4 sm:p-5 ${className ?? ""}`.trim()}>
-      {kicker ? (
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-          {kicker}
+    <div className={`surface-panel p-5 sm:p-6 ${className ?? ""}`.trim()}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          {kicker ? (
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/20 bg-white/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-deep">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-aqua" />
+              {kicker}
+            </div>
+          ) : null}
+          <div className="mt-2 text-base font-semibold text-slate-900">{title}</div>
+          {description ? <div className="mt-1 text-sm text-slate-600">{description}</div> : null}
         </div>
-      ) : null}
-      <div className="mt-2 text-base font-semibold text-slate-900">{title}</div>
-      {description ? <div className="mt-1 text-sm text-slate-600">{description}</div> : null}
+        <span className="rounded-full border border-slate-200/80 bg-white/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+          Preview
+        </span>
+      </div>
       <div className="relative mt-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/80 shadow-sm">
         <div className={`relative ${aspectClass}`}>
           <Image
@@ -49,6 +57,7 @@ export default function MediaPanel({
             quality={90}
             className={`${fitClass} transition duration-500 ease-out`}
           />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-900/20 via-slate-900/5 to-transparent" />
         </div>
       </div>
     </div>

@@ -141,7 +141,7 @@ export default function Podcasts({
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_1fr]">
         {/* INTERNAL */}
-        <section className="surface-panel border-t-4 border-brand-blue/20 p-6">
+        <section className="surface-panel border border-slate-200/80 bg-white/90 p-6">
           <div className="flex items-center justify-between gap-4">
             <h3 className="text-base font-semibold text-slate-900">Colaberry AI Podcast</h3>
             <span className="chip chip-muted rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-600">
@@ -163,7 +163,7 @@ export default function Podcasts({
             {internalEpisodes.map((ep) => (
               <li
                 key={ep.id}
-                className="surface-panel border-t-4 border-brand-blue/20 p-4"
+                className="surface-panel border border-slate-200/80 bg-white/90 p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -215,7 +215,7 @@ export default function Podcasts({
         </section>
 
         {/* EXTERNAL */}
-        <section className="surface-panel border-t-4 border-brand-blue/20 p-6">
+        <section className="surface-panel border border-slate-200/80 bg-white/90 p-6">
           <h3 className="text-base font-semibold text-slate-900">AI Podcast</h3>
           <p className="mt-1 text-sm text-slate-600">
             Surface trusted public sources with a consistent listening experience.

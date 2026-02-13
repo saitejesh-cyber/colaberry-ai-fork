@@ -141,7 +141,7 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
       )}
 
       <div className="mt-6 grid gap-4 sm:mt-8 lg:grid-cols-[1.2fr_0.8fr]">
-        <section className="surface-panel border-t-4 border-brand-blue/20 p-6">
+        <section className="surface-panel border border-slate-200/80 bg-white/90 p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <SectionHeader
               kicker="Curated feed"
@@ -205,7 +205,7 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
           )}
         </section>
 
-        <section className="surface-panel border-t-4 border-brand-blue/20 p-6">
+        <section className="surface-panel border border-slate-200/80 bg-white/90 p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <SectionHeader
               kicker="Daily briefing"

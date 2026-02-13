@@ -22,30 +22,33 @@ export default function SectionHeader({
   const HeadingTag = as;
   const titleClass =
     size === "xl"
-      ? "text-4xl sm:text-5xl lg:text-6xl"
+      ? "text-4xl sm:text-5xl lg:text-[3.55rem]"
       : size === "lg"
-        ? "text-2xl sm:text-3xl lg:text-4xl"
+        ? "text-2xl sm:text-3xl lg:text-[2.4rem]"
         : "text-xl sm:text-2xl";
   const alignClass = align === "center" ? "items-center text-center" : "items-start text-left";
-  const spacingClass = size === "xl" ? "gap-3" : "gap-2";
+  const spacingClass = size === "xl" ? "gap-3.5" : "gap-2.5";
   const kickerAlign = align === "center" ? "justify-center" : "justify-start";
 
   return (
-    <div className={`flex w-full max-w-3xl flex-col ${spacingClass} ${alignClass}`}>
+    <div className={`flex w-full max-w-4xl flex-col ${spacingClass} ${alignClass}`}>
       {kicker ? (
-        <div className={`flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 ${kickerAlign}`}>
+        <div
+          className={`inline-flex items-center gap-2 rounded-full border border-brand-blue/20 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm ${kickerAlign}`}
+        >
+          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-brand-aqua" />
+          <span>{kicker}</span>
           <span
             aria-hidden="true"
-            className="h-[2px] w-10 rounded-full bg-gradient-to-r from-brand-ink to-brand-teal"
+            className="h-[2px] w-8 rounded-full bg-gradient-to-r from-brand-blue to-brand-teal"
           />
-          <span>{kicker}</span>
         </div>
       ) : null}
-      <HeadingTag className={`font-semibold leading-tight tracking-tight text-slate-900 ${titleClass}`}>
+      <HeadingTag className={`font-display font-semibold leading-[1.06] tracking-tight text-slate-900 ${titleClass}`}>
         {title}
       </HeadingTag>
       {description ? (
-        <p className="text-sm leading-relaxed text-slate-600 sm:text-base">{description}</p>
+        <p className="text-sm leading-relaxed text-slate-600 sm:text-[1rem]">{description}</p>
       ) : null}
       {children ? <div className="pt-1">{children}</div> : null}
     </div>
