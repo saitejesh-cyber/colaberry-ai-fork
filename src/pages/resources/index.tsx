@@ -1,27 +1,39 @@
 import Layout from "../../components/Layout";
-import Link from "next/link";
 import Head from "next/head";
 import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
+import PremiumMediaCard from "../../components/PremiumMediaCard";
 import { heroImage } from "../../lib/media";
 
 export default function Resources() {
   const resourceHighlights = [
     {
+      href: "/resources/podcasts",
       title: "Podcasts + transcripts",
       description: "Searchable conversations tied to agents and MCP servers.",
+      meta: "Audio",
+      image: heroImage("hero-resources.png"),
     },
     {
+      href: "/resources/white-papers",
       title: "White papers + POVs",
       description: "Technical guidance, frameworks, and executive summaries.",
+      meta: "Research",
+      image: heroImage("hero-platform.png"),
     },
     {
+      href: "/resources/case-studies",
       title: "Case studies",
       description: "Outcome stories with measurable impact and context.",
+      meta: "Outcomes",
+      image: heroImage("hero-solutions.png"),
     },
     {
+      href: "/resources/books",
       title: "Books + artifacts",
       description: "Reference material, templates, and delivery assets.",
+      meta: "Artifacts",
+      image: heroImage("hero-industries.png"),
     },
   ];
 
@@ -44,13 +56,15 @@ export default function Resources() {
           />
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {resourceHighlights.map((item) => (
-              <div
+              <PremiumMediaCard
                 key={item.title}
-                className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm"
-              >
-                <div className="text-sm font-semibold text-slate-900">{item.title}</div>
-                <div className="mt-1 text-xs text-slate-600">{item.description}</div>
-              </div>
+                href={item.href}
+                title={item.title}
+                description={item.description}
+                image={item.image}
+                meta={item.meta}
+                size="sm"
+              />
             ))}
           </div>
         </div>
@@ -106,36 +120,42 @@ export default function Resources() {
           title="Podcasts"
           description="Colaberry AI podcast + curated ai podcast."
           meta="Internal + External"
+          image={heroImage("hero-resources.png")}
         />
         <ResourceCard
           href="/resources/books"
           title="Books & artifacts"
           description="Books, companion assets, templates, and working artifacts."
           meta="Artifacts"
+          image={heroImage("hero-industries.png")}
         />
         <ResourceCard
           href="/resources/case-studies"
           title="Case studies"
           description="Outcomes and delivery stories, organized by industry."
           meta="By industry"
+          image={heroImage("hero-platform.png")}
         />
         <ResourceCard
           href="/resources/white-papers"
           title="White papers"
           description="Technical deep-dives, POVs, and best-practice guidance."
           meta="Research"
+          image={heroImage("hero-solutions.png")}
         />
         <ResourceCard
           href="/solutions"
           title="Solutions"
           description="Reusable solution patterns and packaged offerings."
           meta="Playbooks"
+          image={heroImage("hero-solutions.png")}
         />
         <ResourceCard
           href="/updates"
           title="News & product"
           description="A single feed for product updates, announcements, and relevant news."
           meta="Aggregator"
+          image={heroImage("hero-updates.png")}
         />
       </div>
 
@@ -167,30 +187,22 @@ function ResourceCard({
   title,
   description,
   meta,
+  image,
 }: {
   href: string;
   title: string;
   description: string;
   meta: string;
+  image: string;
 }) {
   return (
-    <Link
+    <PremiumMediaCard
       href={href}
-      className="surface-panel surface-hover surface-interactive group border border-slate-200/80 bg-white/90 p-5"
-      aria-label={`Open ${title}`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-sm font-semibold text-slate-900">{title}</div>
-          <div className="mt-1 text-sm text-slate-600">{description}</div>
-        </div>
-        <div className="mt-0.5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
-          <span aria-hidden="true">→</span>
-        </div>
-      </div>
-      <div className="chip chip-muted mt-4 inline-flex items-center rounded-full border border-slate-200/80 bg-white/80 px-2.5 py-1 text-xs font-semibold text-slate-700">
-        {meta}
-      </div>
-    </Link>
+      title={title}
+      description={description}
+      meta={meta}
+      image={image}
+      size="sm"
+    />
   );
 }

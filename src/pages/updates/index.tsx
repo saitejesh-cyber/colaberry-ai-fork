@@ -5,6 +5,7 @@ import { GetStaticProps } from "next";
 import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
 import StatePanel from "../../components/StatePanel";
+import PremiumMediaCard from "../../components/PremiumMediaCard";
 import { heroImage } from "../../lib/media";
 import {
   fetchGaiInsightsBriefing,
@@ -63,20 +64,33 @@ export const getStaticProps: GetStaticProps<UpdatesProps> = async () => {
 export default function Updates({ ratings, briefing, fetchError }: UpdatesProps) {
   const updateHighlights = [
     {
+      href: "/updates",
       title: "Product releases",
       description: "Feature updates, changelogs, and release notes.",
+      meta: "Product",
+      image: heroImage("hero-platform.png"),
     },
     {
+      href: "/resources/white-papers",
       title: "Research drops",
       description: "New white papers, POVs, and technical assets.",
+      meta: "Research",
+      image: heroImage("hero-resources.png"),
     },
     {
+      href: "https://gaiinsights.com/articles",
       title: "Ecosystem signals",
       description: "Curated headlines and market signals in one feed.",
+      meta: "Signals",
+      image: heroImage("hero-updates.png"),
+      external: true,
     },
     {
+      href: "/solutions",
       title: "Roadmap highlights",
       description: "What is shipping next across the platform layers.",
+      meta: "Roadmap",
+      image: heroImage("hero-solutions.png"),
     },
   ];
 
@@ -99,13 +113,16 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
           />
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {updateHighlights.map((item) => (
-              <div
+              <PremiumMediaCard
                 key={item.title}
-                className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm"
-              >
-                <div className="text-sm font-semibold text-slate-900">{item.title}</div>
-                <div className="mt-1 text-xs text-slate-600">{item.description}</div>
-              </div>
+                href={item.href}
+                title={item.title}
+                description={item.description}
+                image={item.image}
+                meta={item.meta}
+                external={item.external}
+                size="sm"
+              />
             ))}
           </div>
         </div>
@@ -281,13 +298,13 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
 function ratingTone(rating: string) {
   const normalized = rating.toLowerCase();
   if (normalized.includes("essential")) {
-    return "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200";
+    return "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-900/35 dark:text-emerald-100 dark:ring-emerald-500/35";
   }
   if (normalized.includes("important")) {
-    return "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200";
+    return "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/30 dark:text-amber-100 dark:ring-amber-500/35";
   }
   if (normalized.includes("watch") || normalized.includes("optional")) {
-    return "bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200";
+    return "bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200 dark:bg-slate-800/75 dark:text-slate-100 dark:ring-slate-600/70";
   }
-  return "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200";
+  return "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200 dark:bg-slate-800/75 dark:text-slate-100 dark:ring-slate-600/70";
 }

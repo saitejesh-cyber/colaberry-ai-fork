@@ -144,48 +144,56 @@ export default function Home() {
       title: "Agents catalog",
       description: "Ownership, runbooks, evaluations, and deployment readiness.",
       meta: "Agents",
+      image: heroImage("hero-agents.png"),
     },
     {
       href: "/aixcelerator/mcp",
       title: "MCP integration library",
       description: "Standardized tool access, connectors, and server templates.",
       meta: "MCP",
+      image: heroImage("hero-mcp.png"),
     },
     {
       href: "/solutions",
       title: "Use cases + playbooks",
       description: "Solution blueprints mapped to outcomes and operating models.",
       meta: "Solutions",
+      image: heroImage("hero-solutions.png"),
     },
     {
       href: "/resources/case-studies",
       title: "Case studies",
       description: "Outcome stories with measurable impact and context.",
       meta: "Outcomes",
+      image: heroImage("hero-platform.png"),
     },
     {
       href: "/resources/podcasts",
       title: "Podcasts + narratives",
       description: "Audio insights, transcripts, and linked artifacts.",
       meta: "Resources",
+      image: heroImage("hero-resources.png"),
     },
     {
       href: "/resources/books",
       title: "Books + artifacts",
       description: "Reference material, templates, and delivery assets.",
       meta: "Books",
+      image: heroImage("hero-industries.png"),
     },
     {
       href: "/resources/white-papers",
       title: "Research & POVs",
       description: "Technical guidance, white papers, and decision frameworks.",
       meta: "Research",
+      image: heroImage("hero-industries.png"),
     },
     {
       href: "/updates",
       title: "Signals & updates",
       description: "Product news, experiments, and ecosystem signals.",
       meta: "Updates",
+      image: heroImage("hero-updates.png"),
     },
   ];
 
@@ -261,11 +269,11 @@ export default function Home() {
               AI operations platform
             </div>
 
-            <h1 className="mt-6 text-4xl font-semibold text-slate-900 sm:text-5xl lg:text-6xl">
+            <h1 className="font-display mt-6 text-4xl font-semibold leading-[1.03] tracking-[-0.03em] text-slate-900 dark:text-slate-100 sm:text-5xl lg:text-6xl">
               The go-to destination for discoverable agents, MCPs, and AI knowledge
             </h1>
 
-            <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-600 sm:text-lg">
+            <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-300 sm:text-lg">
               Colaberry AI unifies agents, MCP servers, podcasts, case studies, and trusted research
               into a searchable catalog designed for humans, SEO, and LLM indexing.
             </p>
@@ -304,8 +312,8 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm dark:border-slate-700/80">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
                 Search the catalog
               </div>
               <label htmlFor="catalog-search" className="sr-only">
@@ -318,16 +326,16 @@ export default function Home() {
                   type="search"
                   placeholder="Search agents, MCP servers, podcasts, use cases..."
                   aria-describedby="catalog-search-help"
-                  className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
+                  className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/75 dark:text-slate-100 dark:placeholder:text-slate-500"
                 />
                 <button type="submit" className="btn btn-primary btn-sm">
                   Search
                 </button>
               </form>
-              <p id="catalog-search-help" className="mt-2 text-xs text-slate-500">
+              <p id="catalog-search-help" className="mt-2 text-xs text-slate-500 dark:text-slate-300">
                 Search spans agents, MCP servers, podcasts, and case studies.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
+              <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600 dark:text-slate-300">
                 {heroTags.map((tag) => (
                   <span
                     key={tag}
@@ -340,10 +348,10 @@ export default function Home() {
             </div>
 
             <section className="mt-6 surface-panel p-5">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
                 Proof signals
               </div>
-              <div className="mt-2 text-sm font-semibold text-slate-900">
+              <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
                 What leaders see at a glance
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -352,8 +360,8 @@ export default function Home() {
                     const isExternal = signal.href.startsWith("http");
                     const content = (
                       <>
-                        <div className="text-sm font-semibold text-slate-900">{signal.title}</div>
-                        <div className="mt-1 text-xs text-slate-600">{signal.description}</div>
+                        <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{signal.title}</div>
+                        <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">{signal.description}</div>
                         <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-deep">
                           Explore <span aria-hidden="true">→</span>
                         </div>
@@ -367,7 +375,7 @@ export default function Home() {
                           href={signal.href}
                           target="_blank"
                           rel="noreferrer"
-                          className="group rounded-2xl border border-slate-200/80 bg-white/90 p-3 transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-sm"
+                          className="group rounded-2xl border border-slate-200/80 bg-white/90 p-3 transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-sm dark:border-slate-700/80"
                           aria-label={`Explore ${signal.title}`}
                         >
                           {content}
@@ -379,7 +387,7 @@ export default function Home() {
                       <Link
                         key={signal.title}
                         href={signal.href}
-                        className="group rounded-2xl border border-slate-200/80 bg-white/90 p-3 transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-sm"
+                        className="group rounded-2xl border border-slate-200/80 bg-white/90 p-3 transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-sm dark:border-slate-700/80"
                         aria-label={`Explore ${signal.title}`}
                       >
                         {content}
@@ -607,29 +615,46 @@ function CatalogCard({
   title,
   description,
   meta,
+  image,
 }: {
   href: string;
   title: string;
   description: string;
   meta: string;
+  image: string;
 }) {
   return (
     <Link
       href={href}
-      className="surface-panel surface-hover surface-interactive group flex h-full min-h-[168px] flex-col border border-slate-200/80 bg-white/90 p-5"
+      className="surface-panel surface-hover surface-interactive group flex h-full min-h-[268px] flex-col overflow-hidden border border-slate-200/80 bg-white/90 p-0"
       aria-label={`Open ${title}`}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="media-premium-frame border-0 border-b border-slate-200/80 rounded-none">
+        <div className="relative aspect-[16/10] w-full">
+          <Image
+            src={image}
+            alt={title}
+            fill
+            sizes="(min-width: 1536px) 28vw, (min-width: 1024px) 32vw, (min-width: 640px) 44vw, 95vw"
+            quality={90}
+            className="media-premium-image object-cover object-center"
+          />
+          <div className="media-premium-overlay" />
+          <div className="absolute left-3 top-3">
+            <div className="chip chip-muted rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+              {meta}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-1 items-start justify-between gap-4 p-5">
         <div>
-          <div className="text-sm font-semibold text-slate-900">{title}</div>
-          <div className="mt-1 text-sm text-slate-600">{description}</div>
+          <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</div>
+          <div className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{description}</div>
         </div>
         <div className="mt-0.5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
           <span aria-hidden="true">→</span>
         </div>
-      </div>
-      <div className="chip chip-muted mt-4 inline-flex w-fit items-center rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700">
-        {meta}
       </div>
     </Link>
   );
@@ -682,8 +707,11 @@ function QuickLink({
 function FeatureCard({ title, description }: { title: string; description: string }) {
   return (
     <div className="surface-panel border border-slate-200/80 bg-white/90 p-5">
-      <div className="text-sm font-semibold text-slate-900">{title}</div>
-      <div className="mt-2 text-sm leading-relaxed text-slate-600">{description}</div>
+      <div className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-brand-blue/25 bg-brand-blue/10 text-brand-deep dark:border-brand-teal/35 dark:bg-slate-900/80 dark:text-brand-ice">
+        <span aria-hidden="true">+</span>
+      </div>
+      <div className="mt-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</div>
+      <div className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{description}</div>
     </div>
   );
 }
@@ -750,7 +778,7 @@ function HeroEnterprisePanel({ slides }: { slides: HeroSlide[] }) {
   return (
     <aside className="surface-strong p-5 lg:p-6">
       <div className="flex items-center justify-between gap-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
           Platform control tower
         </div>
         <Link href="/aixcelerator" className="text-xs font-semibold text-brand-deep hover:text-brand-blue">
@@ -759,21 +787,21 @@ function HeroEnterprisePanel({ slides }: { slides: HeroSlide[] }) {
       </div>
       <Link
         href={primary.href}
-        className="group mt-4 block rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-blue/40 hover:shadow-md"
+        className="group mt-4 block rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-blue/40 hover:shadow-md dark:border-slate-700/80"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
               {primary.eyebrow}
             </div>
-            <div className="mt-1 text-base font-semibold text-slate-900">{primary.title}</div>
-            <div className="mt-1 text-xs leading-relaxed text-slate-600">{primary.description}</div>
+            <div className="mt-1 text-base font-semibold text-slate-900 dark:text-slate-100">{primary.title}</div>
+            <div className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">{primary.description}</div>
           </div>
           <span className="rounded-full border border-brand-blue/30 bg-brand-blue/5 px-2.5 py-1 text-[11px] font-semibold text-brand-deep">
             Live
           </span>
         </div>
-        <div className="relative mt-4 overflow-hidden rounded-xl border border-slate-200/80 bg-white/80">
+        <div className="media-premium-frame relative mt-4 overflow-hidden rounded-xl border border-slate-200/80 bg-white/80">
           <div className="relative aspect-[16/10] w-full">
             <Image
               src={primary.image}
@@ -781,10 +809,11 @@ function HeroEnterprisePanel({ slides }: { slides: HeroSlide[] }) {
               fill
               sizes="(min-width: 1920px) 820px, (min-width: 1536px) 720px, (min-width: 1280px) 640px, (min-width: 1024px) 520px, 90vw"
               quality={90}
-              className="object-cover object-center transition duration-300 group-hover:scale-[1.01] dark:brightness-90"
+              className="media-premium-image object-cover object-center"
               priority
             />
           </div>
+          <div className="media-premium-overlay" />
           <div className="absolute bottom-3 left-3 rounded-md border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm">
             {primary.highlight}
           </div>
@@ -798,20 +827,20 @@ function HeroEnterprisePanel({ slides }: { slides: HeroSlide[] }) {
         {controlSignals.map((signal) => (
           <div
             key={signal.label}
-            className="rounded-xl border border-slate-200/80 bg-white/90 p-3"
+            className="rounded-xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/80"
           >
-            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
               {signal.label}
             </div>
-            <div className="mt-1 text-sm font-semibold text-slate-900">{signal.value}</div>
-            <div className="mt-1 text-xs text-slate-600">{signal.note}</div>
+            <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{signal.value}</div>
+            <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">{signal.note}</div>
           </div>
         ))}
       </div>
 
       {secondary.length > 0 ? (
-        <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-3.5">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+        <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-3.5 dark:border-slate-700/80">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
             Active surfaces
           </div>
           <div className="mt-3 grid gap-2">
@@ -819,13 +848,13 @@ function HeroEnterprisePanel({ slides }: { slides: HeroSlide[] }) {
               <Link
                 key={slide.title}
                 href={slide.href}
-                className="group flex items-start justify-between gap-3 rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 transition hover:border-brand-blue/35 hover:shadow-sm"
+                className="group flex items-start justify-between gap-3 rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 transition hover:border-brand-blue/35 hover:shadow-sm dark:border-slate-700/80"
               >
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold text-slate-900">{slide.title}</div>
-                  <div className="mt-1 line-clamp-2 text-xs text-slate-600">{slide.description}</div>
+                  <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{slide.title}</div>
+                  <div className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">{slide.description}</div>
                 </div>
-                <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
                   {slide.eyebrow}
                 </span>
               </Link>
@@ -834,8 +863,8 @@ function HeroEnterprisePanel({ slides }: { slides: HeroSlide[] }) {
         </div>
       ) : null}
 
-      <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-3.5">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+      <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-3.5 dark:border-slate-700/80">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
           Go-to destinations
         </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
@@ -843,15 +872,15 @@ function HeroEnterprisePanel({ slides }: { slides: HeroSlide[] }) {
             <Link
               key={item.title}
               href={item.href}
-              className="group rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 transition hover:border-brand-blue/35 hover:shadow-sm"
+              className="group rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 transition hover:border-brand-blue/35 hover:shadow-sm dark:border-slate-700/80"
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="text-sm font-semibold text-slate-900">{item.title}</span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{item.title}</span>
                 <span className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
                   →
                 </span>
               </div>
-              <div className="mt-1 text-xs leading-relaxed text-slate-600">{item.note}</div>
+              <div className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">{item.note}</div>
             </Link>
           ))}
         </div>

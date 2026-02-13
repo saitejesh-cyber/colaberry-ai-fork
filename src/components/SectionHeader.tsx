@@ -34,7 +34,7 @@ export default function SectionHeader({
     <div className={`flex w-full max-w-4xl flex-col ${spacingClass} ${alignClass}`}>
       {kicker ? (
         <div
-          className={`inline-flex items-center gap-2 rounded-full border border-brand-blue/20 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm ${kickerAlign}`}
+          className={`inline-flex items-center gap-2 rounded-full border border-brand-blue/20 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm dark:border-brand-teal/30 dark:bg-slate-900/70 dark:text-brand-ice ${kickerAlign}`}
         >
           <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-brand-aqua" />
           <span>{kicker}</span>
@@ -44,11 +44,11 @@ export default function SectionHeader({
           />
         </div>
       ) : null}
-      <HeadingTag className={`font-display font-semibold leading-[1.06] tracking-tight text-slate-900 ${titleClass}`}>
+      <HeadingTag className={`font-display font-semibold leading-[1.05] tracking-tight text-slate-900 dark:text-slate-100 ${titleClass}`}>
         {title}
       </HeadingTag>
       {description ? (
-        <p className="text-sm leading-relaxed text-slate-600 sm:text-[1rem]">{description}</p>
+        <p className="max-w-3xl text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:text-[1rem]">{description}</p>
       ) : null}
       {children ? <div className="pt-1">{children}</div> : null}
     </div>
