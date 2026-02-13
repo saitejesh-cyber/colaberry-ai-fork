@@ -355,6 +355,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   const toggleTheme = () => {
     setTheme((previous) => (previous === "dark" ? "light" : "dark"));
   };
+  const isDarkMode = theme === "dark";
+  const themeToggleLabel = isDarkMode ? "Switch to light mode" : "Switch to dark mode";
   const openSearch = () => {
     setMobileMenuOpen(false);
     setSearchOpen(true);
@@ -503,10 +505,10 @@ export default function Layout({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={toggleTheme}
                 className="btn btn-ghost btn-icon"
-                aria-label="Toggle color mode"
+                aria-label={themeToggleLabel}
               >
-                <span className="sr-only">Toggle color mode</span>
-                <ThemeIcon />
+                <span className="sr-only">{themeToggleLabel}</span>
+                <ThemeIcon isDark={isDarkMode} />
               </button>
             </div>
             {globalNav.cta ? (
@@ -560,9 +562,10 @@ export default function Layout({ children }: { children: ReactNode }) {
               type="button"
               onClick={toggleTheme}
               className="btn btn-ghost btn-icon"
-              aria-label="Toggle color mode"
+              aria-label={themeToggleLabel}
             >
-              <ThemeIcon />
+              <span className="sr-only">{themeToggleLabel}</span>
+              <ThemeIcon isDark={isDarkMode} />
             </button>
             <button
               type="button"
@@ -662,9 +665,9 @@ export default function Layout({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={toggleTheme}
                 className="btn btn-ghost btn-sm mt-2 w-full justify-center"
-                aria-label="Toggle color mode"
+                aria-label={themeToggleLabel}
               >
-                <ThemeIcon />
+                <ThemeIcon isDark={isDarkMode} />
                 <span>Toggle color mode</span>
               </button>
               {globalNav.cta ? (
@@ -1036,10 +1039,10 @@ function FooterLink({
   );
 }
 
-function ThemeIcon() {
-  return (
-    <>
-      <svg viewBox="0 0 24 24" className="h-4 w-4 dark:hidden" aria-hidden="true" fill="none">
+function ThemeIcon({ isDark }: { isDark: boolean }) {
+  if (isDark) {
+    return (
+      <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="none">
         <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.6" />
         <path
           d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"
@@ -1048,10 +1051,13 @@ function ThemeIcon() {
           strokeLinecap="round"
         />
       </svg>
-      <svg viewBox="0 0 24 24" className="hidden h-4 w-4 dark:block" aria-hidden="true" fill="currentColor">
-        <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5Z" />
-      </svg>
-    </>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="currentColor">
+      <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5Z" />
+    </svg>
   );
 }
 
