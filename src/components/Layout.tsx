@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
 import { ReactNode, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
 import { fetchGlobalNavigation, GlobalNavigation } from "../lib/cms";
 
 const fallbackNavigation: GlobalNavigation = {
@@ -206,6 +207,33 @@ function getLinkRel(target?: string | null) {
   return target === "_blank" ? "noreferrer noopener" : undefined;
 }
 
+function isExternalHref(href: string) {
+  return /^https?:\/\//i.test(href);
+}
+
+function normalizePath(path: string) {
+  if (!path) return "/";
+  if (isExternalHref(path)) return path;
+  const [pathname] = path.split(/[?#]/);
+  const clean = pathname || "/";
+  if (clean.length > 1 && clean.endsWith("/")) return clean.slice(0, -1);
+  return clean;
+}
+
+function isActiveNavPath(currentPath: string, href: string, navPaths: string[]) {
+  if (!href || isExternalHref(href)) return false;
+  const linkPath = normalizePath(href);
+  if (currentPath === linkPath) return true;
+  if (linkPath === "/") return currentPath === "/";
+  if (!currentPath.startsWith(`${linkPath}/`)) return false;
+
+  const hasMoreSpecific = navPaths.some((candidate) => {
+    if (candidate.length <= linkPath.length) return false;
+    return currentPath === candidate || currentPath.startsWith(`${candidate}/`);
+  });
+  return !hasMoreSpecific;
+}
+
 function mergeGlobalNavigation(primary: GlobalNavigation | null, fallback: GlobalNavigation): GlobalNavigation {
   if (!primary) return fallback;
   const fallbackHeaderIndex = new Map(
@@ -230,20 +258,28 @@ function mergeGlobalNavigation(primary: GlobalNavigation | null, fallback: Globa
 }
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const router = useRouter();
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    const stored = window.localStorage.getItem("theme");
+    if (stored === "light" || stored === "dark") return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
   const [globalNav, setGlobalNav] = useState<GlobalNavigation>(fallbackNavigation);
   const [searchOpen, setSearchOpen] = useState(false);
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const logoSrc = theme === "dark" ? "/brand/colaberry-ai-logo-dark.svg" : "/brand/colaberry-ai-logo.svg";
+  const currentPath = normalizePath(router.asPath || "/");
+  const headerNavPaths = globalNav.headerLinks
+    .map((link) => normalizePath(link.href))
+    .filter((href) => !isExternalHref(href));
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initial = stored === "light" || stored === "dark" ? stored : prefersDark ? "dark" : "light";
-    setTheme(initial);
-    document.documentElement.classList.toggle("dark", initial === "dark");
-  }, []);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    window.localStorage.setItem("theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     let isActive = true;
@@ -282,6 +318,22 @@ export default function Layout({ children }: { children: ReactNode }) {
   }, [searchOpen]);
 
   useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
     const dismissed = window.localStorage.getItem("colaberry_discovery_prompt_dismissed");
     if (dismissed) return;
     const timer = window.setTimeout(() => {
@@ -290,14 +342,30 @@ export default function Layout({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const handleRouteChangeStart = () => {
+      setMobileMenuOpen(false);
+      setSearchOpen(false);
+    };
+    router.events.on("routeChangeStart", handleRouteChangeStart);
+    return () => {
+      router.events.off("routeChangeStart", handleRouteChangeStart);
+    };
+  }, [router.events]);
+
   const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.classList.toggle("dark", next === "dark");
-    window.localStorage.setItem("theme", next);
+    setTheme((previous) => (previous === "dark" ? "light" : "dark"));
   };
-  const openSearch = () => setSearchOpen(true);
+  const openSearch = () => {
+    setMobileMenuOpen(false);
+    setSearchOpen(true);
+  };
   const closeSearch = () => setSearchOpen(false);
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+  const openMobileMenu = () => {
+    setSearchOpen(false);
+    setMobileMenuOpen(true);
+  };
   const dismissDiscovery = () => {
     setDiscoveryOpen(false);
     window.localStorage.setItem("colaberry_discovery_prompt_dismissed", "true");
@@ -312,7 +380,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <a href="#main-content" className="skip-link focus-ring">
         Skip to content
       </a>
-      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/90 shadow-[0_14px_34px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/82 dark:border-slate-800/70 dark:bg-slate-950/80">
         <div className="flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-2">
@@ -333,24 +401,24 @@ export default function Layout({ children }: { children: ReactNode }) {
             </Link>
           </div>
 
-          <nav className="hidden items-center gap-1 text-sm lg:flex">
+          <nav className="hidden items-center gap-1.5 text-sm lg:flex">
             {globalNav.headerLinks.map((link) => {
               const hasChildren = !!link.children?.length;
+              const isParentActive = isActiveNavPath(currentPath, link.href, headerNavPaths);
+              const childNavPaths = (link.children || [])
+                .map((child) => normalizePath(child.href))
+                .filter((href) => !isExternalHref(href));
               const dropdownSurfaceClass =
                 theme === "dark"
-                  ? "border-slate-700 bg-slate-950 text-slate-100"
-                  : "border-slate-200/80 bg-white text-slate-900";
-              const dropdownItemClass =
-                theme === "dark"
-                  ? "text-slate-100 hover:bg-slate-800 hover:text-white"
-                  : "text-slate-900 hover:bg-slate-100 hover:text-slate-900";
+                  ? "border-slate-700 bg-slate-950/95 text-slate-100"
+                  : "border-slate-200/80 bg-white/95 text-slate-900";
               return (
                 <div key={`${link.label}-${link.href}`} className="relative group">
                   <Link
                     href={link.href}
                     target={link.target ?? undefined}
                     rel={getLinkRel(link.target)}
-                    className="nav-link focus-ring inline-flex items-center gap-1"
+                    className={`nav-link focus-ring inline-flex items-center gap-1.5 ${isParentActive ? "nav-link-active" : ""}`}
                     aria-haspopup={hasChildren ? "menu" : undefined}
                   >
                     {link.label}
@@ -358,7 +426,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                       <svg
                         viewBox="0 0 20 20"
                         aria-hidden="true"
-                        className="h-4 w-4 text-slate-400 group-hover:text-brand-ink"
+                        className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-y-[1px] group-hover:text-brand-ink"
                         fill="currentColor"
                       >
                         <path
@@ -373,23 +441,30 @@ export default function Layout({ children }: { children: ReactNode }) {
                     ) : null}
                   </Link>
                   {hasChildren ? (
-                    <div className="absolute left-0 top-full z-50 pt-2 opacity-0 transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto pointer-events-none">
+                    <div className="pointer-events-none absolute left-0 top-full z-50 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
                       <div
-                        className={`min-w-[12rem] translate-y-1 rounded-xl border p-2 shadow-xl transition duration-150 group-hover:translate-y-0 group-focus-within:translate-y-0 ${dropdownSurfaceClass}`}
+                        className={`nav-dropdown-panel min-w-[14rem] translate-y-1 rounded-2xl border p-2.5 shadow-xl transition duration-150 group-hover:translate-y-0 group-focus-within:translate-y-0 ${dropdownSurfaceClass}`}
                       >
+                        <div className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                          Explore {link.label}
+                        </div>
                         <div className="grid gap-1">
-                          {link.children?.map((child) => (
-                            <Link
-                              key={`${child.label}-${child.href}`}
-                              href={child.href}
-                              target={child.target ?? undefined}
-                              rel={getLinkRel(child.target)}
-                              className={`focus-ring rounded-lg px-3 py-2 text-sm font-medium ${dropdownItemClass}`}
-                              role="menuitem"
-                            >
-                              {child.label}
-                            </Link>
-                          ))}
+                          {link.children?.map((child) => {
+                            const isChildActive = isActiveNavPath(currentPath, child.href, childNavPaths);
+                            return (
+                              <Link
+                                key={`${child.label}-${child.href}`}
+                                href={child.href}
+                                target={child.target ?? undefined}
+                                rel={getLinkRel(child.target)}
+                                className={`nav-dropdown-link focus-ring flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium ${isChildActive ? "nav-dropdown-link-active" : ""}`}
+                                role="menuitem"
+                              >
+                                <span>{child.label}</span>
+                                <span className="text-slate-400">→</span>
+                              </Link>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
@@ -398,39 +473,40 @@ export default function Layout({ children }: { children: ReactNode }) {
               );
             })}
 
-            <button
-              type="button"
-              onClick={openSearch}
-              className="btn btn-ghost btn-icon"
-              aria-label="Open global search"
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
-                <path
-                  d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-                <path
-                  d="M16.25 16.25 21 21"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
+            <div className="ml-2 flex items-center gap-2 border-l border-slate-200/80 pl-3 dark:border-slate-700/80">
+              <button
+                type="button"
+                onClick={openSearch}
+                className="btn btn-ghost btn-icon"
+                aria-label="Open global search"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                  <path
+                    d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M16.25 16.25 21 21"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
 
-            <span className="mx-2 h-5 w-px bg-slate-200 dark:bg-slate-700" />
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="btn btn-ghost btn-icon"
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              <span className="sr-only">
-                {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              </span>
-              <ThemeIcon isDark={theme === "dark"} />
-            </button>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="btn btn-ghost btn-icon"
+                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                <span className="sr-only">
+                  {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                </span>
+                <ThemeIcon isDark={theme === "dark"} />
+              </button>
+            </div>
             {globalNav.cta ? (
               <Link
                 href={globalNav.cta.href}
@@ -457,7 +533,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             ) : null}
           </nav>
 
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex items-center gap-1.5 lg:hidden">
             <button
               type="button"
               onClick={openSearch}
@@ -478,27 +554,92 @@ export default function Layout({ children }: { children: ReactNode }) {
                 />
               </svg>
             </button>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="btn btn-ghost btn-icon"
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              <ThemeIcon isDark={theme === "dark"} />
+            </button>
+            <button
+              type="button"
+              onClick={openMobileMenu}
+              className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-slate-200/70 bg-white/85 px-3 text-sm font-semibold text-slate-700 hover:border-brand-blue/35 hover:text-brand-deep dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100"
+              aria-label="Open navigation menu"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+              <span>Menu</span>
+            </button>
+          </div>
+        </div>
+      </header>
+      {mobileMenuOpen ? (
+        <div
+          className="fixed inset-0 z-[55] bg-slate-950/45 backdrop-blur-sm lg:hidden"
+          onClick={closeMobileMenu}
+        >
+          <aside
+            className="absolute right-0 top-0 flex h-full w-[min(92vw,380px)] flex-col border-l border-slate-200/70 bg-white/95 p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-950/95"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Navigation
+                </div>
+                <div className="mt-1 text-base font-semibold text-slate-900 dark:text-white">
+                  Explore Colaberry AI
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeMobileMenu}
+                className="btn btn-ghost btn-icon"
+                aria-label="Close navigation menu"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                  <path d="M6 6 18 18M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
 
-            <details className="relative lg:hidden">
-              <summary className="focus-ring list-none rounded-full border border-slate-200/60 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:bg-slate-800/70">
-                Menu
-              </summary>
-              <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-slate-200/60 bg-white/90 p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900/90">
+            <div className="mt-4 flex-1 overflow-y-auto pb-3">
+              <div className="grid gap-2">
                 {globalNav.headerLinks.map((link) => {
                   const hasChildren = !!link.children?.length;
+                  const isParentActive = isActiveNavPath(currentPath, link.href, headerNavPaths);
+                  const childNavPaths = (link.children || [])
+                    .map((child) => normalizePath(child.href))
+                    .filter((href) => !isExternalHref(href));
+
                   return (
-                    <div key={`${link.label}-${link.href}`}>
-                      <MobileLink href={link.href} target={link.target}>
-                        {link.label}
+                    <div
+                      key={`${link.label}-${link.href}`}
+                      className="rounded-2xl border border-slate-200/80 bg-white/90 p-1 dark:border-slate-700/80 dark:bg-slate-900/70"
+                    >
+                      <MobileLink
+                        href={link.href}
+                        target={link.target}
+                        active={isParentActive}
+                        onClick={closeMobileMenu}
+                        className="flex items-center justify-between px-3 py-2.5 text-sm font-semibold"
+                      >
+                        <span>{link.label}</span>
+                        {hasChildren ? <span className="text-slate-400">→</span> : null}
                       </MobileLink>
                       {hasChildren ? (
-                        <div className="ml-3 grid gap-1">
+                        <div className="mx-3 mb-2 mt-1 grid gap-1 border-l border-slate-200/80 pl-3 dark:border-slate-700/80">
                           {link.children?.map((child) => (
                             <MobileLink
                               key={`${child.label}-${child.href}`}
                               href={child.href}
                               target={child.target}
-                              className="text-xs text-slate-600 dark:text-slate-300"
+                              active={isActiveNavPath(currentPath, child.href, childNavPaths)}
+                              onClick={closeMobileMenu}
+                              className="text-xs font-medium text-slate-600 dark:text-slate-300"
                             >
                               {child.label}
                             </MobileLink>
@@ -508,55 +649,62 @@ export default function Layout({ children }: { children: ReactNode }) {
                     </div>
                   );
                 })}
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="btn btn-ghost btn-sm mt-2 w-full"
-                  aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-                >
-                  <span className="sr-only">
-                    {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-                  </span>
-                  <ThemeIcon isDark={theme === "dark"} />
-                </button>
-                <div className="my-2 h-px bg-slate-200 dark:bg-slate-700" />
-                {globalNav.cta ? (
-                  <Link
-                    href={globalNav.cta.href}
-                    target={globalNav.cta.target ?? undefined}
-                    rel={getLinkRel(globalNav.cta.target)}
-                  className="btn btn-primary btn-sm mt-1 w-full"
-                >
-                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
-                      <path
-                        d="M7 3v2M17 3v2M4 8h16M6 6h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M8.5 12.5h3M8.5 16h6.5"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <span>{globalNav.cta.label}</span>
-                  </Link>
-                ) : null}
               </div>
-            </details>
-          </div>
+            </div>
+
+            <div className="mt-3 rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/80 dark:bg-slate-900/70">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Preferences
+              </div>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="btn btn-ghost btn-sm mt-2 w-full justify-center"
+                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                <ThemeIcon isDark={theme === "dark"} />
+                <span>{theme === "dark" ? "Use light mode" : "Use dark mode"}</span>
+              </button>
+              {globalNav.cta ? (
+                <Link
+                  href={globalNav.cta.href}
+                  target={globalNav.cta.target ?? undefined}
+                  rel={getLinkRel(globalNav.cta.target)}
+                  className="btn btn-primary btn-sm mt-2 w-full justify-center"
+                  onClick={closeMobileMenu}
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
+                    <path
+                      d="M7 3v2M17 3v2M4 8h16M6 6h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M8.5 12.5h3M8.5 16h6.5"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span>{globalNav.cta.label}</span>
+                </Link>
+              ) : null}
+            </div>
+          </aside>
         </div>
-      </header>
+      ) : null}
 
       <main id="main-content" className="main-offset relative w-full flex-1 px-4 sm:px-6 lg:px-8">
         {children}
       </main>
 
-      <footer className="border-t border-slate-200/60 bg-white/90 dark:border-slate-800/60 dark:bg-slate-950/70">
-        <div className="grid w-full grid-cols-1 gap-6 px-4 py-8 text-sm text-slate-800 dark:text-slate-200 sm:grid-cols-4 sm:px-6 lg:px-8">
-          <div>
+      <footer className="mt-10 border-t border-slate-200/70 bg-gradient-to-b from-white/95 to-slate-50/95 dark:border-slate-800/70 dark:from-slate-950/90 dark:to-slate-950/75">
+        <div className="grid w-full grid-cols-1 gap-8 px-4 py-10 text-sm text-slate-800 dark:text-slate-200 sm:px-6 lg:grid-cols-[1.35fr_1fr_1fr_auto] lg:px-8">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-deep dark:border-brand-teal/30 dark:bg-slate-900/70">
+              Enterprise AI destination
+            </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center justify-center px-1">
                 <Image
@@ -568,22 +716,33 @@ export default function Layout({ children }: { children: ReactNode }) {
                 />
               </span>
             </div>
-            <div className="mt-1 text-sm text-slate-900 dark:text-slate-100">AI consulting + delivery platform for agents and MCP.</div>
-            <div className="mt-3 text-xs text-slate-800 dark:text-slate-300">© {new Date().getFullYear()} Colaberry AI</div>
+            <p className="max-w-md text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+              AI consulting and delivery platform for discoverable agents, MCP servers, and trusted knowledge assets.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link href="/request-demo" className="btn btn-primary btn-compact">
+                Book a demo
+              </Link>
+              <Link href="/aixcelerator" className="btn btn-secondary btn-compact">
+                Explore platform
+              </Link>
+            </div>
+            <div className="pt-1 text-xs text-slate-700 dark:text-slate-300">© {new Date().getFullYear()} Colaberry AI</div>
           </div>
+
           {globalNav.footerColumns.map((column, index) => (
             <div key={`${column.title}-${index}`}>
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100">
                 {column.title}
               </div>
-              <div className="mt-2 grid gap-2">
+              <div className="mt-3 grid gap-2.5">
                 {column.links.map((link) => (
                   <div key={`${link.label}-${link.href}`}>
                     <FooterLink href={link.href} target={link.target}>
                       {link.label}
                     </FooterLink>
                     {link.children?.length ? (
-                      <div className="ml-3 mt-1 grid gap-1">
+                      <div className="ml-3 mt-1.5 grid gap-1.5 border-l border-slate-200/80 pl-3 dark:border-slate-700/80">
                         {link.children.map((child) => (
                           <FooterLink
                             key={`${child.label}-${child.href}`}
@@ -601,10 +760,14 @@ export default function Layout({ children }: { children: ReactNode }) {
               </div>
             </div>
           ))}
+
           <div className="sm:justify-self-end">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100 sm:text-right">
-              Follow
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100 sm:text-right">
+              Stay connected
             </div>
+            <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 sm:text-right">
+              Follow platform updates and enterprise AI signals.
+            </p>
             <div className="mt-3 flex items-center gap-3 sm:justify-end">
               {globalNav.socialLinks.map((link) => (
                 <SocialIcon
@@ -619,7 +782,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
         {globalNav.legalLinks.length > 0 ? (
-          <div className="border-t border-slate-200/60 px-4 py-4 text-xs text-slate-600 dark:border-slate-800/60 dark:text-slate-300 sm:px-6 lg:px-8">
+          <div className="border-t border-slate-200/70 px-4 py-4 text-xs text-slate-600 dark:border-slate-800/70 dark:text-slate-300 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-center gap-4">
               {globalNav.legalLinks.map((link) => (
                 <FooterLink
@@ -788,11 +951,15 @@ export default function Layout({ children }: { children: ReactNode }) {
 function MobileLink({
   href,
   target,
+  active,
+  onClick,
   className,
   children,
 }: {
   href: string;
   target?: string | null;
+  active?: boolean;
+  onClick?: () => void;
   className?: string;
   children: ReactNode;
 }) {
@@ -807,6 +974,7 @@ function MobileLink({
     "hover:bg-slate-50",
     "dark:text-slate-200",
     "dark:hover:bg-slate-800/70",
+    active ? "bg-brand-blue/10 text-brand-deep dark:bg-brand-blue/15 dark:text-sky-200" : "",
     className,
   ]
     .filter(Boolean)
@@ -817,6 +985,7 @@ function MobileLink({
       target={target ?? undefined}
       rel={getLinkRel(target)}
       className={classes}
+      onClick={onClick}
     >
       {children}
     </Link>
@@ -834,7 +1003,16 @@ function FooterLink({
   className?: string;
   children: ReactNode;
 }) {
-  const classes = ["footer-link", "focus-ring", "hover:underline", "underline-offset-4", className ?? "font-semibold"]
+  const classes = [
+    "footer-link",
+    "focus-ring",
+    "inline-flex",
+    "items-center",
+    "gap-1",
+    "hover:underline",
+    "underline-offset-4",
+    className ?? "font-semibold",
+  ]
     .filter(Boolean)
     .join(" ");
   return (

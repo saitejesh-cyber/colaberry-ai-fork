@@ -1,11 +1,11 @@
-import type { GetServerSideProps } from "next";
+import type { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import Head from "next/head";
 import sanitizeHtml from "sanitize-html";
 import Layout from "../../../components/Layout";
 import SectionHeader from "../../../components/SectionHeader";
 import MCPCard from "../../../components/MCPCard";
-import { fetchMCPServerBySlug, fetchMCPServers, MCPServer } from "../../../lib/cms";
+import { fetchMCPServerBySlug, fetchRelatedMCPServers, MCPServer } from "../../../lib/cms";
 import type { ReactNode } from "react";
 
 type MCPDetailProps = {
@@ -14,42 +14,41 @@ type MCPDetailProps = {
   relatedServers: MCPServer[];
 };
 
-export const getServerSideProps: GetServerSideProps<MCPDetailProps> = async ({ params }) => {
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],
+    fallback: "blocking",
+  };
+};
+
+export const getStaticProps: GetStaticProps<MCPDetailProps> = async ({ params }) => {
   const slug = String(params?.slug || "");
   const allowPrivate = process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
 
   try {
     const mcp = await fetchMCPServerBySlug(slug);
     if (!mcp) {
-      return { notFound: true };
+      return { notFound: true, revalidate: 120 };
     }
     if (!allowPrivate && (mcp.visibility || "public").toLowerCase() === "private") {
-      return { notFound: true };
+      return { notFound: true, revalidate: 120 };
     }
     let relatedServers: MCPServer[] = [];
     try {
       const visibilityFilter = allowPrivate ? undefined : "public";
-      const allServers = await fetchMCPServers(visibilityFilter);
-      const mcpTags = new Set((mcp.tags || []).map((tag) => tag.slug || tag.name).filter(Boolean));
-      relatedServers = allServers
-        .filter((candidate) => candidate.slug && candidate.slug !== mcp.slug)
-        .map((candidate) => {
-          const sharedTags = (candidate.tags || [])
-            .map((tag) => tag.slug || tag.name)
-            .filter((tag) => tag && mcpTags.has(tag)).length;
-          const sameIndustry = candidate.industry && candidate.industry === mcp.industry ? 3 : 0;
-          const sameCategory = candidate.category && candidate.category === mcp.category ? 2 : 0;
-          return { candidate, score: sharedTags + sameIndustry + sameCategory };
-        })
-        .sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
-        .map((entry) => entry.candidate)
-        .slice(0, 3);
+      relatedServers = await fetchRelatedMCPServers(mcp, {
+        visibility: visibilityFilter,
+        limit: 3,
+      });
     } catch {
       relatedServers = [];
     }
-    return { props: { mcp, allowPrivate, relatedServers } };
+    return {
+      props: { mcp, allowPrivate, relatedServers },
+      revalidate: 600,
+    };
   } catch {
-    return { notFound: true };
+    return { notFound: true, revalidate: 120 };
   }
 };
 
@@ -99,6 +98,19 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
   const useCases = parseList(mcp.useCases);
   const limitations = parseList(mcp.limitations);
   const requirements = parseList(mcp.requirements);
+  const compatibilityItems = parseList(mcp.compatibility);
+  const hasAboutSection = Boolean(mcp.primaryFunction || mcp.description || mcp.longDescription || capabilities.length);
+  const hasValueSection = keyBenefits.length > 0 || limitations.length > 0;
+  const hasExecutionSection = useCases.length > 0 || Boolean(mcp.exampleWorkflow) || requirements.length > 0;
+  const hasToolsSection = tools.length > 0 || integrations.length > 0;
+  const hasSecuritySection = authMethods.length > 0 || hostingOptions.length > 0;
+  const hasCompatibilitySection = compatibilityItems.length > 0 || pricingNotes.length > 0;
+  const hasResourcesSection = Boolean(mcp.docsUrl || mcp.sourceUrl || mcp.tryItNowUrl);
+  const hasAdoptionSection =
+    typeof mcp.usageCount === "number" ||
+    typeof mcp.rating === "number" ||
+    typeof mcp.openSource === "boolean" ||
+    Boolean(mcp.verified);
   const keywords = [mcp.industry, mcp.category, ...tagNames, ...companyNames].filter(Boolean).join(", ");
   const jsonLd = {
     "@context": "https://schema.org",
@@ -160,7 +172,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
               size="xl"
               kicker="MCP profile"
               title={mcp.name}
-              description={mcp.description || "Detailed overview coming soon."}
+              description={mcp.description || "Structured MCP server profile for enterprise catalog discovery."}
             />
             <div className="mt-6 flex flex-wrap items-center gap-2">
               <span className="chip chip-brand rounded-full px-3 py-1 text-xs font-semibold">
@@ -353,211 +365,293 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
             </div>
           </div>
 
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="About"
-          title="Capabilities and scope"
-              description="Technical summary, primary function, and service characteristics."
-            />
-            <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Summary</div>
-                <div className="mt-3 space-y-3 text-sm text-slate-700">
-                  {mcp.primaryFunction ? (
-                    <p>{mcp.primaryFunction}</p>
-                  ) : (
-                    <p>Describe the primary function and why this MCP server matters.</p>
-                  )}
-                  {mcp.description ? <p>{mcp.description}</p> : null}
-                </div>
-                {mcp.longDescription ? (
-                  <div className="mt-4">{renderRichText(mcp.longDescription)}</div>
+          {hasAboutSection ? (
+            <section className="surface-panel p-6">
+              <SectionHeader
+                as="h2"
+                size="md"
+                kicker="About"
+                title="Capabilities and scope"
+                description="Technical summary, primary function, and service characteristics."
+              />
+              <div
+                className={`mt-6 grid gap-6 ${
+                  (mcp.primaryFunction || mcp.description || mcp.longDescription) && capabilities.length > 0
+                    ? "lg:grid-cols-[1.2fr_0.8fr]"
+                    : ""
+                }`}
+              >
+                {mcp.primaryFunction || mcp.description || mcp.longDescription ? (
+                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Summary
+                    </div>
+                    <div className="mt-3 space-y-3 text-sm text-slate-700">
+                      {mcp.primaryFunction ? <p>{mcp.primaryFunction}</p> : null}
+                      {mcp.description ? <p>{mcp.description}</p> : null}
+                    </div>
+                    {mcp.longDescription ? (
+                      <div className="mt-4">{renderRichText(mcp.longDescription)}</div>
+                    ) : null}
+                  </div>
+                ) : null}
+                {capabilities.length > 0 ? (
+                  <ListSection
+                    title="Capabilities"
+                    items={capabilities}
+                    empty="Capabilities not documented yet."
+                  />
                 ) : null}
               </div>
-          <ListSection
-            title="Capabilities"
-            items={capabilities}
-            empty="Capabilities not documented yet."
-          />
-        </div>
-      </section>
+            </section>
+          ) : null}
 
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Value"
-          title="Benefits and constraints"
-          description="Key benefits plus known limitations and tradeoffs."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <ListSection
-            title="Key benefits"
-            items={keyBenefits}
-            empty="Key benefits not documented yet."
-          />
-          <ListSection
-            title="Limitations"
-            items={limitations}
-            empty="Limitations not documented yet."
-          />
-        </div>
-      </section>
-
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Execution"
-          title="Use cases and workflow"
-          description="Where the server is used and how it runs end-to-end."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <ListSection
-            title="Use cases"
-            items={useCases}
-            empty="Use cases not documented yet."
-          />
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Example workflow
-            </div>
-            {mcp.exampleWorkflow ? (
-              <div className="mt-3 space-y-3 text-sm text-slate-700">
-                {renderParagraphs(mcp.exampleWorkflow)}
+          {hasValueSection ? (
+            <section className="surface-panel p-6">
+              <SectionHeader
+                as="h2"
+                size="md"
+                kicker="Value"
+                title="Benefits and constraints"
+                description="Key benefits plus known limitations and tradeoffs."
+              />
+              <div
+                className={`mt-6 grid gap-6 ${
+                  keyBenefits.length > 0 && limitations.length > 0 ? "lg:grid-cols-2" : ""
+                }`}
+              >
+                {keyBenefits.length > 0 ? (
+                  <ListSection
+                    title="Key benefits"
+                    items={keyBenefits}
+                    empty="Key benefits not documented yet."
+                  />
+                ) : null}
+                {limitations.length > 0 ? (
+                  <ListSection
+                    title="Limitations"
+                    items={limitations}
+                    empty="Limitations not documented yet."
+                  />
+                ) : null}
               </div>
-            ) : (
-              <p className="mt-3 text-sm text-slate-600">
-                Example workflow not documented yet.
-              </p>
-            )}
-            <div className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Requirements
-            </div>
-            {requirements.length ? (
-              <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                {requirements.map((item, index) => (
-                  <li key={`req-${index}`} className="flex gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-3 text-sm text-slate-600">Requirements not documented yet.</p>
-            )}
-          </div>
-        </div>
-      </section>
+            </section>
+          ) : null}
 
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-              size="md"
-              kicker="Tools & endpoints"
-              title="Exposed actions"
-              description="Key actions, tools, or endpoints provided by this server."
-            />
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <ListSection title="Tools" items={tools} empty="Tools not documented yet." />
-              <ListSection title="Integrations" items={integrations} empty="Integrations not linked yet." />
-            </div>
-          </section>
+          {hasExecutionSection ? (
+            <section className="surface-panel p-6">
+              <SectionHeader
+                as="h2"
+                size="md"
+                kicker="Execution"
+                title="Use cases and workflow"
+                description="Where the server is used and how it runs end-to-end."
+              />
+              <div
+                className={`mt-6 grid gap-6 ${
+                  useCases.length > 0 && (mcp.exampleWorkflow || requirements.length > 0)
+                    ? "lg:grid-cols-[1.1fr_0.9fr]"
+                    : ""
+                }`}
+              >
+                {useCases.length > 0 ? (
+                  <ListSection title="Use cases" items={useCases} empty="Use cases not documented yet." />
+                ) : null}
+                {mcp.exampleWorkflow || requirements.length > 0 ? (
+                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+                    {mcp.exampleWorkflow ? (
+                      <>
+                        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Example workflow
+                        </div>
+                        <div className="mt-3 space-y-3 text-sm text-slate-700">
+                          {renderParagraphs(mcp.exampleWorkflow)}
+                        </div>
+                      </>
+                    ) : null}
+                    {requirements.length ? (
+                      <>
+                        <div className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Requirements
+                        </div>
+                        <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                          {requirements.map((item, index) => (
+                            <li key={`req-${index}`} className="flex gap-2">
+                              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
 
-          <section className="surface-panel p-6">
-            <SectionHeader
-              as="h2"
-              size="md"
-              kicker="Security"
-              title="Auth and credentials"
-              description="Credential types, access patterns, and control expectations."
-            />
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <ListSection title="Auth methods" items={authMethods} empty="Auth methods not documented yet." />
-              <ListSection title="Hosting options" items={hostingOptions} empty="Hosting options not documented yet." />
-            </div>
-          </section>
+          {hasToolsSection ? (
+            <section className="surface-panel p-6">
+              <SectionHeader
+                as="h2"
+                size="md"
+                kicker="Tools & endpoints"
+                title="Exposed actions"
+                description="Key actions, tools, or endpoints provided by this server."
+              />
+              <div
+                className={`mt-6 grid gap-6 ${
+                  tools.length > 0 && integrations.length > 0 ? "lg:grid-cols-2" : ""
+                }`}
+              >
+                {tools.length > 0 ? (
+                  <ListSection title="Tools" items={tools} empty="Tools not documented yet." />
+                ) : null}
+                {integrations.length > 0 ? (
+                  <ListSection
+                    title="Integrations"
+                    items={integrations}
+                    empty="Integrations not linked yet."
+                  />
+                ) : null}
+              </div>
+            </section>
+          ) : null}
 
-          <section className="surface-panel p-6">
-            <SectionHeader
-              as="h2"
-              size="md"
-              kicker="Compatibility"
-              title="Deployment requirements"
-              description="Protocol versions, environment expectations, and pricing signals."
-            />
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <ListSection
-                title="Compatibility"
-                items={parseList(mcp.compatibility)}
-                empty="Compatibility requirements not documented yet."
+          {hasSecuritySection ? (
+            <section className="surface-panel p-6">
+              <SectionHeader
+                as="h2"
+                size="md"
+                kicker="Security"
+                title="Auth and credentials"
+                description="Credential types, access patterns, and control expectations."
               />
-              <ListSection
-                title="Pricing & usage limits"
-                items={pricingNotes}
-                empty="Pricing details not documented yet."
-              />
-            </div>
-          </section>
+              <div
+                className={`mt-6 grid gap-6 ${
+                  authMethods.length > 0 && hostingOptions.length > 0 ? "lg:grid-cols-2" : ""
+                }`}
+              >
+                {authMethods.length > 0 ? (
+                  <ListSection
+                    title="Auth methods"
+                    items={authMethods}
+                    empty="Auth methods not documented yet."
+                  />
+                ) : null}
+                {hostingOptions.length > 0 ? (
+                  <ListSection
+                    title="Hosting options"
+                    items={hostingOptions}
+                    empty="Hosting options not documented yet."
+                  />
+                ) : null}
+              </div>
+            </section>
+          ) : null}
 
-          <section className="surface-panel p-6">
-            <SectionHeader
-              as="h2"
-              size="md"
-              kicker="Resources"
-              title="Docs, source, and try it now"
-              description="Links for integration teams and evaluation."
-            />
-            <div className="mt-6 flex flex-wrap gap-3">
-              {mcp.docsUrl ? (
-                <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
-                  View docs
-                </a>
-              ) : null}
-              {mcp.sourceUrl ? (
-                <a href={mcp.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-ghost">
-                  View source
-                </a>
-              ) : null}
-              {mcp.tryItNowUrl ? (
-                <a href={mcp.tryItNowUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
-                  Try it now
-                </a>
-              ) : null}
-              {!mcp.docsUrl && !mcp.sourceUrl && !mcp.tryItNowUrl ? (
-                <p className="text-sm text-slate-600">Resources not linked yet.</p>
-              ) : null}
-            </div>
-          </section>
+          {hasCompatibilitySection ? (
+            <section className="surface-panel p-6">
+              <SectionHeader
+                as="h2"
+                size="md"
+                kicker="Compatibility"
+                title="Deployment requirements"
+                description="Protocol versions, environment expectations, and pricing signals."
+              />
+              <div
+                className={`mt-6 grid gap-6 ${
+                  compatibilityItems.length > 0 && pricingNotes.length > 0 ? "lg:grid-cols-2" : ""
+                }`}
+              >
+                {compatibilityItems.length > 0 ? (
+                  <ListSection
+                    title="Compatibility"
+                    items={compatibilityItems}
+                    empty="Compatibility requirements not documented yet."
+                  />
+                ) : null}
+                {pricingNotes.length > 0 ? (
+                  <ListSection
+                    title="Pricing & usage limits"
+                    items={pricingNotes}
+                    empty="Pricing details not documented yet."
+                  />
+                ) : null}
+              </div>
+            </section>
+          ) : null}
 
-          <section className="surface-panel p-6">
-            <SectionHeader
-              as="h2"
-              size="md"
-              kicker="Adoption"
-              title="Usage signals"
-              description="Signals to help teams evaluate readiness and adoption."
-            />
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <SignalStat
-                label="Usage"
-                value={mcp.usageCount ? mcp.usageCount.toLocaleString() : "—"}
-                note="Recorded runs or deployments."
+          {hasResourcesSection ? (
+            <section className="surface-panel p-6">
+              <SectionHeader
+                as="h2"
+                size="md"
+                kicker="Resources"
+                title="Docs, source, and try it now"
+                description="Links for integration teams and evaluation."
               />
-              <SignalStat
-                label="Rating"
-                value={mcp.rating ? `${mcp.rating.toFixed(1)} / 5` : "—"}
-                note="Internal or customer feedback."
+              <div className="mt-6 flex flex-wrap gap-3">
+                {mcp.docsUrl ? (
+                  <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
+                    View docs
+                  </a>
+                ) : null}
+                {mcp.sourceUrl ? (
+                  <a href={mcp.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-ghost">
+                    View source
+                  </a>
+                ) : null}
+                {mcp.tryItNowUrl ? (
+                  <a href={mcp.tryItNowUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
+                    Try it now
+                  </a>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
+
+          {hasAdoptionSection ? (
+            <section className="surface-panel p-6">
+              <SectionHeader
+                as="h2"
+                size="md"
+                kicker="Adoption"
+                title="Usage signals"
+                description="Signals to help teams evaluate readiness and adoption."
               />
-              <SignalStat
-                label="Open source"
-                value={mcp.openSource === true ? "Yes" : mcp.openSource === false ? "No" : "—"}
-                note="Licensing signal."
-              />
-            </div>
-          </section>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {typeof mcp.usageCount === "number" ? (
+                  <SignalStat
+                    label="Usage"
+                    value={mcp.usageCount.toLocaleString()}
+                    note="Recorded runs or deployments."
+                  />
+                ) : null}
+                {typeof mcp.rating === "number" ? (
+                  <SignalStat
+                    label="Rating"
+                    value={`${mcp.rating.toFixed(1)} / 5`}
+                    note="Internal or customer feedback."
+                  />
+                ) : null}
+                {typeof mcp.openSource === "boolean" ? (
+                  <SignalStat
+                    label="Open source"
+                    value={mcp.openSource ? "Yes" : "No"}
+                    note="Licensing signal."
+                  />
+                ) : null}
+                {typeof mcp.verified === "boolean" ? (
+                  <SignalStat
+                    label="Verification"
+                    value={mcp.verified ? "Verified" : "Pending"}
+                    note="Ownership and metadata review."
+                  />
+                ) : null}
+              </div>
+            </section>
+          ) : null}
 
           {relatedServers.length > 0 && (
             <section className="surface-panel p-6">
@@ -570,7 +664,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
               />
               <div className="mt-6 grid gap-4 lg:grid-cols-3">
                 {relatedServers.map((related) => (
-                  <MCPCard key={related.id} mcp={related} />
+                  <MCPCard key={related.slug || String(related.id)} mcp={related} />
                 ))}
               </div>
             </section>
@@ -592,7 +686,10 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
             <MetadataRow label="Category" value={mcp.category || "General"} />
             <MetadataRow label="Server type" value={mcp.serverType || "Not provided"} />
             <MetadataRow label="Primary function" value={mcp.primaryFunction || "Not provided"} />
-            <MetadataRow label="Open source" value={mcp.openSource ? "Yes" : "No"} />
+            <MetadataRow
+              label="Open source"
+              value={mcp.openSource === true ? "Yes" : mcp.openSource === false ? "No" : "Not provided"}
+            />
             <MetadataRow label="Language" value={mcp.language || "Not provided"} />
             <MetadataRow label="Status" value={status} />
             <MetadataRow label="Visibility" value={isPrivate ? "Private" : "Public"} />

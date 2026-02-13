@@ -3,8 +3,6 @@ import type { GetServerSideProps } from "next";
 import Layout from "../components/Layout";
 import SectionHeader from "../components/SectionHeader";
 import StatePanel from "../components/StatePanel";
-import fallbackAgents from "../data/agents.json";
-import fallbackMcps from "../data/mcps.json";
 import caseStudies from "../data/caseStudies.json";
 import {
   Agent,
@@ -30,6 +28,7 @@ type SearchResult = {
 type SearchPageProps = {
   query: string;
   results: SearchResult[];
+  fetchError: boolean;
 };
 
 const TYPE_ORDER: SearchResultType[] = ["Agents", "MCP Servers", "Podcasts", "Case Studies", "Pages"];
@@ -221,21 +220,34 @@ function groupResults(results: SearchResult[]) {
   }).filter((group) => group.items.length > 0);
 }
 
-export const getServerSideProps: GetServerSideProps<SearchPageProps> = async ({ query }) => {
+export const getServerSideProps: GetServerSideProps<SearchPageProps> = async ({ query, res }) => {
+  res.setHeader("Cache-Control", "public, s-maxage=120, stale-while-revalidate=600");
   const rawQuery = typeof query.q === "string" ? query.q.trim() : "";
   if (!rawQuery) {
-    return { props: { query: "", results: [] } };
+    return { props: { query: "", results: [], fetchError: false } };
   }
 
   const normalizedQuery = normalizeText(rawQuery);
   const allowPrivate = process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
   const visibilityFilter = allowPrivate ? undefined : "public";
+  let fetchError = false;
 
-  const [agents, mcps, podcasts] = await Promise.all([
-    fetchAgents(visibilityFilter).catch(() => fallbackAgents as Agent[]),
-    fetchMCPServers(visibilityFilter).catch(() => fallbackMcps as MCPServer[]),
-    fetchPodcastEpisodes().catch(() => [] as PodcastEpisode[]),
+  const [agentsResult, mcpsResult, podcastsResult] = await Promise.allSettled([
+    fetchAgents(visibilityFilter),
+    fetchMCPServers(visibilityFilter),
+    fetchPodcastEpisodes(),
   ]);
+
+  const agents = agentsResult.status === "fulfilled" ? agentsResult.value : [];
+  const mcps = mcpsResult.status === "fulfilled" ? mcpsResult.value : [];
+  const podcasts = podcastsResult.status === "fulfilled" ? podcastsResult.value : [];
+  if (
+    agentsResult.status === "rejected" ||
+    mcpsResult.status === "rejected" ||
+    podcastsResult.status === "rejected"
+  ) {
+    fetchError = true;
+  }
 
   const results = [
     ...buildAgentResults(normalizedQuery, rawQuery, agents),
@@ -249,16 +261,26 @@ export const getServerSideProps: GetServerSideProps<SearchPageProps> = async ({ 
     props: {
       query: rawQuery,
       results,
+      fetchError,
     },
   };
 };
 
-export default function SearchPage({ query, results }: SearchPageProps) {
+export default function SearchPage({ query, results, fetchError }: SearchPageProps) {
   const grouped = groupResults(results);
   const hasResults = grouped.length > 0;
 
   return (
     <Layout>
+      {fetchError ? (
+        <div className="mb-6">
+          <StatePanel
+            variant="error"
+            title="Some catalog data is temporarily unavailable"
+            description="Search results may be partial while we reconnect to upstream data sources."
+          />
+        </div>
+      ) : null}
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
         <div className="flex flex-col gap-3">
           <SectionHeader

@@ -4,8 +4,7 @@ import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
 import StatePanel from "../../components/StatePanel";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { GetServerSideProps } from "next";
-import fallbackAgents from "../../data/agents.json";
+import type { GetStaticProps } from "next";
 import { Agent, fetchAgents } from "../../lib/cms";
 import { heroImage } from "../../lib/media";
 import { useRouter } from "next/router";
@@ -18,23 +17,21 @@ type AgentsPageProps = {
   fetchError: boolean;
 };
 
-export const getServerSideProps: GetServerSideProps<AgentsPageProps> = async () => {
+export const getStaticProps: GetStaticProps<AgentsPageProps> = async () => {
   const allowPrivate = process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
   const visibilityFilter = allowPrivate ? undefined : "public";
 
   try {
     const agents = await fetchAgents(visibilityFilter);
-    const safeAgents = agents.length
-      ? agents
-      : (fallbackAgents as Agent[]).filter(
-          (agent) => (agent.visibility || "public").toLowerCase() === "public"
-        );
-    return { props: { agents: safeAgents, allowPrivate, fetchError: false } };
+    return {
+      props: { agents, allowPrivate, fetchError: false },
+      revalidate: 600,
+    };
   } catch {
-    const safeAgents = (fallbackAgents as Agent[]).filter(
-      (agent) => (agent.visibility || "public").toLowerCase() === "public"
-    );
-    return { props: { agents: safeAgents, allowPrivate, fetchError: true } };
+    return {
+      props: { agents: [], allowPrivate, fetchError: true },
+      revalidate: 120,
+    };
   }
 };
 
@@ -442,8 +439,8 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
       </section>
 
       <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
-        {visibleAgents.map((a, i) => (
-          <AgentCard key={i} agent={a} />
+        {visibleAgents.map((a) => (
+          <AgentCard key={a.slug || String(a.id)} agent={a} />
         ))}
       </div>
 

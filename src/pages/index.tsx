@@ -70,6 +70,24 @@ export default function Home() {
     },
   ];
 
+  const heroKpis = [
+    {
+      label: "Catalog coverage",
+      value: "Agents + MCP",
+      note: "Unified discovery layer for operations and integration teams.",
+    },
+    {
+      label: "Governance posture",
+      value: "Enterprise",
+      note: "Ownership, verification, and deployment context tracked.",
+    },
+    {
+      label: "Knowledge surface",
+      value: "Resources + Updates",
+      note: "Signals from podcasts, research, and AI news briefings.",
+    },
+  ];
+
   const heroSlides = [
     {
       eyebrow: "Agents",
@@ -270,6 +288,21 @@ export default function Home() {
             <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
               Rooted in {rootIndustries.join(" • ")}
             </p>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              {heroKpis.map((kpi) => (
+                <div
+                  key={kpi.label}
+                  className="rounded-2xl border border-slate-200/80 bg-white/85 p-3 shadow-sm"
+                >
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {kpi.label}
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-slate-900">{kpi.value}</div>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-600">{kpi.note}</p>
+                </div>
+              ))}
+            </div>
 
             <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm">
               <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -559,14 +592,12 @@ function PillarCard({
   className?: string;
 }) {
   return (
-    <div
-      className={`surface-panel border-t-4 border-brand-blue/30 p-4 ${className ?? ""}`.trim()}
-    >
-      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+    <div className={`surface-panel border border-slate-200/80 bg-white/90 p-5 ${className ?? ""}`.trim()}>
+      <div className="inline-flex rounded-full border border-brand-blue/25 bg-brand-blue/5 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-deep">
         {String(index + 1).padStart(2, "0")}
       </div>
-      <div className="mt-2 text-base font-semibold text-slate-900">{title}</div>
-      <div className="mt-1 text-sm text-slate-600">{description}</div>
+      <div className="mt-3 text-base font-semibold text-slate-900">{title}</div>
+      <div className="mt-1 text-sm leading-relaxed text-slate-600">{description}</div>
     </div>
   );
 }
@@ -585,7 +616,7 @@ function CatalogCard({
   return (
     <Link
       href={href}
-      className="surface-panel surface-hover surface-interactive group flex h-full flex-col border-t-4 border-brand-blue/20 p-5"
+      className="surface-panel surface-hover surface-interactive group flex h-full min-h-[168px] flex-col border border-slate-200/80 bg-white/90 p-5"
       aria-label={`Open ${title}`}
     >
       <div className="flex items-start justify-between gap-4">
@@ -597,7 +628,7 @@ function CatalogCard({
           <span aria-hidden="true">→</span>
         </div>
       </div>
-      <div className="chip chip-muted mt-4 inline-flex w-fit items-center rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700">
+      <div className="chip chip-muted mt-4 inline-flex w-fit items-center rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700">
         {meta}
       </div>
     </Link>
@@ -650,9 +681,9 @@ function QuickLink({
 
 function FeatureCard({ title, description }: { title: string; description: string }) {
   return (
-    <div className="surface-panel border-t-4 border-brand-blue/20 p-5">
+    <div className="surface-panel border border-slate-200/80 bg-white/90 p-5">
       <div className="text-sm font-semibold text-slate-900">{title}</div>
-      <div className="mt-1 text-sm leading-relaxed text-slate-600">{description}</div>
+      <div className="mt-2 text-sm leading-relaxed text-slate-600">{description}</div>
     </div>
   );
 }
@@ -669,7 +700,7 @@ function Stat({
   note: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm">
+    <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm">
       <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
         {title}
       </div>
@@ -690,35 +721,60 @@ type HeroSlide = {
 
 function HeroEnterprisePanel({ slides }: { slides: HeroSlide[] }) {
   const primary = slides[0];
-  const secondary = slides.slice(1);
+  const secondary = slides.slice(1, 3);
+  const controlSignals = [
+    { label: "Catalog", value: "Indexed", note: "Search-ready entities" },
+    { label: "Security", value: "Policy aware", note: "Role and ownership context" },
+    { label: "Ops", value: "Deployment fit", note: "Readiness and trust signals" },
+  ];
+  const destinations = [
+    {
+      title: "Industries",
+      href: "/industries",
+      note: "Domain-aligned playbooks",
+    },
+    {
+      title: "Resources",
+      href: "/resources",
+      note: "Podcasts, books, and research",
+    },
+    {
+      title: "Updates",
+      href: "/updates",
+      note: "AI news and product signals",
+    },
+  ];
 
   if (!primary) return null;
 
   return (
-    <aside className="surface-strong p-5">
-      <div className="flex items-center justify-between">
+    <aside className="surface-strong p-5 lg:p-6">
+      <div className="flex items-center justify-between gap-4">
         <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-          Platform preview
+          Platform control tower
         </div>
         <Link href="/aixcelerator" className="text-xs font-semibold text-brand-deep hover:text-brand-blue">
-          Explore platform →
+          Explore platform <span aria-hidden="true">→</span>
         </Link>
       </div>
       <Link
         href={primary.href}
-        className="group mt-4 block rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-md"
+        className="group mt-4 block rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-blue/40 hover:shadow-md"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-sm font-semibold text-slate-900">{primary.title}</div>
-            <div className="mt-1 text-xs text-slate-600">{primary.description}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              {primary.eyebrow}
+            </div>
+            <div className="mt-1 text-base font-semibold text-slate-900">{primary.title}</div>
+            <div className="mt-1 text-xs leading-relaxed text-slate-600">{primary.description}</div>
           </div>
           <span className="rounded-full border border-brand-blue/30 bg-brand-blue/5 px-2.5 py-1 text-[11px] font-semibold text-brand-deep">
-            {primary.eyebrow}
+            Live
           </span>
         </div>
         <div className="relative mt-4 overflow-hidden rounded-xl border border-slate-200/80 bg-white/80">
-          <div className="relative aspect-[16/9] w-full">
+          <div className="relative aspect-[16/10] w-full">
             <Image
               src={primary.image}
               alt={primary.title}
@@ -732,75 +788,72 @@ function HeroEnterprisePanel({ slides }: { slides: HeroSlide[] }) {
           <div className="absolute bottom-3 left-3 rounded-md border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm">
             {primary.highlight}
           </div>
+          <div className="absolute bottom-3 right-3 rounded-md border border-slate-200/80 bg-slate-900/85 px-2.5 py-1 text-xs font-semibold text-white">
+            Control view
+          </div>
         </div>
       </Link>
 
-      <div className="mt-3 grid gap-3">
-        {secondary.map((slide) => (
-          <Link
-            key={slide.title}
-            href={slide.href}
-            className="group flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white/90 p-3 transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-sm"
+      <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+        {controlSignals.map((signal) => (
+          <div
+            key={signal.label}
+            className="rounded-xl border border-slate-200/80 bg-white/90 p-3"
           >
-            <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border border-slate-200/80 bg-slate-100">
-              <Image
-                src={slide.image}
-                alt={slide.title}
-                fill
-                sizes="96px"
-                quality={85}
-                className="object-cover object-center"
-              />
+            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              {signal.label}
             </div>
-            <div className="min-w-0">
-              <div className="text-sm font-semibold text-slate-900">{slide.title}</div>
-              <div className="mt-0.5 line-clamp-2 text-xs text-slate-600">{slide.description}</div>
-            </div>
-            <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              {slide.eyebrow}
-            </span>
-          </Link>
+            <div className="mt-1 text-sm font-semibold text-slate-900">{signal.value}</div>
+            <div className="mt-1 text-xs text-slate-600">{signal.note}</div>
+          </div>
         ))}
       </div>
 
-      <div className="mt-3 rounded-xl border border-slate-200/80 bg-white/90 p-3">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-          Enterprise focus
+      {secondary.length > 0 ? (
+        <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-3.5">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Active surfaces
+          </div>
+          <div className="mt-3 grid gap-2">
+            {secondary.map((slide) => (
+              <Link
+                key={slide.title}
+                href={slide.href}
+                className="group flex items-start justify-between gap-3 rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 transition hover:border-brand-blue/35 hover:shadow-sm"
+              >
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-slate-900">{slide.title}</div>
+                  <div className="mt-1 line-clamp-2 text-xs text-slate-600">{slide.description}</div>
+                </div>
+                <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                  {slide.eyebrow}
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
-        <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-700">
-          <span className="rounded-md border border-slate-200/80 bg-white px-2 py-1 font-semibold">Governance</span>
-          <span className="rounded-md border border-slate-200/80 bg-white px-2 py-1 font-semibold">Observability</span>
-          <span className="rounded-md border border-slate-200/80 bg-white px-2 py-1 font-semibold">Security</span>
-          <span className="rounded-md border border-slate-200/80 bg-white px-2 py-1 font-semibold">Scalability</span>
-        </div>
-      </div>
+      ) : null}
 
-      <div className="mt-3 rounded-xl border border-slate-200/80 bg-white/90 p-3">
+      <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-3.5">
         <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
           Go-to destinations
         </div>
-        <div className="mt-2 grid gap-2">
-          <Link
-            href="/industries"
-            className="group flex items-center justify-between rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-800 transition hover:border-brand-blue/30 hover:text-brand-deep"
-          >
-            <span>Industries</span>
-            <span className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">→</span>
-          </Link>
-          <Link
-            href="/resources"
-            className="group flex items-center justify-between rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-800 transition hover:border-brand-blue/30 hover:text-brand-deep"
-          >
-            <span>Resources</span>
-            <span className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">→</span>
-          </Link>
-          <Link
-            href="/updates"
-            className="group flex items-center justify-between rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-800 transition hover:border-brand-blue/30 hover:text-brand-deep"
-          >
-            <span>Updates</span>
-            <span className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">→</span>
-          </Link>
+        <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+          {destinations.map((item) => (
+            <Link
+              key={item.title}
+              href={item.href}
+              className="group rounded-lg border border-slate-200/80 bg-white px-3 py-2.5 transition hover:border-brand-blue/35 hover:shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-sm font-semibold text-slate-900">{item.title}</span>
+                <span className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
+                  →
+                </span>
+              </div>
+              <div className="mt-1 text-xs leading-relaxed text-slate-600">{item.note}</div>
+            </Link>
+          ))}
         </div>
       </div>
     </aside>

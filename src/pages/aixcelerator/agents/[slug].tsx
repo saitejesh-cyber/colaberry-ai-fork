@@ -1,11 +1,11 @@
-import type { GetServerSideProps } from "next";
+import type { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import Head from "next/head";
 import sanitizeHtml from "sanitize-html";
 import Layout from "../../../components/Layout";
 import SectionHeader from "../../../components/SectionHeader";
 import AgentCard from "../../../components/AgentCard";
-import { Agent, fetchAgentBySlug, fetchAgents } from "../../../lib/cms";
+import { Agent, fetchAgentBySlug, fetchRelatedAgents } from "../../../lib/cms";
 import type { ReactNode } from "react";
 
 type AgentDetailProps = {
@@ -14,42 +14,38 @@ type AgentDetailProps = {
   relatedAgents: Agent[];
 };
 
-export const getServerSideProps: GetServerSideProps<AgentDetailProps> = async ({ params }) => {
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],
+    fallback: "blocking",
+  };
+};
+
+export const getStaticProps: GetStaticProps<AgentDetailProps> = async ({ params }) => {
   const slug = String(params?.slug || "");
   const allowPrivate = process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
 
   try {
     const agent = await fetchAgentBySlug(slug);
     if (!agent) {
-      return { notFound: true };
+      return { notFound: true, revalidate: 120 };
     }
     if (!allowPrivate && (agent.visibility || "public").toLowerCase() === "private") {
-      return { notFound: true };
+      return { notFound: true, revalidate: 120 };
     }
     let relatedAgents: Agent[] = [];
     try {
       const visibilityFilter = allowPrivate ? undefined : "public";
-      const allAgents = await fetchAgents(visibilityFilter);
-      const agentTags = new Set((agent.tags || []).map((tag) => tag.slug || tag.name).filter(Boolean));
-      relatedAgents = allAgents
-        .filter((candidate) => candidate.slug && candidate.slug !== agent.slug)
-        .map((candidate) => {
-          const sharedTags = (candidate.tags || [])
-            .map((tag) => tag.slug || tag.name)
-            .filter((tag) => tag && agentTags.has(tag)).length;
-          const sameIndustry = candidate.industry && candidate.industry === agent.industry ? 3 : 0;
-          const sameSource = candidate.source && candidate.source === agent.source ? 1 : 0;
-          return { candidate, score: sharedTags + sameIndustry + sameSource };
-        })
-        .sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
-        .map((entry) => entry.candidate)
-        .slice(0, 3);
+      relatedAgents = await fetchRelatedAgents(agent, { visibility: visibilityFilter, limit: 3 });
     } catch {
       relatedAgents = [];
     }
-    return { props: { agent, allowPrivate, relatedAgents } };
+    return {
+      props: { agent, allowPrivate, relatedAgents },
+      revalidate: 600,
+    };
   } catch {
-    return { notFound: true };
+    return { notFound: true, revalidate: 120 };
   }
 };
 
@@ -101,6 +97,15 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
   const useCases = parseList(agent.useCases);
   const limitations = parseList(agent.limitations);
   const requirements = parseList(agent.requirements);
+  const hasOverviewSection = Boolean(agent.whatItDoes || agent.longDescription || outcomes.length);
+  const hasValueSection = keyBenefits.length > 0 || limitations.length > 0;
+  const hasExecutionSection = useCases.length > 0 || Boolean(agent.exampleWorkflow) || requirements.length > 0;
+  const hasCoreSection = coreTasks.length > 0 || executionModes.length > 0;
+  const hasInputOutputSection = inputs.length > 0 || outputs.length > 0;
+  const hasOrchestrationSection = orchestrationSteps.length > 0 || securityItems.length > 0;
+  const hasToolsSection = tools.length > 0 || companyNames.length > 0;
+  const hasResourcesSection = Boolean(agent.docsUrl || agent.demoUrl || agent.changelogUrl);
+  const hasAdoptionSection = Boolean(agent.usageCount || agent.rating || agent.verified);
   const keywords = [agent.industry, ...tagNames, ...companyNames].filter(Boolean).join(", ");
   const jsonLd = {
     "@context": "https://schema.org",
@@ -161,7 +166,9 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
               size="xl"
               kicker="Agent profile"
               title={agent.name}
-              description={agent.description || "Detailed overview coming soon."}
+              description={
+                agent.description || "Structured agent profile for enterprise catalog discovery."
+              }
             />
             <div className="mt-6 flex flex-wrap items-center gap-2">
               <span className="chip chip-brand rounded-full px-3 py-1 text-xs font-semibold">
@@ -326,235 +333,277 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
           </div>
         </div>
 
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="What it does"
-          title="Overview and outcomes"
-          description="Clear positioning, expected outcomes, and where this agent fits."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Overview</div>
-            {agent.whatItDoes ? (
-              <div className="mt-3 space-y-3 text-sm text-slate-700">
-                {renderParagraphs(agent.whatItDoes)}
+      {hasOverviewSection ? (
+        <section className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="What it does"
+            title="Overview and outcomes"
+            description="Clear positioning, expected outcomes, and where this agent fits."
+          />
+          <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+            {agent.whatItDoes || agent.longDescription ? (
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Overview
+                </div>
+                {agent.whatItDoes ? (
+                  <div className="mt-3 space-y-3 text-sm text-slate-700">
+                    {renderParagraphs(agent.whatItDoes)}
+                  </div>
+                ) : null}
+                {agent.longDescription ? (
+                  <div className="mt-4">{renderRichText(agent.longDescription)}</div>
+                ) : null}
               </div>
-            ) : (
-              <p className="mt-3 text-sm text-slate-600">
-                Add a concise overview describing what this agent does, the problem it solves,
-                and how teams use it.
-              </p>
-            )}
-            {agent.longDescription ? (
-              <div className="mt-4">{renderRichText(agent.longDescription)}</div>
+            ) : null}
+            {outcomes.length > 0 ? (
+              <ListSection title="Outcomes" items={outcomes} empty="Outcomes not documented yet." />
             ) : null}
           </div>
-          <ListSection
-            title="Outcomes"
-            items={outcomes}
-            empty="Outcomes not documented yet."
-          />
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Value"
-          title="Benefits and constraints"
-          description="Key benefits plus known limitations and tradeoffs."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <ListSection
-            title="Key benefits"
-            items={keyBenefits}
-            empty="Key benefits not documented yet."
+      {hasValueSection ? (
+        <section className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="Value"
+            title="Benefits and constraints"
+            description="Key benefits plus known limitations and tradeoffs."
           />
-          <ListSection
-            title="Limitations"
-            items={limitations}
-            empty="Limitations not documented yet."
-          />
-        </div>
-      </section>
-
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Execution"
-          title="Use cases and workflow"
-          description="Where the agent is used and how it runs end-to-end."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <ListSection
-            title="Use cases"
-            items={useCases}
-            empty="Use cases not documented yet."
-          />
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Example workflow
-            </div>
-            {agent.exampleWorkflow ? (
-              <div className="mt-3 space-y-3 text-sm text-slate-700">
-                {renderParagraphs(agent.exampleWorkflow)}
-              </div>
-            ) : (
-              <p className="mt-3 text-sm text-slate-600">
-                Example workflow not documented yet.
-              </p>
-            )}
-            <div className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Requirements
-            </div>
-            {requirements.length ? (
-              <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                {requirements.map((item, index) => (
-                  <li key={`req-${index}`} className="flex gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-3 text-sm text-slate-600">Requirements not documented yet.</p>
-            )}
+          <div className={`mt-6 grid gap-6 ${keyBenefits.length > 0 && limitations.length > 0 ? "lg:grid-cols-2" : ""}`}>
+            {keyBenefits.length > 0 ? (
+              <ListSection
+                title="Key benefits"
+                items={keyBenefits}
+                empty="Key benefits not documented yet."
+              />
+            ) : null}
+            {limitations.length > 0 ? (
+              <ListSection
+                title="Limitations"
+                items={limitations}
+                empty="Limitations not documented yet."
+              />
+            ) : null}
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Core tasks"
-          title="Use cases and workflows"
-          description="Primary tasks, repeatable workflows, and where the agent delivers value."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <ListSection title="Core tasks" items={coreTasks} empty="Core tasks not listed yet." />
-          <ListSection
-            title="Execution modes"
-            items={executionModes}
-            empty="Execution modes not documented yet."
+      {hasExecutionSection ? (
+        <section className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="Execution"
+            title="Use cases and workflow"
+            description="Where the agent is used and how it runs end-to-end."
           />
-        </div>
-      </section>
+          <div
+            className={`mt-6 grid gap-6 ${
+              useCases.length > 0 && (agent.exampleWorkflow || requirements.length > 0)
+                ? "lg:grid-cols-[1.1fr_0.9fr]"
+                : ""
+            }`}
+          >
+            {useCases.length > 0 ? (
+              <ListSection title="Use cases" items={useCases} empty="Use cases not documented yet." />
+            ) : null}
+            {agent.exampleWorkflow || requirements.length > 0 ? (
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+                {agent.exampleWorkflow ? (
+                  <>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Example workflow
+                    </div>
+                    <div className="mt-3 space-y-3 text-sm text-slate-700">
+                      {renderParagraphs(agent.exampleWorkflow)}
+                    </div>
+                  </>
+                ) : null}
+                {requirements.length ? (
+                  <>
+                    <div className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Requirements
+                    </div>
+                    <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                      {requirements.map((item, index) => (
+                        <li key={`req-${index}`} className="flex gap-2">
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Inputs & outputs"
-          title="Data in, actions out"
-          description="Clarify the data required and the artifacts or actions produced."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <ListSection title="Inputs" items={inputs} empty="Inputs not documented yet." />
-          <ListSection title="Outputs" items={outputs} empty="Outputs not documented yet." />
-        </div>
-      </section>
+      {hasCoreSection ? (
+        <section className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="Core tasks"
+            title="Use cases and workflows"
+            description="Primary tasks, repeatable workflows, and where the agent delivers value."
+          />
+          <div className={`mt-6 grid gap-6 ${coreTasks.length > 0 && executionModes.length > 0 ? "lg:grid-cols-2" : ""}`}>
+            {coreTasks.length > 0 ? (
+              <ListSection title="Core tasks" items={coreTasks} empty="Core tasks not listed yet." />
+            ) : null}
+            {executionModes.length > 0 ? (
+              <ListSection
+                title="Execution modes"
+                items={executionModes}
+                empty="Execution modes not documented yet."
+              />
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Orchestration"
-          title="How it runs"
-          description="Operational flow, orchestration steps, and governance checks."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <ListSection
-            title="Orchestration steps"
-            items={orchestrationSteps}
-            empty="Orchestration steps not documented yet."
+      {hasInputOutputSection ? (
+        <section className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="Inputs & outputs"
+            title="Data in, actions out"
+            description="Clarify the data required and the artifacts or actions produced."
           />
-          <ListSection
-            title="Security & compliance"
-            items={securityItems}
-            empty="Security and compliance details not documented yet."
-          />
-        </div>
-      </section>
+          <div className={`mt-6 grid gap-6 ${inputs.length > 0 && outputs.length > 0 ? "lg:grid-cols-2" : ""}`}>
+            {inputs.length > 0 ? (
+              <ListSection title="Inputs" items={inputs} empty="Inputs not documented yet." />
+            ) : null}
+            {outputs.length > 0 ? (
+              <ListSection title="Outputs" items={outputs} empty="Outputs not documented yet." />
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Tools & integrations"
-          title="Systems connected"
-          description="Internal systems, APIs, or tools used by this agent."
-        />
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <ListSection title="Tools" items={tools} empty="Tools not documented yet." />
-          <ListSection
-            title="Integrations"
-            items={companyNames}
-            empty="Integrations not documented yet."
+      {hasOrchestrationSection ? (
+        <section className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="Orchestration"
+            title="How it runs"
+            description="Operational flow, orchestration steps, and governance checks."
           />
-        </div>
-      </section>
+          <div
+            className={`mt-6 grid gap-6 ${
+              orchestrationSteps.length > 0 && securityItems.length > 0
+                ? "lg:grid-cols-[1.2fr_0.8fr]"
+                : ""
+            }`}
+          >
+            {orchestrationSteps.length > 0 ? (
+              <ListSection
+                title="Orchestration steps"
+                items={orchestrationSteps}
+                empty="Orchestration steps not documented yet."
+              />
+            ) : null}
+            {securityItems.length > 0 ? (
+              <ListSection
+                title="Security & compliance"
+                items={securityItems}
+                empty="Security and compliance details not documented yet."
+              />
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Resources"
-          title="Docs, demo, and changelog"
-          description="Material for enablement, onboarding, and release tracking."
-        />
-        <div className="mt-6 flex flex-wrap gap-3">
-          {agent.docsUrl ? (
-            <a href={agent.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
-              View docs
-            </a>
-          ) : null}
-          {agent.demoUrl ? (
-            <a href={agent.demoUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
-              View demo
-            </a>
-          ) : null}
-          {agent.changelogUrl ? (
-            <a href={agent.changelogUrl} target="_blank" rel="noreferrer" className="btn btn-ghost">
-              Changelog
-            </a>
-          ) : null}
-          {!agent.docsUrl && !agent.demoUrl && !agent.changelogUrl ? (
-            <p className="text-sm text-slate-600">Resources not linked yet.</p>
-          ) : null}
-        </div>
-      </section>
+      {hasToolsSection ? (
+        <section className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="Tools & integrations"
+            title="Systems connected"
+            description="Internal systems, APIs, or tools used by this agent."
+          />
+          <div className={`mt-6 grid gap-6 ${tools.length > 0 && companyNames.length > 0 ? "lg:grid-cols-2" : ""}`}>
+            {tools.length > 0 ? (
+              <ListSection title="Tools" items={tools} empty="Tools not documented yet." />
+            ) : null}
+            {companyNames.length > 0 ? (
+              <ListSection
+                title="Integrations"
+                items={companyNames}
+                empty="Integrations not documented yet."
+              />
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
-      <section className="surface-panel p-6">
-        <SectionHeader
-          as="h2"
-          size="md"
-          kicker="Adoption"
-          title="Usage signals"
-          description="Signals to help teams evaluate readiness and adoption."
-        />
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <SignalStat
-            label="Usage"
-            value={agent.usageCount ? agent.usageCount.toLocaleString() : "—"}
-            note="Recorded runs or deployments."
+      {hasResourcesSection ? (
+        <section className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="Resources"
+            title="Docs, demo, and changelog"
+            description="Material for enablement, onboarding, and release tracking."
           />
-          <SignalStat
-            label="Rating"
-            value={agent.rating ? `${agent.rating.toFixed(1)} / 5` : "—"}
-            note="Internal or customer feedback."
+          <div className="mt-6 flex flex-wrap gap-3">
+            {agent.docsUrl ? (
+              <a href={agent.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
+                View docs
+              </a>
+            ) : null}
+            {agent.demoUrl ? (
+              <a href={agent.demoUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
+                View demo
+              </a>
+            ) : null}
+            {agent.changelogUrl ? (
+              <a href={agent.changelogUrl} target="_blank" rel="noreferrer" className="btn btn-ghost">
+                Changelog
+              </a>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {hasAdoptionSection ? (
+        <section className="surface-panel p-6">
+          <SectionHeader
+            as="h2"
+            size="md"
+            kicker="Adoption"
+            title="Usage signals"
+            description="Signals to help teams evaluate readiness and adoption."
           />
-          <SignalStat
-            label="Verification"
-            value={agent.verified ? "Verified" : "Pending"}
-            note="Ownership and metadata review."
-          />
-        </div>
-      </section>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <SignalStat
+              label="Usage"
+              value={agent.usageCount ? agent.usageCount.toLocaleString() : "—"}
+              note="Recorded runs or deployments."
+            />
+            <SignalStat
+              label="Rating"
+              value={agent.rating ? `${agent.rating.toFixed(1)} / 5` : "—"}
+              note="Internal or customer feedback."
+            />
+            <SignalStat
+              label="Verification"
+              value={agent.verified ? "Verified" : "Pending"}
+              note="Ownership and metadata review."
+            />
+          </div>
+        </section>
+      ) : null}
 
       {relatedAgents.length > 0 && (
         <section className="surface-panel p-6">

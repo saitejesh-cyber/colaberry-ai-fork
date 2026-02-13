@@ -520,7 +520,7 @@ export async function fetchGlobalNavigation(): Promise<GlobalNavigation | null> 
 export async function fetchPodcastBySlug(slug: string) {
   const json = await fetchCMSJson<CMSCollectionResponse>(
     `${CMS_URL}/api/podcast-episodes` +
-      `?filters[slug][$eq]=${slug}` +
+      `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
       `&filters[podcastStatus][$eq]=published` +
       `&publicationState=live` +
       `&populate[tags][fields][0]=name` +
@@ -635,4 +635,154 @@ export async function fetchMCPServerBySlug(slug: string) {
     { cacheMs: CMS_CACHE_TTL_MS }
   );
   return json?.data?.[0] ? mapMCPServer(json.data[0]) : null;
+}
+
+function normalizeTagKey(tag?: { name?: string; slug?: string } | null) {
+  return (tag?.slug || tag?.name || "").toLowerCase().trim();
+}
+
+function rankRelatedAgents(seed: Agent, candidates: Agent[], limit: number) {
+  const seedTagSet = new Set((seed.tags || []).map(normalizeTagKey).filter(Boolean));
+  return candidates
+    .filter((candidate) => candidate.slug && candidate.slug !== seed.slug)
+    .map((candidate) => {
+      const sharedTags = (candidate.tags || [])
+        .map(normalizeTagKey)
+        .filter((tag) => tag && seedTagSet.has(tag)).length;
+      const sameIndustry = candidate.industry && candidate.industry === seed.industry ? 3 : 0;
+      const sameSource = candidate.source && candidate.source === seed.source ? 1 : 0;
+      return { candidate, score: sharedTags + sameIndustry + sameSource };
+    })
+    .sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
+    .slice(0, limit)
+    .map((entry) => entry.candidate);
+}
+
+function rankRelatedMCPServers(seed: MCPServer, candidates: MCPServer[], limit: number) {
+  const seedTagSet = new Set((seed.tags || []).map(normalizeTagKey).filter(Boolean));
+  return candidates
+    .filter((candidate) => candidate.slug && candidate.slug !== seed.slug)
+    .map((candidate) => {
+      const sharedTags = (candidate.tags || [])
+        .map(normalizeTagKey)
+        .filter((tag) => tag && seedTagSet.has(tag)).length;
+      const sameIndustry = candidate.industry && candidate.industry === seed.industry ? 3 : 0;
+      const sameCategory = candidate.category && candidate.category === seed.category ? 2 : 0;
+      return { candidate, score: sharedTags + sameIndustry + sameCategory };
+    })
+    .sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
+    .slice(0, limit)
+    .map((entry) => entry.candidate);
+}
+
+export async function fetchRelatedAgents(
+  agent: Agent,
+  options: { visibility?: "public" | "private"; limit?: number } = {}
+): Promise<Agent[]> {
+  if (!agent.slug) return [];
+  const limit = Math.max(options.limit || 3, 1);
+  const pageSize = Math.max(limit * 4, 12);
+  const visibilityFilter = options.visibility
+    ? `&filters[visibility][$eq]=${options.visibility}`
+    : "";
+  const basePopulate =
+    `&populate[tags][fields][0]=name` +
+    `&populate[tags][fields][1]=slug` +
+    `&populate[companies][fields][0]=name` +
+    `&populate[companies][fields][1]=slug` +
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText`;
+
+  const industryFilter = agent.industry
+    ? `&filters[industry][$eq]=${encodeURIComponent(agent.industry)}`
+    : "";
+  const byIndustry = await fetchCMSJson<CMSCollectionResponse>(
+    `${CMS_URL}/api/agents` +
+      `?sort=updatedAt:desc` +
+      `${visibilityFilter}` +
+      `${industryFilter}` +
+      `&filters[slug][$ne]=${encodeURIComponent(agent.slug)}` +
+      `&publicationState=live` +
+      `&pagination[pageSize]=${pageSize}` +
+      basePopulate,
+    { cacheMs: CMS_CACHE_TTL_MS }
+  );
+  const industryCandidates = (byIndustry?.data || []).map(mapAgent);
+  if (industryCandidates.length >= limit) {
+    return rankRelatedAgents(agent, industryCandidates, limit);
+  }
+
+  const bySource = await fetchCMSJson<CMSCollectionResponse>(
+    `${CMS_URL}/api/agents` +
+      `?sort=updatedAt:desc` +
+      `${visibilityFilter}` +
+      `${agent.source ? `&filters[source][$eq]=${encodeURIComponent(agent.source)}` : ""}` +
+      `&filters[slug][$ne]=${encodeURIComponent(agent.slug)}` +
+      `&publicationState=live` +
+      `&pagination[pageSize]=${pageSize}` +
+      basePopulate,
+    { cacheMs: CMS_CACHE_TTL_MS }
+  );
+
+  const merged = new Map<number, Agent>();
+  industryCandidates.forEach((candidate) => merged.set(candidate.id, candidate));
+  ((bySource?.data || []).map(mapAgent) || []).forEach((candidate) => merged.set(candidate.id, candidate));
+
+  return rankRelatedAgents(agent, Array.from(merged.values()), limit);
+}
+
+export async function fetchRelatedMCPServers(
+  mcp: MCPServer,
+  options: { visibility?: "public" | "private"; limit?: number } = {}
+): Promise<MCPServer[]> {
+  if (!mcp.slug) return [];
+  const limit = Math.max(options.limit || 3, 1);
+  const pageSize = Math.max(limit * 4, 12);
+  const visibilityFilter = options.visibility
+    ? `&filters[visibility][$eq]=${options.visibility}`
+    : "";
+  const basePopulate =
+    `&populate[tags][fields][0]=name` +
+    `&populate[tags][fields][1]=slug` +
+    `&populate[companies][fields][0]=name` +
+    `&populate[companies][fields][1]=slug` +
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText`;
+
+  const byCategoryAndIndustry = await fetchCMSJson<CMSCollectionResponse>(
+    `${CMS_URL}/api/mcp-servers` +
+      `?sort=updatedAt:desc` +
+      `${visibilityFilter}` +
+      `${mcp.industry ? `&filters[industry][$eq]=${encodeURIComponent(mcp.industry)}` : ""}` +
+      `${mcp.category ? `&filters[category][$eq]=${encodeURIComponent(mcp.category)}` : ""}` +
+      `&filters[slug][$ne]=${encodeURIComponent(mcp.slug)}` +
+      `&publicationState=live` +
+      `&pagination[pageSize]=${pageSize}` +
+      basePopulate,
+    { cacheMs: CMS_CACHE_TTL_MS }
+  );
+  const primaryCandidates = (byCategoryAndIndustry?.data || []).map(mapMCPServer);
+  if (primaryCandidates.length >= limit) {
+    return rankRelatedMCPServers(mcp, primaryCandidates, limit);
+  }
+
+  const byIndustry = await fetchCMSJson<CMSCollectionResponse>(
+    `${CMS_URL}/api/mcp-servers` +
+      `?sort=updatedAt:desc` +
+      `${visibilityFilter}` +
+      `${mcp.industry ? `&filters[industry][$eq]=${encodeURIComponent(mcp.industry)}` : ""}` +
+      `&filters[slug][$ne]=${encodeURIComponent(mcp.slug)}` +
+      `&publicationState=live` +
+      `&pagination[pageSize]=${pageSize}` +
+      basePopulate,
+    { cacheMs: CMS_CACHE_TTL_MS }
+  );
+
+  const merged = new Map<number, MCPServer>();
+  primaryCandidates.forEach((candidate) => merged.set(candidate.id, candidate));
+  ((byIndustry?.data || []).map(mapMCPServer) || []).forEach((candidate) =>
+    merged.set(candidate.id, candidate)
+  );
+
+  return rankRelatedMCPServers(mcp, Array.from(merged.values()), limit);
 }

@@ -4,8 +4,7 @@ import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
 import StatePanel from "../../components/StatePanel";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { GetServerSideProps } from "next";
-import fallbackMCPs from "../../data/mcps.json";
+import type { GetStaticProps } from "next";
 import { fetchMCPServers, MCPServer } from "../../lib/cms";
 import { heroImage } from "../../lib/media";
 import { useRouter } from "next/router";
@@ -18,23 +17,21 @@ type MCPPageProps = {
   fetchError: boolean;
 };
 
-export const getServerSideProps: GetServerSideProps<MCPPageProps> = async () => {
+export const getStaticProps: GetStaticProps<MCPPageProps> = async () => {
   const allowPrivate = process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
   const visibilityFilter = allowPrivate ? undefined : "public";
 
   try {
     const mcps = await fetchMCPServers(visibilityFilter);
-    const safeMcps = mcps.length
-      ? mcps
-      : (fallbackMCPs as MCPServer[]).filter(
-          (mcp) => (mcp.visibility || "public").toLowerCase() === "public"
-        );
-    return { props: { mcps: safeMcps, allowPrivate, fetchError: false } };
+    return {
+      props: { mcps, allowPrivate, fetchError: false },
+      revalidate: 600,
+    };
   } catch {
-    const safeMcps = (fallbackMCPs as MCPServer[]).filter(
-      (mcp) => (mcp.visibility || "public").toLowerCase() === "public"
-    );
-    return { props: { mcps: safeMcps, allowPrivate, fetchError: true } };
+    return {
+      props: { mcps: [], allowPrivate, fetchError: true },
+      revalidate: 120,
+    };
   }
 };
 
@@ -442,8 +439,8 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
       </section>
 
       <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
-        {visibleMCPs.map((m, i) => (
-          <MCPCard key={i} mcp={m} />
+        {visibleMCPs.map((m) => (
+          <MCPCard key={m.slug || String(m.id)} mcp={m} />
         ))}
       </div>
 

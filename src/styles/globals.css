@@ -639,18 +639,45 @@ button:focus-visible {
 }
 
 .nav-link {
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  padding: 0.45rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.5rem 0.78rem;
   font-weight: 600;
-  color: #0f172a;
-  transition: color 160ms ease, border-color 160ms ease;
+  color: #1e293b;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
 }
 
 .nav-link:hover,
 .nav-link:focus-visible {
   color: #0f172a;
-  border-color: #1d4ed8;
+  border-color: rgba(47, 111, 237, 0.35);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.nav-link-active {
+  border-color: rgba(47, 111, 237, 0.4);
+  background: rgba(219, 234, 254, 0.6);
+  color: #1d4ed8;
+}
+
+.nav-dropdown-panel {
+  backdrop-filter: blur(10px);
+}
+
+.nav-dropdown-link {
+  color: #0f172a;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.nav-dropdown-link:hover,
+.nav-dropdown-link:focus-visible {
+  background: rgba(241, 245, 249, 0.88);
+  color: #0f172a;
+}
+
+.nav-dropdown-link-active {
+  background: rgba(219, 234, 254, 0.72);
+  color: #1d4ed8;
 }
 
 .dark .nav-link {
@@ -660,7 +687,29 @@ button:focus-visible {
 .dark .nav-link:hover,
 .dark .nav-link:focus-visible {
   color: #ffffff;
-  border-color: #7dd3fc;
+  border-color: rgba(125, 211, 252, 0.55);
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.dark .nav-link-active {
+  border-color: rgba(125, 211, 252, 0.55);
+  background: rgba(30, 58, 138, 0.35);
+  color: #e0f2fe;
+}
+
+.dark .nav-dropdown-link {
+  color: #e2e8f0;
+}
+
+.dark .nav-dropdown-link:hover,
+.dark .nav-dropdown-link:focus-visible {
+  background: rgba(30, 41, 59, 0.75);
+  color: #ffffff;
+}
+
+.dark .nav-dropdown-link-active {
+  background: rgba(30, 58, 138, 0.35);
+  color: #bae6fd;
 }
 
 footer .footer-link {
