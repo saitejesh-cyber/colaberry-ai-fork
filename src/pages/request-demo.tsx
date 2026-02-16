@@ -2,6 +2,7 @@ import Layout from "../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../components/SectionHeader";
 import MediaPanel from "../components/MediaPanel";
+import DemoRequestForm from "../components/DemoRequestForm";
 
 export default function RequestDemo() {
   return (
@@ -23,19 +24,15 @@ export default function RequestDemo() {
           </div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <a
-              href="mailto:info@colaberry.com?subject=Colaberry%20AI%20Demo%20Request"
-              className="btn btn-primary"
-            >
+            <button type="submit" form="demo-request-form" className="btn btn-primary">
               Email to book a demo
-            </a>
-            <Link
-              href="/aixcelerator"
-              className="btn btn-secondary"
-            >
+            </button>
+            <Link href="/aixcelerator" className="btn btn-secondary">
               Explore AIXcelerator
             </Link>
           </div>
+
+          <DemoRequestForm sourcePage="request-demo" sourcePath="/request-demo" />
 
           <div className="surface-panel mt-8 p-6">
             <SectionHeader
@@ -60,10 +57,10 @@ export default function RequestDemo() {
             kicker="Demo preview"
             title="Walkthrough highlights"
             description="See how agents, MCP, and modular layers connect end to end."
-            image="/media/visuals/panel-platform.svg"
-            alt="Platform walkthrough illustration"
+            image="/media/hero/hero-platform-cinematic.webp"
+            alt="Enterprise platform walkthrough preview"
             aspect="wide"
-            fit="contain"
+            fit="cover"
             className="mb-6"
           />
           <div className="surface-panel p-6">

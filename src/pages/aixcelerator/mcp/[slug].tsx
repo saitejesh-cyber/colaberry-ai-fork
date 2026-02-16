@@ -1,6 +1,7 @@
 import type { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import Head from "next/head";
+import Image from "next/image";
 import sanitizeHtml from "sanitize-html";
 import Layout from "../../../components/Layout";
 import SectionHeader from "../../../components/SectionHeader";
@@ -246,10 +247,12 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
           <div className="surface-panel overflow-hidden border border-slate-200/80 p-0">
             <div className="relative aspect-[4/3] w-full">
               {hasCoverImage ? (
-                <img
+                <Image
                   src={mcp.coverImageUrl || ""}
                   alt={mcp.coverImageAlt || mcp.name}
+                  fill
                   className="h-full w-full object-cover"
+                  unoptimized
                   loading="lazy"
                 />
               ) : (

@@ -22,7 +22,9 @@ export const getStaticProps: GetStaticProps<MCPPageProps> = async () => {
   const visibilityFilter = allowPrivate ? undefined : "public";
 
   try {
-    const mcps = await fetchMCPServers(visibilityFilter);
+    const mcps = (await fetchMCPServers(visibilityFilter, { maxRecords: 300 })).map(
+      toMcpListItem
+    );
     return {
       props: { mcps, allowPrivate, fetchError: false },
       revalidate: 600,
@@ -59,17 +61,16 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
     },
   ];
   const mcpSignals = ["TLS-ready", "Auth-ready", "Rate-limited", "Docs linked"];
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState<string | null>(null);
   const [industryFilter, setIndustryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
-  useEffect(() => {
-    if (!router.isReady) return;
+  const querySearch = useMemo(() => {
     const raw = Array.isArray(router.query.q) ? router.query.q[0] : router.query.q;
-    const nextQuery = typeof raw === "string" ? raw : "";
-    setSearch((prev) => (prev === nextQuery ? prev : nextQuery));
-  }, [router.isReady, router.query.q]);
+    return typeof raw === "string" ? raw : "";
+  }, [router.query.q]);
+  const effectiveSearch = search ?? querySearch;
   const pageSize = 24;
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -129,7 +130,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
     })),
   };
   const filteredMCPs = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query = effectiveSearch.trim().toLowerCase();
     if (!allowPrivate) {
       return mcps.filter((mcp) => {
         const matchesVisibility =
@@ -145,7 +146,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
         (mcp.visibility || "public").toLowerCase() === visibility &&
         matchesFilters(mcp, query, industryFilter, statusFilter, sourceFilter, tagFilter)
     );
-  }, [allowPrivate, industryFilter, mcps, search, sourceFilter, statusFilter, tagFilter, visibility]);
+  }, [allowPrivate, effectiveSearch, industryFilter, mcps, sourceFilter, statusFilter, tagFilter, visibility]);
   const shownCount = Math.min(visibleCount, filteredMCPs.length);
   const visibleMCPs = useMemo(
     () => filteredMCPs.slice(0, shownCount),
@@ -153,10 +154,6 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
   );
   const hasMore = shownCount < filteredMCPs.length;
   const hasResults = filteredMCPs.length > 0;
-
-  useEffect(() => {
-    setVisibleCount(pageSize);
-  }, [search, industryFilter, statusFilter, sourceFilter, tagFilter, visibility, allowPrivate, mcps.length, pageSize]);
 
   useEffect(() => {
     if (!hasMore) return;
@@ -267,7 +264,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
           kicker="Integration preview"
           title="Connector-ready surface"
           description="Standardize tool access with MCP server patterns and endpoints."
-          image={heroImage("hero-mcp.png")}
+          image={heroImage("hero-mcp-cinematic.webp")}
           alt="MCP integration network overview"
           aspect="wide"
           fit="cover"
@@ -314,7 +311,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                 name="mcp-search"
                 type="search"
                 placeholder="Search MCP servers, industries, tags..."
-                value={search}
+                value={effectiveSearch}
                 onChange={(event) => setSearch(event.target.value)}
                 className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2 pr-11 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
               />
@@ -434,7 +431,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
           </div>
         )}
         <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500" aria-live="polite">
-          Showing {shownCount} of {filteredMCPs.length} (total {mcps.length})
+          Showing {shownCount} of {filteredMCPs.length} (loaded {mcps.length})
         </div>
       </section>
 
@@ -474,6 +471,31 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
       </div>
     </Layout>
   );
+}
+
+function toMcpListItem(mcp: MCPServer): MCPServer {
+  return {
+    id: mcp.id,
+    name: mcp.name,
+    slug: mcp.slug,
+    description: clipText(mcp.description, 220),
+    industry: mcp.industry ?? null,
+    category: mcp.category ?? null,
+    status: mcp.status ?? null,
+    visibility: mcp.visibility ?? null,
+    source: mcp.source ?? null,
+    sourceName: mcp.sourceName ?? null,
+    verified: mcp.verified ?? null,
+    tags: mcp.tags ?? [],
+    companies: mcp.companies ?? [],
+  };
+}
+
+function clipText(value?: string | null, limit = 220) {
+  if (!value) return null;
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (normalized.length <= limit) return normalized;
+  return `${normalized.slice(0, limit - 1).trimEnd()}...`;
 }
 
 function matchesFilters(

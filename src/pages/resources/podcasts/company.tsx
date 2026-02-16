@@ -1,10 +1,29 @@
 import Layout from "../../../components/Layout";
 import Link from "next/link";
+import type { GetServerSideProps } from "next";
 import SectionHeader from "../../../components/SectionHeader";
 import StatePanel from "../../../components/StatePanel";
+import type { Company, Tag } from "../../../lib/cms";
 
-export async function getServerSideProps({ query }: any) {
-  const slug = query?.slug;
+type CompanyEpisode = {
+  id: number;
+  title: string;
+  slug: string;
+  tags: Tag[];
+  companies: Company[];
+};
+
+type PodcastCompanyPageProps = {
+  companySlug: string;
+  companyName: string;
+  episodes: CompanyEpisode[];
+  fetchError: boolean;
+};
+
+export const getServerSideProps: GetServerSideProps<PodcastCompanyPageProps> = async ({
+  query,
+}) => {
+  const slug = typeof query?.slug === "string" ? query.slug : "";
 
   if (!slug) {
     return { notFound: true };
@@ -24,20 +43,33 @@ export async function getServerSideProps({ query }: any) {
     );
 
     const json = await res.json();
-    const episodes =
-      json?.data?.map((item: any) => {
-        const attrs = item.attributes ?? item;
+    const rawData = Array.isArray(json?.data) ? json.data : [];
+    const episodes: CompanyEpisode[] =
+      rawData.map((item: { id?: number; attributes?: Record<string, unknown> }) => {
+        const attrs = (item.attributes ?? item) as {
+          title?: string;
+          slug?: string;
+          tags?: { data?: Tag[] } | Tag[];
+          companies?: { data?: Company[] } | Company[];
+        };
         return {
-          id: item.id,
-          title: attrs.title,
-          slug: attrs.slug,
-          tags: attrs.tags?.data ?? attrs.tags ?? [],
-          companies: attrs.companies?.data ?? attrs.companies ?? [],
+          id: item.id ?? 0,
+          title: attrs.title ?? "Podcast episode",
+          slug: attrs.slug ?? "",
+          tags: Array.isArray(attrs.tags)
+            ? attrs.tags
+            : Array.isArray(attrs.tags?.data)
+            ? attrs.tags.data
+            : [],
+          companies: Array.isArray(attrs.companies)
+            ? attrs.companies
+            : Array.isArray(attrs.companies?.data)
+            ? attrs.companies.data
+            : [],
         };
       }) || [];
 
     const companyName =
-      episodes?.[0]?.companies?.[0]?.attributes?.name ??
       episodes?.[0]?.companies?.[0]?.name ??
       slug;
 
@@ -59,17 +91,13 @@ export async function getServerSideProps({ query }: any) {
       },
     };
   }
-}
+};
 
 export default function PodcastCompanyPage({
   companyName,
   episodes,
   fetchError,
-}: {
-  companyName: string;
-  episodes: any[];
-  fetchError: boolean;
-}) {
+}: PodcastCompanyPageProps) {
   return (
     <Layout>
       {fetchError && (
@@ -92,17 +120,17 @@ export default function PodcastCompanyPage({
       </div>
 
       <ul className="mt-6 grid gap-4">
-        {episodes.map((episode: any) => (
+        {episodes.map((episode) => (
           <li key={episode.id} className="surface-panel border border-slate-200/80 bg-white/90 p-4">
             <div className="text-sm font-semibold text-slate-900">{episode.title}</div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {episode.tags?.map((tag: any) => (
+              {episode.tags?.map((tag) => (
                 <Link
-                  key={tag.slug ?? tag.id}
+                  key={tag.slug}
                   href={`/resources/podcasts/tag/${tag.slug}`}
                   className="chip rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-brand-deep"
                 >
-                  #{tag.name ?? tag.attributes?.name}
+                  #{tag.name}
                 </Link>
               ))}
             </div>

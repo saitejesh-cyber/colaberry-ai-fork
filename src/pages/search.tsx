@@ -6,15 +6,26 @@ import StatePanel from "../components/StatePanel";
 import caseStudies from "../data/caseStudies.json";
 import {
   Agent,
+  Article,
   MCPServer,
   PodcastEpisode,
+  UseCase,
   fetchAgents,
+  fetchArticles,
   fetchMCPServers,
   fetchPodcastEpisodes,
+  fetchUseCases,
 } from "../lib/cms";
 import { getIndustryDisplayName } from "../data/caseStudies";
 
-type SearchResultType = "Agents" | "MCP Servers" | "Podcasts" | "Case Studies" | "Pages";
+type SearchResultType =
+  | "Agents"
+  | "MCP Servers"
+  | "Use Cases"
+  | "Podcasts"
+  | "Articles"
+  | "Case Studies"
+  | "Pages";
 
 type SearchResult = {
   id: string;
@@ -31,11 +42,21 @@ type SearchPageProps = {
   fetchError: boolean;
 };
 
-const TYPE_ORDER: SearchResultType[] = ["Agents", "MCP Servers", "Podcasts", "Case Studies", "Pages"];
+const TYPE_ORDER: SearchResultType[] = [
+  "Agents",
+  "MCP Servers",
+  "Use Cases",
+  "Podcasts",
+  "Articles",
+  "Case Studies",
+  "Pages",
+];
 const TYPE_LIMITS: Record<SearchResultType, number> = {
   Agents: 12,
   "MCP Servers": 12,
+  "Use Cases": 10,
   Podcasts: 8,
+  Articles: 8,
   "Case Studies": 10,
   Pages: 6,
 };
@@ -64,6 +85,13 @@ const STATIC_PAGES: Array<Omit<SearchResult, "id">> = [
   },
   {
     type: "Pages",
+    title: "Use cases",
+    description: "Structured use cases linked to agents, MCP servers, and outcomes.",
+    href: "/use-cases",
+    meta: "Solutions",
+  },
+  {
+    type: "Pages",
     title: "Industries",
     description: "Industry pages with aligned solutions and case studies.",
     href: "/industries",
@@ -85,12 +113,31 @@ const STATIC_PAGES: Array<Omit<SearchResult, "id">> = [
   },
   {
     type: "Pages",
+    title: "Articles",
+    description: "CMS-backed analysis and implementation guidance.",
+    href: "/resources/articles",
+    meta: "Resources",
+  },
+  {
+    type: "Pages",
     title: "News and product updates",
     description: "Announcements, releases, and ecosystem signals.",
     href: "/updates",
     meta: "Updates",
   },
 ];
+
+type RawCaseStudy = {
+  title?: string;
+  challenge?: string[];
+  solution?: string[];
+  outcomes?: string[];
+};
+
+type RawIndustryCaseStudies = {
+  industry?: string;
+  cases?: RawCaseStudy[];
+};
 
 function normalizeText(value: string) {
   return value.toLowerCase().replace(/\s+/g, " ").trim();
@@ -101,7 +148,7 @@ function matchesQuery(query: string, fields: Array<string | undefined | null>) {
   return haystack.includes(query);
 }
 
-function buildAgentResults(query: string, rawQuery: string, agents: Agent[]): SearchResult[] {
+function buildAgentResults(query: string, agents: Agent[]): SearchResult[] {
   return agents
     .filter((agent) =>
       matchesQuery(query, [
@@ -119,12 +166,12 @@ function buildAgentResults(query: string, rawQuery: string, agents: Agent[]): Se
       type: "Agents",
       title: agent.name,
       description: agent.description || "Agent catalog entry",
-      href: `/aixcelerator/agents?q=${encodeURIComponent(rawQuery)}`,
+      href: `/aixcelerator/agents/${agent.slug}`,
       meta: [agent.industry, agent.status].filter(Boolean).join(" · ") || "Agent",
     }));
 }
 
-function buildMcpResults(query: string, rawQuery: string, servers: MCPServer[]): SearchResult[] {
+function buildMcpResults(query: string, servers: MCPServer[]): SearchResult[] {
   return servers
     .filter((server) =>
       matchesQuery(query, [
@@ -143,8 +190,37 @@ function buildMcpResults(query: string, rawQuery: string, servers: MCPServer[]):
       type: "MCP Servers",
       title: server.name,
       description: server.description || "MCP server catalog entry",
-      href: `/aixcelerator/mcp?q=${encodeURIComponent(rawQuery)}`,
+      href: `/aixcelerator/mcp/${server.slug}`,
       meta: [server.industry, server.category].filter(Boolean).join(" · ") || "MCP server",
+    }));
+}
+
+function buildUseCaseResults(query: string, useCases: UseCase[]): SearchResult[] {
+  return useCases
+    .filter((item) =>
+      matchesQuery(query, [
+        item.title,
+        item.summary,
+        item.longDescription,
+        item.problem,
+        item.approach,
+        item.outcomes,
+        item.industry,
+        item.category,
+        item.status,
+        ...(item.tags || []).map((tag) => tag.name || tag.slug || ""),
+        ...(item.companies || []).map((company) => company.name || company.slug || ""),
+        ...(item.agents || []).map((agent) => agent.name || agent.slug || ""),
+        ...(item.mcpServers || []).map((server) => server.name || server.slug || ""),
+      ])
+    )
+    .map((item) => ({
+      id: `use-case-${item.id}`,
+      type: "Use Cases",
+      title: item.title,
+      description: item.summary || "Use case profile",
+      href: `/use-cases/${item.slug}`,
+      meta: [item.industry, item.category].filter(Boolean).join(" · ") || "Use case",
     }));
 }
 
@@ -167,13 +243,33 @@ function buildPodcastResults(query: string, episodes: PodcastEpisode[]): SearchR
     }));
 }
 
+function buildArticleResults(query: string, articles: Article[]): SearchResult[] {
+  return articles
+    .filter((article) =>
+      matchesQuery(query, [
+        article.title,
+        article.description,
+        article.category?.name,
+        article.author?.name,
+      ])
+    )
+    .map((article) => ({
+      id: `article-${article.id}`,
+      type: "Articles",
+      title: article.title,
+      description: article.description || "Article",
+      href: `/resources/articles/${article.slug}`,
+      meta: article.category?.name || "Article",
+    }));
+}
+
 function buildCaseStudyResults(query: string): SearchResult[] {
   const results: SearchResult[] = [];
-  const entries = Object.entries(caseStudies as Record<string, any>);
+  const entries = Object.entries(caseStudies as Record<string, RawIndustryCaseStudies>);
   entries.forEach(([slug, industry]) => {
     const displayName = industry?.industry || getIndustryDisplayName(slug);
     const cases = Array.isArray(industry?.cases) ? industry.cases : [];
-    cases.forEach((caseStudy: any, index: number) => {
+    cases.forEach((caseStudy, index) => {
       const title = caseStudy?.title || "Case study";
       const match = matchesQuery(query, [
         displayName,
@@ -232,27 +328,35 @@ export const getServerSideProps: GetServerSideProps<SearchPageProps> = async ({ 
   const visibilityFilter = allowPrivate ? undefined : "public";
   let fetchError = false;
 
-  const [agentsResult, mcpsResult, podcastsResult] = await Promise.allSettled([
-    fetchAgents(visibilityFilter),
-    fetchMCPServers(visibilityFilter),
+  const [agentsResult, mcpsResult, useCasesResult, podcastsResult, articlesResult] = await Promise.allSettled([
+    fetchAgents(visibilityFilter, { maxRecords: 600 }),
+    fetchMCPServers(visibilityFilter, { maxRecords: 600 }),
+    fetchUseCases(visibilityFilter, { maxRecords: 600 }),
     fetchPodcastEpisodes(),
+    fetchArticles({ maxRecords: 300 }),
   ]);
 
   const agents = agentsResult.status === "fulfilled" ? agentsResult.value : [];
   const mcps = mcpsResult.status === "fulfilled" ? mcpsResult.value : [];
+  const useCases = useCasesResult.status === "fulfilled" ? useCasesResult.value : [];
   const podcasts = podcastsResult.status === "fulfilled" ? podcastsResult.value : [];
+  const articles = articlesResult.status === "fulfilled" ? articlesResult.value : [];
   if (
     agentsResult.status === "rejected" ||
     mcpsResult.status === "rejected" ||
-    podcastsResult.status === "rejected"
+    useCasesResult.status === "rejected" ||
+    podcastsResult.status === "rejected" ||
+    articlesResult.status === "rejected"
   ) {
     fetchError = true;
   }
 
   const results = [
-    ...buildAgentResults(normalizedQuery, rawQuery, agents),
-    ...buildMcpResults(normalizedQuery, rawQuery, mcps),
+    ...buildAgentResults(normalizedQuery, agents),
+    ...buildMcpResults(normalizedQuery, mcps),
+    ...buildUseCaseResults(normalizedQuery, useCases),
     ...buildPodcastResults(normalizedQuery, podcasts),
+    ...buildArticleResults(normalizedQuery, articles),
     ...buildCaseStudyResults(normalizedQuery),
     ...buildPageResults(normalizedQuery),
   ];
@@ -288,7 +392,7 @@ export default function SearchPage({ query, results, fetchError }: SearchPagePro
             size="xl"
             kicker="Search"
             title={query ? `Results for \"${query}\"` : "Search the catalog"}
-            description="Search across agents, MCP servers, podcasts, case studies, and core pages."
+            description="Search across agents, MCP servers, use cases, podcasts, case studies, and core pages."
           />
         </div>
         <div className="surface-panel p-5">
@@ -304,7 +408,7 @@ export default function SearchPage({ query, results, fetchError }: SearchPagePro
               name="q"
               type="search"
               defaultValue={query}
-              placeholder="Search agents, MCP servers, podcasts, case studies..."
+              placeholder="Search agents, MCP servers, use cases, podcasts..."
               className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
             />
             <button type="submit" className="btn btn-primary btn-sm">
@@ -322,7 +426,7 @@ export default function SearchPage({ query, results, fetchError }: SearchPagePro
           <StatePanel
             variant="empty"
             title="Start with a search term"
-            description="Enter a keyword to explore agents, MCP servers, podcasts, and case studies."
+            description="Enter a keyword to explore agents, MCP servers, use cases, podcasts, and case studies."
           />
         </div>
       ) : null}

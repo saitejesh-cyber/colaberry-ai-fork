@@ -2,6 +2,7 @@ import Layout from "../../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
+import { heroImage } from "../../lib/media";
 
 export default function Books() {
   return (
@@ -20,10 +21,10 @@ export default function Books() {
           kicker="Artifacts"
           title="Learning assets"
           description="Curated books and reusable artifacts."
-          image="/media/visuals/panel-books.svg"
-          alt="Books and artifacts illustration"
+          image={heroImage("hero-books-premium-v2.svg")}
+          alt="Curated books and artifact knowledge surface"
           aspect="wide"
-          fit="contain"
+          fit="cover"
         />
       </div>
 

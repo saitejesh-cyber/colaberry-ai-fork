@@ -12,28 +12,35 @@ export default function Resources() {
       title: "Podcasts + transcripts",
       description: "Searchable conversations tied to agents and MCP servers.",
       meta: "Audio",
-      image: heroImage("hero-resources.png"),
+      image: heroImage("hero-podcasts-premium-v2.svg"),
     },
     {
       href: "/resources/white-papers",
       title: "White papers + POVs",
       description: "Technical guidance, frameworks, and executive summaries.",
       meta: "Research",
-      image: heroImage("hero-platform.png"),
+      image: heroImage("hero-whitepapers-premium-v2.svg"),
+    },
+    {
+      href: "/resources/articles",
+      title: "Articles + analysis",
+      description: "CMS-backed articles, practical notes, and implementation updates.",
+      meta: "Editorial",
+      image: heroImage("hero-updates-cinematic.webp"),
     },
     {
       href: "/resources/case-studies",
       title: "Case studies",
       description: "Outcome stories with measurable impact and context.",
       meta: "Outcomes",
-      image: heroImage("hero-solutions.png"),
+      image: heroImage("hero-case-studies-premium-v2.svg"),
     },
     {
       href: "/resources/books",
       title: "Books + artifacts",
       description: "Reference material, templates, and delivery assets.",
       meta: "Artifacts",
-      image: heroImage("hero-industries.png"),
+      image: heroImage("hero-books-premium-v2.svg"),
     },
   ];
 
@@ -72,7 +79,7 @@ export default function Resources() {
           kicker="Knowledge hub"
           title="Research and artifacts"
           description="Podcasts, books, white papers, and curated signals."
-          image={heroImage("hero-resources.png")}
+          image={heroImage("hero-resources-cinematic.webp")}
           alt="Research workspace overview"
           aspect="wide"
           fit="cover"
@@ -120,42 +127,49 @@ export default function Resources() {
           title="Podcasts"
           description="Colaberry AI podcast + curated ai podcast."
           meta="Internal + External"
-          image={heroImage("hero-resources.png")}
+          image={heroImage("hero-podcasts-premium-v2.svg")}
         />
         <ResourceCard
           href="/resources/books"
           title="Books & artifacts"
           description="Books, companion assets, templates, and working artifacts."
           meta="Artifacts"
-          image={heroImage("hero-industries.png")}
+          image={heroImage("hero-books-premium-v2.svg")}
         />
         <ResourceCard
           href="/resources/case-studies"
           title="Case studies"
           description="Outcomes and delivery stories, organized by industry."
           meta="By industry"
-          image={heroImage("hero-platform.png")}
+          image={heroImage("hero-case-studies-premium-v2.svg")}
         />
         <ResourceCard
           href="/resources/white-papers"
           title="White papers"
           description="Technical deep-dives, POVs, and best-practice guidance."
           meta="Research"
-          image={heroImage("hero-solutions.png")}
+          image={heroImage("hero-whitepapers-premium-v2.svg")}
+        />
+        <ResourceCard
+          href="/resources/articles"
+          title="Articles"
+          description="Editorial insights, platform updates, and implementation guidance."
+          meta="Editorial"
+          image={heroImage("hero-updates-cinematic.webp")}
         />
         <ResourceCard
           href="/solutions"
           title="Solutions"
           description="Reusable solution patterns and packaged offerings."
           meta="Playbooks"
-          image={heroImage("hero-solutions.png")}
+          image={heroImage("hero-solutions-cinematic.webp")}
         />
         <ResourceCard
           href="/updates"
           title="News & product"
           description="A single feed for product updates, announcements, and relevant news."
           meta="Aggregator"
-          image={heroImage("hero-updates.png")}
+          image={heroImage("hero-updates-cinematic.webp")}
         />
       </div>
 

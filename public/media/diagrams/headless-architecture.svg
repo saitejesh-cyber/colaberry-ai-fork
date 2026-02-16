@@ -1,0 +1,152 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="900" fill="#F6F8FC"/>
+
+  <defs>
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="160%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#0F172A" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <text x="800" y="78" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="36" font-weight="600" fill="#0F172A">
+    Colaberry AI Headless Architecture
+  </text>
+  <text x="800" y="112" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="16" fill="#475569">
+    Strapi CMS as content source, API layer, and Next.js delivery surface
+  </text>
+
+  <line x1="190" y1="150" x2="1410" y2="150" stroke="#CBD5E1" stroke-width="2" stroke-dasharray="6 8"/>
+
+  <g>
+    <rect x="280" y="128" width="170" height="40" rx="20" fill="#E2E8F0"/>
+    <text x="365" y="154" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="13" font-weight="600" fill="#475569">
+      Source of Truth
+    </text>
+  </g>
+  <g>
+    <rect x="720" y="128" width="160" height="40" rx="20" fill="#E2E8F0"/>
+    <text x="800" y="154" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="13" font-weight="600" fill="#475569">
+      API Layer
+    </text>
+  </g>
+  <g>
+    <rect x="1160" y="128" width="170" height="40" rx="20" fill="#E2E8F0"/>
+    <text x="1245" y="154" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="13" font-weight="600" fill="#475569">
+      Delivery
+    </text>
+  </g>
+
+  <!-- Content Team -->
+  <g filter="url(#cardShadow)">
+    <rect x="120" y="210" width="240" height="210" rx="24" fill="#FFFFFF" stroke="#E2E8F0"/>
+  </g>
+  <g transform="translate(145 238)" stroke="#2F6FED" stroke-width="2" fill="none">
+    <circle cx="26" cy="20" r="12"/>
+    <path d="M8 50c6-12 30-12 36 0"/>
+    <rect x="62" y="8" width="64" height="44" rx="6"/>
+    <line x1="70" y1="22" x2="118" y2="22"/>
+    <line x1="70" y1="34" x2="108" y2="34"/>
+  </g>
+  <text x="240" y="326" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="16" font-weight="600" fill="#0F172A">
+    Content Team
+  </text>
+  <text x="140" y="352" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- UX intent + IA</text>
+  <text x="140" y="370" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- Content drafts</text>
+  <text x="140" y="388" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- Media approvals</text>
+
+  <!-- Strapi CMS -->
+  <g filter="url(#cardShadow)">
+    <rect x="400" y="210" width="240" height="210" rx="24" fill="#FFFFFF" stroke="#E2E8F0"/>
+  </g>
+  <g transform="translate(430 236)">
+    <ellipse cx="70" cy="18" rx="44" ry="14" fill="#DBEAFE" stroke="#6366F1" stroke-width="2"/>
+    <rect x="26" y="18" width="88" height="56" fill="#EEF2FF" stroke="#6366F1" stroke-width="2"/>
+    <ellipse cx="70" cy="74" rx="44" ry="14" fill="#DBEAFE" stroke="#6366F1" stroke-width="2"/>
+  </g>
+  <text x="520" y="326" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="16" font-weight="600" fill="#0F172A">
+    Strapi CMS
+  </text>
+  <text x="420" y="352" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- Content types</text>
+  <text x="420" y="370" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- Media library</text>
+  <text x="420" y="388" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- Global navigation</text>
+
+  <!-- API -->
+  <g filter="url(#cardShadow)">
+    <rect x="680" y="210" width="240" height="210" rx="24" fill="#FFFFFF" stroke="#E2E8F0"/>
+  </g>
+  <g transform="translate(725 248)" stroke="#0EA5E9" stroke-width="2" fill="none">
+    <circle cx="20" cy="24" r="8"/>
+    <circle cx="90" cy="12" r="8"/>
+    <circle cx="120" cy="52" r="8"/>
+    <line x1="28" y1="24" x2="82" y2="14"/>
+    <line x1="96" y1="18" x2="112" y2="46"/>
+    <line x1="28" y1="28" x2="112" y2="46"/>
+  </g>
+  <text x="800" y="326" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="16" font-weight="600" fill="#0F172A">
+    API Layer
+  </text>
+  <text x="700" y="352" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- REST / GraphQL</text>
+  <text x="700" y="370" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- Auth + caching</text>
+  <text x="700" y="388" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- Search indexing</text>
+
+  <!-- Next.js -->
+  <g filter="url(#cardShadow)">
+    <rect x="960" y="210" width="240" height="210" rx="24" fill="#FFFFFF" stroke="#E2E8F0"/>
+  </g>
+  <g transform="translate(985 240)" stroke="#1D4ED8" stroke-width="2" fill="none">
+    <rect x="0" y="6" width="110" height="70" rx="6"/>
+    <line x1="14" y1="26" x2="96" y2="26"/>
+    <line x1="14" y1="42" x2="86" y2="42"/>
+    <line x1="14" y1="58" x2="70" y2="58"/>
+  </g>
+  <text x="1080" y="326" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="16" font-weight="600" fill="#0F172A">
+    Next.js Frontend
+  </text>
+  <text x="980" y="352" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- Pages + layouts</text>
+  <text x="980" y="370" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- Tailwind UI</text>
+  <text x="980" y="388" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- SSR / ISR</text>
+
+  <!-- End Users -->
+  <g filter="url(#cardShadow)">
+    <rect x="1240" y="210" width="240" height="210" rx="24" fill="#FFFFFF" stroke="#E2E8F0"/>
+  </g>
+  <g transform="translate(1270 244)" stroke="#14B8A6" stroke-width="2" fill="none">
+    <circle cx="20" cy="18" r="10"/>
+    <circle cx="56" cy="18" r="10"/>
+    <circle cx="92" cy="18" r="10"/>
+    <path d="M4 52c6-10 28-10 32 0"/>
+    <path d="M40 52c6-10 28-10 32 0"/>
+    <path d="M76 52c6-10 28-10 32 0"/>
+  </g>
+  <text x="1360" y="326" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="16" font-weight="600" fill="#0F172A">
+    End Users
+  </text>
+  <text x="1260" y="352" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- Buyers + leaders</text>
+  <text x="1260" y="370" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- Operators + devs</text>
+  <text x="1260" y="388" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">- Discover + search</text>
+
+  <!-- Flow arrows -->
+  <g stroke="#94A3B8" stroke-width="2.5" fill="none" stroke-linecap="round">
+    <path d="M360 315h40"/>
+    <path d="M640 315h40"/>
+    <path d="M920 315h40"/>
+    <path d="M1200 315h40"/>
+    <path d="M392 306l10 9-10 9"/>
+    <path d="M672 306l10 9-10 9"/>
+    <path d="M952 306l10 9-10 9"/>
+    <path d="M1232 306l10 9-10 9"/>
+  </g>
+
+  <!-- Supporting detail row -->
+  <g>
+    <rect x="300" y="470" width="1000" height="150" rx="24" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+    <text x="330" y="512" font-family="Poppins, Arial, sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+      Delivery flow
+    </text>
+    <text x="330" y="540" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">
+      Content + media published in Strapi are surfaced through the API and rendered in Next.js for enterprise users.
+    </text>
+    <text x="330" y="564" font-family="Poppins, Arial, sans-serif" font-size="12" fill="#475569">
+      Frontend uses the existing Tailwind design system to maintain consistency across pages.
+    </text>
+  </g>
+</svg>

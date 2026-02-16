@@ -4,6 +4,7 @@ import Head from "next/head";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { fetchGlobalNavigation, GlobalNavigation } from "../lib/cms";
+import NewsletterSignup from "./NewsletterSignup";
 
 const fallbackNavigation: GlobalNavigation = {
   headerLinks: [
@@ -16,6 +17,7 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Overview", href: "/aixcelerator", order: 1 },
         { label: "Agents", href: "/aixcelerator/agents", order: 2 },
         { label: "MCP servers", href: "/aixcelerator/mcp", order: 3 },
+        { label: "Discovery assistant", href: "/assistant", order: 4 },
       ],
     },
     {
@@ -44,7 +46,10 @@ const fallbackNavigation: GlobalNavigation = {
       href: "/solutions",
       order: 5,
       group: "header",
-      children: [{ label: "Solutions overview", href: "/solutions", order: 1 }],
+      children: [
+        { label: "Solutions overview", href: "/solutions", order: 1 },
+        { label: "Use cases", href: "/use-cases", order: 2 },
+      ],
     },
     {
       label: "Resources",
@@ -55,8 +60,9 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Resources hub", href: "/resources", order: 1 },
         { label: "Podcasts", href: "/resources/podcasts", order: 2 },
         { label: "White papers", href: "/resources/white-papers", order: 3 },
-        { label: "Books", href: "/resources/books", order: 4 },
-        { label: "Case studies", href: "/resources/case-studies", order: 5 },
+        { label: "Articles", href: "/resources/articles", order: 4 },
+        { label: "Books", href: "/resources/books", order: 5 },
+        { label: "Case studies", href: "/resources/case-studies", order: 6 },
       ],
     },
     {
@@ -74,8 +80,10 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Platform", href: "/aixcelerator", order: 1, group: "Product" },
         { label: "Agents", href: "/aixcelerator/agents", order: 2, group: "Product" },
         { label: "MCP servers", href: "/aixcelerator/mcp", order: 3, group: "Product" },
-        { label: "Solutions", href: "/solutions", order: 4, group: "Product" },
-        { label: "Industries", href: "/industries", order: 5, group: "Product" },
+        { label: "Discovery assistant", href: "/assistant", order: 4, group: "Product" },
+        { label: "Solutions", href: "/solutions", order: 5, group: "Product" },
+        { label: "Use cases", href: "/use-cases", order: 6, group: "Product" },
+        { label: "Industries", href: "/industries", order: 7, group: "Product" },
       ],
     },
     {
@@ -84,7 +92,8 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Resources hub", href: "/resources", order: 1, group: "Resources" },
         { label: "Podcasts", href: "/resources/podcasts", order: 2, group: "Resources" },
         { label: "White papers", href: "/resources/white-papers", order: 3, group: "Resources" },
-        { label: "News & product", href: "/updates", order: 4, group: "Resources" },
+        { label: "Articles", href: "/resources/articles", order: 4, group: "Resources" },
+        { label: "News & product", href: "/updates", order: 5, group: "Resources" },
       ],
     },
   ],
@@ -259,12 +268,8 @@ function mergeGlobalNavigation(primary: GlobalNavigation | null, fallback: Globa
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") return "light";
-    const stored = window.localStorage.getItem("theme");
-    if (stored === "light" || stored === "dark") return stored;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  });
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [hasMounted, setHasMounted] = useState(false);
   const [globalNav, setGlobalNav] = useState<GlobalNavigation>(fallbackNavigation);
   const [searchOpen, setSearchOpen] = useState(false);
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
@@ -276,9 +281,20 @@ export default function Layout({ children }: { children: ReactNode }) {
     .filter((href) => !isExternalHref(href));
 
   useEffect(() => {
+    const rafId = window.requestAnimationFrame(() => {
+      const storedTheme = window.localStorage.getItem("theme");
+      const resolvedTheme = storedTheme === "dark" ? "dark" : "light";
+      setTheme(resolvedTheme);
+      setHasMounted(true);
+    });
+    return () => window.cancelAnimationFrame(rafId);
+  }, []);
+
+  useEffect(() => {
+    if (!hasMounted) return;
     document.documentElement.classList.toggle("dark", theme === "dark");
     window.localStorage.setItem("theme", theme);
-  }, [theme]);
+  }, [hasMounted, theme]);
 
   useEffect(() => {
     let isActive = true;
@@ -355,8 +371,12 @@ export default function Layout({ children }: { children: ReactNode }) {
   const toggleTheme = () => {
     setTheme((previous) => (previous === "dark" ? "light" : "dark"));
   };
-  const isDarkMode = theme === "dark";
-  const themeToggleLabel = isDarkMode ? "Switch to light mode" : "Switch to dark mode";
+  const isDarkMode = hasMounted ? theme === "dark" : false;
+  const themeToggleLabel = hasMounted
+    ? isDarkMode
+      ? "Switch to light mode"
+      : "Switch to dark mode"
+    : "Toggle color mode";
   const openSearch = () => {
     setMobileMenuOpen(false);
     setSearchOpen(true);
@@ -480,6 +500,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             })}
 
             <div className="ml-2 flex items-center gap-2 border-l border-slate-200/80 pl-3 dark:border-slate-700/80">
+              <Link href="/assistant" className="btn btn-ghost btn-sm">
+                Assistant
+              </Link>
               <button
                 type="button"
                 onClick={openSearch}
@@ -661,6 +684,13 @@ export default function Layout({ children }: { children: ReactNode }) {
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Preferences
               </div>
+              <Link
+                href="/assistant"
+                className="btn btn-secondary btn-sm mt-2 w-full justify-center"
+                onClick={closeMobileMenu}
+              >
+                Discovery assistant
+              </Link>
               <button
                 type="button"
                 onClick={toggleTheme}
@@ -774,7 +804,17 @@ export default function Layout({ children }: { children: ReactNode }) {
           ))}
 
           <div className="sm:justify-self-end">
-            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100 sm:text-right">
+            <div className="max-w-sm">
+              <NewsletterSignup
+                compact
+                sourcePath={router.asPath}
+                sourcePage="layout-footer"
+                title="Newsletter"
+                description="Get product updates and enterprise AI signals."
+                ctaLabel="Subscribe"
+              />
+            </div>
+            <div className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100 sm:text-right">
               Stay connected
             </div>
             <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 sm:text-right">
@@ -887,6 +927,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             </form>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {[
+                { label: "Discovery assistant", href: "/assistant" },
                 { label: "Agents catalog", href: "/aixcelerator/agents" },
                 { label: "MCP servers", href: "/aixcelerator/mcp" },
                 { label: "Solutions overview", href: "/solutions" },
@@ -939,6 +980,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {[
+                { label: "Discovery assistant", href: "/assistant" },
                 { label: "Agents catalog", href: "/aixcelerator/agents" },
                 { label: "MCP servers", href: "/aixcelerator/mcp" },
                 { label: "Resources hub", href: "/resources" },

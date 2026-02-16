@@ -80,7 +80,7 @@ export default function Solutions() {
           kicker="Solution preview"
           title="Operational playbooks"
           description="Repeatable solution patterns ready for deployment."
-          image={heroImage("hero-solutions.png")}
+          image={heroImage("hero-solutions-cinematic.webp")}
           alt="Operational playbook overview"
           aspect="wide"
           fit="cover"
@@ -101,6 +101,12 @@ export default function Solutions() {
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Link
+          href="/use-cases"
+          className="btn btn-primary"
+        >
+          Explore use cases
+        </Link>
+        <Link
           href="/industries"
           className="btn btn-secondary"
         >
@@ -108,7 +114,7 @@ export default function Solutions() {
         </Link>
         <Link
           href="/resources"
-          className="btn btn-primary"
+          className="btn btn-ghost"
         >
           Explore resources
         </Link>

@@ -25,7 +25,7 @@ export default function AIXcelerator() {
           kicker="Platform preview"
           title="Governed delivery surface"
           description="A clean, visual surface for readiness, workflow alignment, and modular layers."
-          image={heroImage("hero-platform.png")}
+          image={heroImage("hero-platform-cinematic.webp")}
           alt="Governed delivery platform preview"
           aspect="wide"
           fit="cover"

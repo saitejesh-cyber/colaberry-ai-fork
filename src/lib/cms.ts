@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Strapi responses are polymorphic across populate modes and normalized by mapper functions in this module. */
 const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL!;
 const CMS_CACHE_TTL_MS = Number(process.env.NEXT_PUBLIC_CMS_CACHE_TTL_MS || 300000);
 
@@ -218,6 +219,83 @@ export type MCPServer = {
   coverImageAlt?: string | null;
 };
 
+export type ArticleCategory = {
+  name: string;
+  slug: string;
+};
+
+export type ArticleAuthor = {
+  name: string;
+  email?: string | null;
+  avatarUrl?: string | null;
+};
+
+export type ArticleMedia = {
+  url: string;
+  alt?: string | null;
+};
+
+export type ArticleBlock = {
+  __component: string;
+  body?: string | null;
+  title?: string | null;
+  file?: unknown;
+  files?: unknown;
+};
+
+export type Article = {
+  id: number;
+  title: string;
+  slug: string;
+  description?: string | null;
+  category?: ArticleCategory | null;
+  author?: ArticleAuthor | null;
+  coverImageUrl?: string | null;
+  coverImageAlt?: string | null;
+  blocks: ArticleBlock[];
+  publishedAt?: string | null;
+  updatedAt?: string | null;
+};
+
+export type UseCaseReference = {
+  name: string;
+  slug: string;
+};
+
+export type UseCase = {
+  id: number;
+  title: string;
+  slug: string;
+  summary?: string | null;
+  longDescription?: string | null;
+  status?: string | null;
+  visibility?: "public" | "private" | string | null;
+  source?: "internal" | "external" | "partner" | string | null;
+  sourceUrl?: string | null;
+  sourceName?: string | null;
+  verified?: boolean | null;
+  industry?: string | null;
+  category?: string | null;
+  problem?: string | null;
+  approach?: string | null;
+  outcomes?: string | null;
+  metrics?: string | null;
+  keyBenefits?: string | null;
+  implementationSteps?: string | null;
+  requirements?: string | null;
+  limitations?: string | null;
+  timeline?: string | null;
+  docsUrl?: string | null;
+  demoUrl?: string | null;
+  lastUpdated?: string | null;
+  tags: Tag[];
+  companies: Company[];
+  agents: UseCaseReference[];
+  mcpServers: UseCaseReference[];
+  coverImageUrl?: string | null;
+  coverImageAlt?: string | null;
+};
+
 function mapNavLink(item: any): GlobalNavLink {
   const attrs = item?.attributes ?? item;
   const rawOrder = attrs?.order;
@@ -339,6 +417,120 @@ function mapCompany(item: any): Company {
     slug: attrs?.slug ?? "",
     website: attrs?.website ?? null,
     logoUrl,
+  };
+}
+
+function normalizeMediaUrl(rawUrl?: string | null) {
+  if (!rawUrl) return null;
+  return rawUrl.startsWith("/") ? `${CMS_URL}${rawUrl}` : rawUrl;
+}
+
+function mapArticle(item: any): Article {
+  const attrs = item?.attributes ?? item;
+  const rawCoverUrl =
+    attrs?.cover?.data?.attributes?.url ??
+    attrs?.cover?.attributes?.url ??
+    attrs?.cover?.url ??
+    null;
+  const coverImageUrl = normalizeMediaUrl(rawCoverUrl);
+  const coverImageAlt =
+    attrs?.cover?.data?.attributes?.alternativeText ??
+    attrs?.cover?.attributes?.alternativeText ??
+    attrs?.cover?.alternativeText ??
+    null;
+  const categoryAttrs = attrs?.category?.data?.attributes ?? attrs?.category?.attributes ?? attrs?.category ?? null;
+  const authorAttrs = attrs?.author?.data?.attributes ?? attrs?.author?.attributes ?? attrs?.author ?? null;
+  const rawAvatarUrl =
+    authorAttrs?.avatar?.data?.attributes?.url ??
+    authorAttrs?.avatar?.attributes?.url ??
+    authorAttrs?.avatar?.url ??
+    null;
+
+  return {
+    id: item?.id ?? attrs?.id ?? 0,
+    title: attrs?.title ?? "",
+    slug: attrs?.slug ?? "",
+    description: attrs?.description ?? null,
+    category: categoryAttrs
+      ? {
+          name: categoryAttrs?.name ?? "",
+          slug: categoryAttrs?.slug ?? "",
+        }
+      : null,
+    author: authorAttrs
+      ? {
+          name: authorAttrs?.name ?? "",
+          email: authorAttrs?.email ?? null,
+          avatarUrl: normalizeMediaUrl(rawAvatarUrl),
+        }
+      : null,
+    coverImageUrl,
+    coverImageAlt,
+    blocks: Array.isArray(attrs?.blocks) ? attrs.blocks : [],
+    publishedAt: attrs?.publishedAt ?? null,
+    updatedAt: attrs?.updatedAt ?? null,
+  };
+}
+
+function mapUseCaseReference(item: any): UseCaseReference {
+  const attrs = item?.attributes ?? item;
+  return {
+    name: attrs?.name ?? "",
+    slug: attrs?.slug ?? "",
+  };
+}
+
+function mapUseCase(item: any): UseCase {
+  const attrs = item?.attributes ?? item;
+  const tags = attrs?.tags?.data?.map(mapTag) ?? (attrs?.tags ?? []).map(mapTag);
+  const companies =
+    attrs?.companies?.data?.map(mapCompany) ??
+    (attrs?.companies ?? []).map(mapCompany);
+  const agents: UseCaseReference[] =
+    attrs?.agents?.data?.map(mapUseCaseReference) ??
+    (attrs?.agents ?? []).map(mapUseCaseReference);
+  const mcpServers: UseCaseReference[] =
+    attrs?.mcpServers?.data?.map(mapUseCaseReference) ??
+    (attrs?.mcpServers ?? []).map(mapUseCaseReference);
+  const rawCoverUrl = attrs?.coverImage?.data?.attributes?.url ?? attrs?.coverImage?.attributes?.url ?? null;
+  const coverImageUrl = normalizeMediaUrl(rawCoverUrl);
+  const coverImageAlt =
+    attrs?.coverImage?.data?.attributes?.alternativeText ??
+    attrs?.coverImage?.attributes?.alternativeText ??
+    null;
+
+  return {
+    id: item?.id ?? attrs?.id ?? 0,
+    title: attrs?.title ?? "",
+    slug: attrs?.slug ?? "",
+    summary: attrs?.summary ?? null,
+    longDescription: attrs?.longDescription ?? null,
+    status: attrs?.status ?? null,
+    visibility: attrs?.visibility ?? null,
+    source: attrs?.source ?? null,
+    sourceUrl: attrs?.sourceUrl ?? null,
+    sourceName: attrs?.sourceName ?? null,
+    verified: attrs?.verified ?? null,
+    industry: attrs?.industry ?? null,
+    category: attrs?.category ?? null,
+    problem: attrs?.problem ?? null,
+    approach: attrs?.approach ?? null,
+    outcomes: attrs?.outcomes ?? null,
+    metrics: attrs?.metrics ?? null,
+    keyBenefits: attrs?.keyBenefits ?? null,
+    implementationSteps: attrs?.implementationSteps ?? null,
+    requirements: attrs?.requirements ?? null,
+    limitations: attrs?.limitations ?? null,
+    timeline: attrs?.timeline ?? null,
+    docsUrl: attrs?.docsUrl ?? null,
+    demoUrl: attrs?.demoUrl ?? null,
+    lastUpdated: attrs?.lastUpdated ?? attrs?.updatedAt ?? null,
+    tags,
+    companies,
+    agents: agents.filter((entry: UseCaseReference) => Boolean(entry.name || entry.slug)),
+    mcpServers: mcpServers.filter((entry: UseCaseReference) => Boolean(entry.name || entry.slug)),
+    coverImageUrl,
+    coverImageAlt,
   };
 }
 
@@ -535,30 +727,45 @@ export async function fetchPodcastBySlug(slug: string) {
   return json?.data?.[0] ? mapEpisode(json.data[0]) : null;
 }
 
-export async function fetchAgents(visibility?: "public" | "private") {
-  const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
-  const pageSize = 100;
+export async function fetchArticles(options: { maxRecords?: number } = {}) {
+  const pageSize = 50;
+  const maxRecords =
+    typeof options.maxRecords === "number" && options.maxRecords > 0
+      ? Math.floor(options.maxRecords)
+      : Number.POSITIVE_INFINITY;
   let page = 1;
-  const results: ReturnType<typeof mapAgent>[] = [];
+  const results: Article[] = [];
 
   while (true) {
     const json = await fetchCMSJson<CMSCollectionResponse>(
-      `${CMS_URL}/api/agents` +
-        `?sort=name:asc` +
-        `${visibilityFilter}` +
+      `${CMS_URL}/api/articles` +
+        `?sort=publishedAt:desc` +
         `&publicationState=live` +
+        `&fields[0]=title` +
+        `&fields[1]=slug` +
+        `&fields[2]=description` +
+        `&fields[3]=publishedAt` +
+        `&fields[4]=updatedAt` +
         `&pagination[page]=${page}` +
         `&pagination[pageSize]=${pageSize}` +
-        `&populate[tags][fields][0]=name` +
-        `&populate[tags][fields][1]=slug` +
-        `&populate[companies][fields][0]=name` +
-        `&populate[companies][fields][1]=slug` +
-        `&populate[coverImage][fields][0]=url` +
-        `&populate[coverImage][fields][1]=alternativeText`,
+        `&populate[cover][fields][0]=url` +
+        `&populate[cover][fields][1]=alternativeText` +
+        `&populate[author][fields][0]=name` +
+        `&populate[author][fields][1]=email` +
+        `&populate[author][populate][avatar][fields][0]=url` +
+        `&populate[category][fields][0]=name` +
+        `&populate[category][fields][1]=slug`,
       { cacheMs: CMS_CACHE_TTL_MS }
     );
     const data = json?.data || [];
-    results.push(...data.map(mapAgent));
+    const remaining = Math.max(maxRecords - results.length, 0);
+    if (remaining <= 0) {
+      break;
+    }
+    results.push(...data.slice(0, remaining).map(mapArticle));
+    if (results.length >= maxRecords) {
+      break;
+    }
 
     const pagination = json?.meta?.pagination;
     if (!pagination || page >= pagination.pageCount) {
@@ -570,18 +777,122 @@ export async function fetchAgents(visibility?: "public" | "private") {
   return results;
 }
 
-export async function fetchMCPServers(visibility?: "public" | "private") {
+export async function fetchArticleBySlug(slug: string) {
+  const json = await fetchCMSJson<CMSCollectionResponse>(
+    `${CMS_URL}/api/articles` +
+      `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
+      `&publicationState=live` +
+      `&populate=*`,
+    { cacheMs: CMS_CACHE_TTL_MS }
+  );
+  return json?.data?.[0] ? mapArticle(json.data[0]) : null;
+}
+
+export async function fetchUseCases(
+  visibility?: "public" | "private",
+  options: { maxRecords?: number } = {}
+) {
   const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
-  const pageSize = 100;
+  const pageSize = 50;
+  const maxRecords =
+    typeof options.maxRecords === "number" && options.maxRecords > 0
+      ? Math.floor(options.maxRecords)
+      : Number.POSITIVE_INFINITY;
   let page = 1;
-  const results: ReturnType<typeof mapMCPServer>[] = [];
+  const results: UseCase[] = [];
 
   while (true) {
     const json = await fetchCMSJson<CMSCollectionResponse>(
-      `${CMS_URL}/api/mcp-servers` +
+      `${CMS_URL}/api/use-cases` +
+        `?sort=lastUpdated:desc` +
+        `${visibilityFilter}` +
+        `&publicationState=live` +
+        `&fields[0]=title` +
+        `&fields[1]=slug` +
+        `&fields[2]=summary` +
+        `&fields[3]=industry` +
+        `&fields[4]=category` +
+        `&fields[5]=status` +
+        `&fields[6]=visibility` +
+        `&fields[7]=source` +
+        `&fields[8]=sourceName` +
+        `&fields[9]=verified` +
+        `&fields[10]=lastUpdated` +
+        `&pagination[page]=${page}` +
+        `&pagination[pageSize]=${pageSize}` +
+        `&populate[tags][fields][0]=name` +
+        `&populate[tags][fields][1]=slug` +
+        `&populate[companies][fields][0]=name` +
+        `&populate[companies][fields][1]=slug` +
+        `&populate[agents][fields][0]=name` +
+        `&populate[agents][fields][1]=slug` +
+        `&populate[mcpServers][fields][0]=name` +
+        `&populate[mcpServers][fields][1]=slug` +
+        `&populate[coverImage][fields][0]=url` +
+        `&populate[coverImage][fields][1]=alternativeText`,
+      { cacheMs: CMS_CACHE_TTL_MS }
+    );
+    const data = json?.data || [];
+    const remaining = Math.max(maxRecords - results.length, 0);
+    if (remaining <= 0) {
+      break;
+    }
+    results.push(...data.slice(0, remaining).map(mapUseCase));
+    if (results.length >= maxRecords) {
+      break;
+    }
+
+    const pagination = json?.meta?.pagination;
+    if (!pagination || page >= pagination.pageCount) {
+      break;
+    }
+    page += 1;
+  }
+
+  return results;
+}
+
+export async function fetchUseCaseBySlug(slug: string) {
+  const json = await fetchCMSJson<CMSCollectionResponse>(
+    `${CMS_URL}/api/use-cases` +
+      `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
+      `&publicationState=live` +
+      `&populate=*`,
+    { cacheMs: CMS_CACHE_TTL_MS }
+  );
+  return json?.data?.[0] ? mapUseCase(json.data[0]) : null;
+}
+
+export async function fetchAgents(
+  visibility?: "public" | "private",
+  options: { maxRecords?: number } = {}
+) {
+  const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
+  const listFields =
+    `&fields[0]=name` +
+    `&fields[1]=slug` +
+    `&fields[2]=description` +
+    `&fields[3]=industry` +
+    `&fields[4]=status` +
+    `&fields[5]=visibility` +
+    `&fields[6]=source` +
+    `&fields[7]=sourceName` +
+    `&fields[8]=verified`;
+  const pageSize = 100;
+  const maxRecords =
+    typeof options.maxRecords === "number" && options.maxRecords > 0
+      ? Math.floor(options.maxRecords)
+      : Number.POSITIVE_INFINITY;
+  let page = 1;
+  const results: ReturnType<typeof mapAgent>[] = [];
+
+  while (true) {
+    const json = await fetchCMSJson<CMSCollectionResponse>(
+      `${CMS_URL}/api/agents` +
         `?sort=name:asc` +
         `${visibilityFilter}` +
         `&publicationState=live` +
+        `${listFields}` +
         `&pagination[page]=${page}` +
         `&pagination[pageSize]=${pageSize}` +
         `&populate[tags][fields][0]=name` +
@@ -593,7 +904,75 @@ export async function fetchMCPServers(visibility?: "public" | "private") {
       { cacheMs: CMS_CACHE_TTL_MS }
     );
     const data = json?.data || [];
-    results.push(...data.map(mapMCPServer));
+    const remaining = Math.max(maxRecords - results.length, 0);
+    if (remaining <= 0) {
+      break;
+    }
+    results.push(...data.slice(0, remaining).map(mapAgent));
+    if (results.length >= maxRecords) {
+      break;
+    }
+
+    const pagination = json?.meta?.pagination;
+    if (!pagination || page >= pagination.pageCount) {
+      break;
+    }
+    page += 1;
+  }
+
+  return results;
+}
+
+export async function fetchMCPServers(
+  visibility?: "public" | "private",
+  options: { maxRecords?: number } = {}
+) {
+  const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
+  const listFields =
+    `&fields[0]=name` +
+    `&fields[1]=slug` +
+    `&fields[2]=description` +
+    `&fields[3]=industry` +
+    `&fields[4]=category` +
+    `&fields[5]=status` +
+    `&fields[6]=visibility` +
+    `&fields[7]=source` +
+    `&fields[8]=sourceName` +
+    `&fields[9]=verified`;
+  const pageSize = 100;
+  const maxRecords =
+    typeof options.maxRecords === "number" && options.maxRecords > 0
+      ? Math.floor(options.maxRecords)
+      : Number.POSITIVE_INFINITY;
+  let page = 1;
+  const results: ReturnType<typeof mapMCPServer>[] = [];
+
+  while (true) {
+    const json = await fetchCMSJson<CMSCollectionResponse>(
+      `${CMS_URL}/api/mcp-servers` +
+        `?sort=name:asc` +
+        `${visibilityFilter}` +
+        `&publicationState=live` +
+        `${listFields}` +
+        `&pagination[page]=${page}` +
+        `&pagination[pageSize]=${pageSize}` +
+        `&populate[tags][fields][0]=name` +
+        `&populate[tags][fields][1]=slug` +
+        `&populate[companies][fields][0]=name` +
+        `&populate[companies][fields][1]=slug` +
+        `&populate[coverImage][fields][0]=url` +
+        `&populate[coverImage][fields][1]=alternativeText`,
+      { cacheMs: CMS_CACHE_TTL_MS }
+    );
+    const data = json?.data || [];
+    const remaining = Math.max(maxRecords - results.length, 0);
+    if (remaining <= 0) {
+      break;
+    }
+    results.push(...data.slice(0, remaining).map(mapMCPServer));
+    if (results.length >= maxRecords) {
+      break;
+    }
 
     const pagination = json?.meta?.pagination;
     if (!pagination || page >= pagination.pageCount) {

@@ -2,16 +2,33 @@
 import Layout from "../../../components/Layout";
 import Link from "next/link";
 import Head from "next/head";
+import Image from "next/image";
+import type { GetServerSideProps } from "next";
 import RichText from "../../../components/RichText";
 import SectionHeader from "../../../components/SectionHeader";
 import PodcastPlayer from "../../../components/PodcastPlayer";
 import TranscriptTimeline from "../../../components/TranscriptTimeline";
-import { fetchPodcastBySlug } from "../../../lib/cms";
+import { fetchPodcastBySlug, type PodcastEpisode, type PlatformLink } from "../../../lib/cms";
 import sanitizeHtml from "sanitize-html";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { logPodcastEvent } from "../../../lib/podcastTelemetry";
 
-export async function getServerSideProps({ params }: any) {
-  const episode = await fetchPodcastBySlug(params.slug);
+type PodcastDetailProps = {
+  episode: PodcastEpisode;
+};
+
+type RouteParams = {
+  slug?: string;
+};
+
+export const getServerSideProps: GetServerSideProps<PodcastDetailProps, RouteParams> = async ({
+  params,
+}) => {
+  const slug = params?.slug;
+  if (!slug) {
+    return { notFound: true };
+  }
+  const episode = await fetchPodcastBySlug(slug);
 
   if (!episode) {
     return { notFound: true };
@@ -36,9 +53,9 @@ export async function getServerSideProps({ params }: any) {
       },
     },
   };
-}
+};
 
-export default function PodcastDetail({ episode }: any) {
+export default function PodcastDetail({ episode }: PodcastDetailProps) {
   const platformLabels: Record<string, string> = {
     apple: "Apple Podcasts",
     spotify: "Spotify",
@@ -50,7 +67,6 @@ export default function PodcastDetail({ episode }: any) {
   const preferNative = Boolean(episode.useNativePlayer && episode.audioUrl);
   const embedCode = preferNative ? null : episode.buzzsproutEmbedCode;
   const audioUrl = episode.audioUrl;
-  const [shareUrl, setShareUrl] = useState("");
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const transcriptRef = useRef<HTMLDivElement | null>(null);
@@ -62,17 +78,11 @@ export default function PodcastDetail({ episode }: any) {
   const [duration, setDuration] = useState(0);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setShareUrl(window.location.href);
-    }
-  }, []);
-
-  useEffect(() => {
     if (!hasLoggedView.current) {
       hasLoggedView.current = true;
       logPodcastEvent("view", undefined, { slug: episode.slug, title: episode.title });
     }
-  }, []);
+  }, [episode.slug, episode.title]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -109,14 +119,11 @@ export default function PodcastDetail({ episode }: any) {
   }, [audioUrl]);
 
   const resolvedShareUrl = useMemo(() => {
-    if (shareUrl) {
-      return shareUrl;
-    }
     if (baseUrl) {
       return `${baseUrl.replace(/\/$/, "")}/resources/podcasts/${episode.slug}`;
     }
-    return "";
-  }, [baseUrl, episode.slug, shareUrl]);
+    return `https://colaberry.ai/resources/podcasts/${episode.slug}`;
+  }, [baseUrl, episode.slug]);
 
   const shareLinks = useMemo(() => {
     const url = encodeURIComponent(resolvedShareUrl);
@@ -138,7 +145,9 @@ export default function PodcastDetail({ episode }: any) {
   const shouldForceNative = hasTimedTranscript && audioUrl;
   const usesNativePlayer = Boolean(audioUrl && (shouldForceNative || preferNative));
   const showMiniPlayer = usesNativePlayer && (isPlaying || currentTime > 0);
-  const subscribeLinks = (episode.platformLinks || []).filter((link: any) => link?.url);
+  const subscribeLinks = (episode.platformLinks || []).filter(
+    (link): link is PlatformLink & { url: string } => Boolean(link?.url)
+  );
 
   const publishedLabel = episode.publishedDate
     ? new Date(episode.publishedDate).toLocaleDateString("en-US", {
@@ -199,10 +208,13 @@ export default function PodcastDetail({ episode }: any) {
 
       {episode.coverImageUrl && (
         <div className="surface-panel mt-6 overflow-hidden border border-slate-200/80">
-          <img
+          <Image
             src={episode.coverImageUrl}
             alt={episode.coverImageAlt || episode.title}
+            width={1600}
+            height={800}
             className="h-64 w-full object-cover sm:h-80"
+            unoptimized
             loading="lazy"
           />
         </div>
@@ -310,7 +322,7 @@ export default function PodcastDetail({ episode }: any) {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              {episode.tags.map((tag: any) => (
+              {episode.tags.map((tag) => (
                 <Link
                   key={tag.slug}
                   href={`/resources/podcasts/tag/${tag.slug}`}
@@ -319,7 +331,7 @@ export default function PodcastDetail({ episode }: any) {
                   #{tag.name}
                 </Link>
               ))}
-              {episode.companies.map((company: any) => (
+              {episode.companies.map((company) => (
                 <Link
                   key={company.slug}
                   href={`/podcast/${company.slug}`}
@@ -404,7 +416,7 @@ export default function PodcastDetail({ episode }: any) {
             </div>
             {subscribeLinks.length > 0 ? (
               <div className="mt-4 grid gap-2">
-                {subscribeLinks.map((link: any, index: number) => {
+                {subscribeLinks.map((link, index) => {
                   const platform = String(link.platform || "platform");
                   const platformKey = platform.toLowerCase();
                   const label = platformLabels[platformKey] || platform;
@@ -439,7 +451,7 @@ export default function PodcastDetail({ episode }: any) {
                 Company tags
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                {episode.companies.map((company: any) => (
+                {episode.companies.map((company) => (
                   <Link
                     key={company.slug}
                     href={`/podcast/${company.slug}`}
@@ -509,25 +521,4 @@ export default function PodcastDetail({ episode }: any) {
       )}
     </Layout>
   );
-}
-
-async function logPodcastEvent(
-  eventType: "view" | "play" | "share" | "subscribe" | "click",
-  platform?: string,
-  episode?: { slug?: string; title?: string }
-) {
-  try {
-    await fetch("/api/podcast-log", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        eventType,
-        platform,
-        episodeSlug: episode?.slug,
-        episodeTitle: episode?.title,
-      }),
-    });
-  } catch {
-    // logging is best-effort only
-  }
 }

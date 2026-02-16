@@ -6,6 +6,7 @@ import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
 import StatePanel from "../../components/StatePanel";
 import PremiumMediaCard from "../../components/PremiumMediaCard";
+import NewsletterSignup from "../../components/NewsletterSignup";
 import { heroImage } from "../../lib/media";
 import {
   fetchGaiInsightsBriefing,
@@ -37,12 +38,12 @@ export const getStaticProps: GetStaticProps<UpdatesProps> = async () => {
     fetchError = true;
   }
 
-  const safeRatings: GaiRatingItem[] = ratings.map((item) => {
+  const safeRatings: GaiRatingItem[] = ratings.slice(0, 24).map((item) => {
     const safe: GaiRatingItem = { title: item.title };
     if (item.date) safe.date = item.date;
     if (item.rating) safe.rating = item.rating;
     if (item.url) safe.url = item.url;
-    if (item.rationale) safe.rationale = item.rationale;
+    if (item.rationale) safe.rationale = item.rationale.slice(0, 420);
     return safe;
   });
 
@@ -68,21 +69,21 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
       title: "Product releases",
       description: "Feature updates, changelogs, and release notes.",
       meta: "Product",
-      image: heroImage("hero-platform.png"),
+      image: heroImage("hero-platform-cinematic.webp"),
     },
     {
       href: "/resources/white-papers",
       title: "Research drops",
       description: "New white papers, POVs, and technical assets.",
       meta: "Research",
-      image: heroImage("hero-resources.png"),
+      image: heroImage("hero-resources-cinematic.webp"),
     },
     {
       href: "https://gaiinsights.com/articles",
       title: "Ecosystem signals",
       description: "Curated headlines and market signals in one feed.",
       meta: "Signals",
-      image: heroImage("hero-updates.png"),
+      image: heroImage("hero-updates-cinematic.webp"),
       external: true,
     },
     {
@@ -90,7 +91,7 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
       title: "Roadmap highlights",
       description: "What is shipping next across the platform layers.",
       meta: "Roadmap",
-      image: heroImage("hero-solutions.png"),
+      image: heroImage("hero-solutions-cinematic.webp"),
     },
   ];
 
@@ -130,7 +131,7 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
           kicker="Signal feed"
           title="Updates and announcements"
           description="Product releases and ecosystem signals in one place."
-          image={heroImage("hero-updates.png")}
+          image={heroImage("hero-updates-cinematic.webp")}
           alt="City skyline highlighting update signals"
           aspect="wide"
           fit="cover"
@@ -276,6 +277,24 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
           )}
         </section>
       </div>
+
+      <section className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-6">
+        <SectionHeader
+          kicker="Subscription"
+          title="Newsletter and release alerts"
+          description="Subscribe for product releases, AI news briefings, and enterprise rollout signals."
+          size="md"
+        />
+        <div className="mt-4">
+          <NewsletterSignup
+            sourcePath="/updates"
+            sourcePage="updates-page"
+            title="Stay informed"
+            description="One digest covering platform releases, curated AI signals, and implementation notes."
+            ctaLabel="Subscribe"
+          />
+        </div>
+      </section>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Link

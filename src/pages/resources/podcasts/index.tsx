@@ -9,6 +9,8 @@ import BuzzsproutPlayer from "../../../components/BuzzsproutPlayer";
 import MediaPanel from "../../../components/MediaPanel";
 import StatePanel from "../../../components/StatePanel";
 import { fetchPodcastEpisodes, PodcastEpisode } from "../../../lib/cms";
+import { heroImage } from "../../../lib/media";
+import { logPodcastEvent } from "../../../lib/podcastTelemetry";
 
 export default function Podcasts({
   episodes,
@@ -29,9 +31,9 @@ export default function Podcasts({
   const companies = useMemo(() => {
     const map = new Map<string, { slug: string; name: string }>();
     episodes.forEach((episode) => {
-      episode.companies?.forEach((company: any) => {
-        const slug = company.slug || company.attributes?.slug;
-        const name = company.name || company.attributes?.name || slug;
+      episode.companies?.forEach((company) => {
+        const slug = company.slug;
+        const name = company.name || slug;
         if (slug && !map.has(slug)) {
           map.set(slug, { slug, name });
         }
@@ -75,10 +77,10 @@ export default function Podcasts({
           kicker="Audio library"
           title="Signal-rich conversations"
           description="Episodes and curated conversations across AI adoption."
-          image="/media/visuals/panel-podcast.svg"
-          alt="Podcast waveform illustration"
+          image={heroImage("hero-podcasts-premium-v2.svg")}
+          alt="Studio-grade podcast signal visualization"
           aspect="wide"
-          fit="contain"
+          fit="cover"
         />
       </div>
 
@@ -179,7 +181,7 @@ export default function Podcasts({
 
                 {/* TAGS */}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {ep.tags.map((tag: any) => (
+                  {ep.tags.map((tag) => (
                     <Link
                       key={tag.slug}
                       href={`/resources/podcasts/tag/${tag.slug}`}
@@ -235,7 +237,7 @@ export default function Podcasts({
                 <li key={ep.id} className="rounded-2xl border border-slate-200/80 bg-white/90 p-4">
                   <div className="text-sm font-semibold text-slate-900">{ep.title}</div>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {ep.tags.map((tag: any) => (
+                    {ep.tags.map((tag) => (
                       <Link
                         key={tag.slug}
                         href={`/resources/podcasts/tag/${tag.slug}`}
@@ -274,24 +276,3 @@ export const getServerSideProps: GetServerSideProps = async () => {
     return { props: { episodes: [], fetchError: true } };
   }
 };
-
-async function logPodcastEvent(
-  eventType: "view" | "play" | "share" | "subscribe" | "click",
-  platform?: string,
-  episode?: { slug?: string; title?: string }
-) {
-  try {
-    await fetch("/api/podcast-log", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        eventType,
-        platform,
-        episodeSlug: episode?.slug,
-        episodeTitle: episode?.title,
-      }),
-    });
-  } catch {
-    // logging is best-effort only
-  }
-}

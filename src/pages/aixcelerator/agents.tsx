@@ -22,7 +22,9 @@ export const getStaticProps: GetStaticProps<AgentsPageProps> = async () => {
   const visibilityFilter = allowPrivate ? undefined : "public";
 
   try {
-    const agents = await fetchAgents(visibilityFilter);
+    const agents = (await fetchAgents(visibilityFilter, { maxRecords: 400 })).map(
+      toAgentListItem
+    );
     return {
       props: { agents, allowPrivate, fetchError: false },
       revalidate: 600,
@@ -59,7 +61,7 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
     },
   ];
   const agentSignals = ["Owner mapped", "Eval ready", "Private-aware", "LLM metadata"];
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState<string | null>(null);
   const [industryFilter, setIndustryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
@@ -67,12 +69,11 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
   const pageSize = 24;
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (!router.isReady) return;
+  const querySearch = useMemo(() => {
     const raw = Array.isArray(router.query.q) ? router.query.q[0] : router.query.q;
-    const nextQuery = typeof raw === "string" ? raw : "";
-    setSearch((prev) => (prev === nextQuery ? prev : nextQuery));
-  }, [router.isReady, router.query.q]);
+    return typeof raw === "string" ? raw : "";
+  }, [router.query.q]);
+  const effectiveSearch = search ?? querySearch;
   const industries = useMemo(
     () =>
       Array.from(new Set(agents.map((a) => a.industry || "Other"))).filter(Boolean).sort(),
@@ -129,7 +130,7 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
     })),
   };
   const filteredAgents = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query = effectiveSearch.trim().toLowerCase();
     if (!allowPrivate) {
       return agents.filter((agent) => {
         const matchesVisibility =
@@ -145,7 +146,7 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
         (agent.visibility || "public").toLowerCase() === visibility &&
         matchesFilters(agent, query, industryFilter, statusFilter, sourceFilter, tagFilter)
     );
-  }, [allowPrivate, agents, industryFilter, search, sourceFilter, statusFilter, tagFilter, visibility]);
+  }, [allowPrivate, agents, effectiveSearch, industryFilter, sourceFilter, statusFilter, tagFilter, visibility]);
   const shownCount = Math.min(visibleCount, filteredAgents.length);
   const visibleAgents = useMemo(
     () => filteredAgents.slice(0, shownCount),
@@ -153,10 +154,6 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
   );
   const hasMore = shownCount < filteredAgents.length;
   const hasResults = filteredAgents.length > 0;
-
-  useEffect(() => {
-    setVisibleCount(pageSize);
-  }, [search, industryFilter, statusFilter, sourceFilter, tagFilter, visibility, allowPrivate, agents.length, pageSize]);
 
   useEffect(() => {
     if (!hasMore) return;
@@ -267,7 +264,7 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
           kicker="Catalog preview"
           title="Agent coverage at a glance"
           description="Quickly see ownership, visibility, and readiness status."
-          image={heroImage("hero-agents.png")}
+          image={heroImage("hero-agents-cinematic.webp")}
           alt="Operators reviewing agent coverage"
           aspect="wide"
           fit="cover"
@@ -314,7 +311,7 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
                 name="agent-search"
                 type="search"
                 placeholder="Search agents, industries, tags..."
-                value={search}
+                value={effectiveSearch}
                 onChange={(event) => setSearch(event.target.value)}
                 className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2 pr-11 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
               />
@@ -434,7 +431,7 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
           </div>
         )}
         <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500" aria-live="polite">
-          Showing {shownCount} of {filteredAgents.length} (total {agents.length})
+          Showing {shownCount} of {filteredAgents.length} (loaded {agents.length})
         </div>
       </section>
 
@@ -474,6 +471,30 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
       </div>
     </Layout>
   );
+}
+
+function toAgentListItem(agent: Agent): Agent {
+  return {
+    id: agent.id,
+    name: agent.name,
+    slug: agent.slug,
+    description: clipText(agent.description, 220),
+    industry: agent.industry ?? null,
+    status: agent.status ?? null,
+    visibility: agent.visibility ?? null,
+    source: agent.source ?? null,
+    sourceName: agent.sourceName ?? null,
+    verified: agent.verified ?? null,
+    tags: agent.tags ?? [],
+    companies: agent.companies ?? [],
+  };
+}
+
+function clipText(value?: string | null, limit = 220) {
+  if (!value) return null;
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (normalized.length <= limit) return normalized;
+  return `${normalized.slice(0, limit - 1).trimEnd()}...`;
 }
 
 function matchesFilters(

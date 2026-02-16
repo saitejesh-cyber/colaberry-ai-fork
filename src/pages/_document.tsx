@@ -4,8 +4,7 @@ const themeInitScript = `
 (() => {
   try {
     const storedTheme = window.localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const isDark = storedTheme ? storedTheme === "dark" : prefersDark;
+    const isDark = storedTheme === "dark";
     document.documentElement.classList.toggle("dark", isDark);
   } catch (_) {}
 })();

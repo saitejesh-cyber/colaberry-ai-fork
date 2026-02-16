@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
+type IdleCapableGlobal = typeof globalThis & {
+  requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
+
 type PodcastPlayerProps = {
   embedCode?: string | null;
   audioUrl?: string | null;
@@ -74,10 +79,9 @@ export default function PodcastPlayer({
       setTimeout(() => setLoading(false), 300);
     };
 
-    const globalObj = typeof globalThis !== "undefined" ? globalThis : undefined;
-    const requestIdle = (globalObj as any)?.requestIdleCallback as
-      | ((callback: () => void, options?: { timeout?: number }) => number)
-      | undefined;
+    const globalObj =
+      (typeof globalThis !== "undefined" ? globalThis : undefined) as IdleCapableGlobal | undefined;
+    const requestIdle = globalObj?.requestIdleCallback;
 
     if (requestIdle) {
       idleModeRef.current = "idle";
@@ -89,9 +93,7 @@ export default function PodcastPlayer({
 
     return () => {
       if (idleRef.current) {
-        const cancelIdle = (globalObj as any)?.cancelIdleCallback as
-          | ((handle: number) => void)
-          | undefined;
+        const cancelIdle = globalObj?.cancelIdleCallback;
         if (idleModeRef.current === "idle" && cancelIdle && typeof idleRef.current === "number") {
           cancelIdle(idleRef.current);
         } else {

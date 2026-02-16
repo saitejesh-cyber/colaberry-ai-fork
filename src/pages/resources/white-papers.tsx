@@ -2,6 +2,7 @@ import Layout from "../../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
+import { heroImage } from "../../lib/media";
 
 export default function WhitePapers() {
   return (
@@ -20,10 +21,10 @@ export default function WhitePapers() {
           kicker="Research"
           title="Reference architectures"
           description="Technical guidance with ready-to-use frameworks."
-          image="/media/visuals/panel-books.svg"
-          alt="Reference architecture illustration"
+          image={heroImage("hero-whitepapers-premium-v2.svg")}
+          alt="Enterprise research and architecture review surface"
           aspect="wide"
-          fit="contain"
+          fit="cover"
         />
       </div>
 

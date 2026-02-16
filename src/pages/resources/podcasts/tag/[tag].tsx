@@ -1,14 +1,39 @@
 import Layout from "../../../../components/Layout";
 import Link from "next/link";
+import type { GetServerSideProps } from "next";
 import SectionHeader from "../../../../components/SectionHeader";
 import StatePanel from "../../../../components/StatePanel";
-import { PodcastEpisode } from "../../../../lib/cms";
+import type { Company, Tag } from "../../../../lib/cms";
 
-export async function getServerSideProps({ params }: any) {
+type TaggedEpisode = {
+  id: number;
+  title: string;
+  slug: string;
+  tags: Tag[];
+  companies: Company[];
+};
+
+type PodcastTagPageProps = {
+  tag: string;
+  episodes: TaggedEpisode[];
+  fetchError: boolean;
+};
+
+type RouteParams = {
+  tag?: string;
+};
+
+export const getServerSideProps: GetServerSideProps<PodcastTagPageProps, RouteParams> = async ({
+  params,
+}) => {
+  const tag = params?.tag ?? "";
+  if (!tag) {
+    return { notFound: true };
+  }
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_CMS_URL}/api/podcast-episodes` +
-        `?filters[tags][slug][$eq]=${params.tag}` +
+        `?filters[tags][slug][$eq]=${tag}` +
         `&filters[podcastStatus][$eq]=published` +
         `&publicationState=live` +
         `&populate[tags][fields][0]=name` +
@@ -19,21 +44,35 @@ export async function getServerSideProps({ params }: any) {
     );
 
     const json = await res.json();
-    const episodes =
-      json?.data?.map((item: any) => {
-        const attrs = item.attributes ?? item;
+    const rawData = Array.isArray(json?.data) ? json.data : [];
+    const episodes: TaggedEpisode[] =
+      rawData.map((item: { id?: number; attributes?: Record<string, unknown> }) => {
+        const attrs = (item.attributes ?? item) as {
+          title?: string;
+          slug?: string;
+          tags?: { data?: Tag[] } | Tag[];
+          companies?: { data?: Company[] } | Company[];
+        };
         return {
-          id: item.id,
-          title: attrs.title,
-          slug: attrs.slug,
-          tags: attrs.tags?.data ?? attrs.tags ?? [],
-          companies: attrs.companies?.data ?? attrs.companies ?? [],
+          id: item.id ?? 0,
+          title: attrs.title ?? "Podcast episode",
+          slug: attrs.slug ?? "",
+          tags: Array.isArray(attrs.tags)
+            ? attrs.tags
+            : Array.isArray(attrs.tags?.data)
+            ? attrs.tags.data
+            : [],
+          companies: Array.isArray(attrs.companies)
+            ? attrs.companies
+            : Array.isArray(attrs.companies?.data)
+            ? attrs.companies.data
+            : [],
         };
       }) || [];
 
     return {
       props: {
-        tag: params.tag,
+        tag,
         episodes,
         fetchError: false,
       },
@@ -41,23 +80,19 @@ export async function getServerSideProps({ params }: any) {
   } catch {
     return {
       props: {
-        tag: params.tag,
+        tag,
         episodes: [],
         fetchError: true,
       },
     };
   }
-}
+};
 
 export default function PodcastTagPage({
   tag,
   episodes,
   fetchError,
-}: {
-  tag: string;
-  episodes: PodcastEpisode[];
-  fetchError: boolean;
-}) {
+}: PodcastTagPageProps) {
   return (
     <Layout>
       {fetchError && (
@@ -80,17 +115,17 @@ export default function PodcastTagPage({
       </div>
 
       <ul className="mt-6 grid gap-4">
-        {episodes.map((e: any) => (
+        {episodes.map((e) => (
           <li key={e.id} className="surface-panel border border-slate-200/80 bg-white/90 p-4">
             <div className="text-sm font-semibold text-slate-900">{e.title}</div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {e.companies?.map((company: any) => (
+              {e.companies?.map((company) => (
                 <Link
-                  key={company.slug ?? company.id}
+                  key={company.slug}
                   href={`/podcast/${company.slug}`}
                   className="chip chip-brand rounded-full border border-brand-blue/20 bg-white/90 px-2.5 py-1 text-xs font-semibold text-brand-deep hover:text-brand-blue"
                 >
-                  {company.name ?? company.attributes?.name}
+                  {company.name}
                 </Link>
               ))}
             </div>

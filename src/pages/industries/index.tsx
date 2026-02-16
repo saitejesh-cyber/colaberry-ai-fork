@@ -7,14 +7,14 @@ import { heroImage } from "../../lib/media";
 
 export default function IndustriesIndex() {
   const industries = [
-    { name: "Agriculture", slug: "agriculture", image: heroImage("hero-agents.png") },
-    { name: "Energy", slug: "energy", image: heroImage("hero-updates.png") },
-    { name: "Utilities", slug: "utilities", image: heroImage("hero-platform.png") },
-    { name: "Healthcare & Life Sciences", slug: "healthcare-life-sciences", image: heroImage("hero-resources.png") },
-    { name: "Climate Tech", slug: "climate-tech", image: heroImage("hero-industries.png") },
-    { name: "Manufacturing", slug: "manufacturing", image: heroImage("hero-solutions.png") },
-    { name: "Fintech", slug: "fintech", image: heroImage("hero-mcp.png") },
-    { name: "Supply Chain", slug: "supply-chain", image: heroImage("hero-platform.png") },
+    { name: "Agriculture", slug: "agriculture", image: heroImage("hero-agents-cinematic.webp") },
+    { name: "Energy", slug: "energy", image: heroImage("hero-updates-cinematic.webp") },
+    { name: "Utilities", slug: "utilities", image: heroImage("hero-platform-cinematic.webp") },
+    { name: "Healthcare & Life Sciences", slug: "healthcare-life-sciences", image: heroImage("hero-resources-cinematic.webp") },
+    { name: "Climate Tech", slug: "climate-tech", image: heroImage("hero-industries-cinematic.webp") },
+    { name: "Manufacturing", slug: "manufacturing", image: heroImage("hero-solutions-cinematic.webp") },
+    { name: "Fintech", slug: "fintech", image: heroImage("hero-mcp-cinematic.webp") },
+    { name: "Supply Chain", slug: "supply-chain", image: heroImage("hero-platform-cinematic.webp") },
   ];
   const industryHighlights = [
     {
@@ -22,28 +22,28 @@ export default function IndustriesIndex() {
       title: "Outcome stories",
       description: "Case studies with measurable outcomes and delivery context.",
       meta: "Outcomes",
-      image: heroImage("hero-solutions.png"),
+      image: heroImage("hero-solutions-cinematic.webp"),
     },
     {
       href: "/solutions",
       title: "Workspace templates",
       description: "Repeatable industry-aligned playbooks and signal feeds.",
       meta: "Playbooks",
-      image: heroImage("hero-platform.png"),
+      image: heroImage("hero-platform-cinematic.webp"),
     },
     {
       href: "/updates",
       title: "Domain signals",
       description: "Key data sources, workflows, and AI surfaces per industry.",
       meta: "Signals",
-      image: heroImage("hero-updates.png"),
+      image: heroImage("hero-updates-cinematic.webp"),
     },
     {
       href: "/aixcelerator/agents",
       title: "Governed delivery",
       description: "Ownership, approvals, and evaluation-ready metadata.",
       meta: "Governance",
-      image: heroImage("hero-agents.png"),
+      image: heroImage("hero-agents-cinematic.webp"),
     },
   ];
 
@@ -76,7 +76,7 @@ export default function IndustriesIndex() {
           kicker="Industry coverage"
           title="Service line coverage map"
           description="A quick view of industry-aligned AI service lines."
-          image={heroImage("hero-industries.png")}
+          image={heroImage("hero-industries-cinematic.webp")}
           alt="Industry landscape overview"
           aspect="wide"
           fit="cover"

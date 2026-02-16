@@ -2,6 +2,7 @@ import Layout from "../../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../../components/SectionHeader";
 import MediaPanel from "../../components/MediaPanel";
+import { heroImage } from "../../lib/media";
 
 export default function CaseStudiesHub() {
   const industries = [
@@ -31,10 +32,10 @@ export default function CaseStudiesHub() {
           kicker="Impact library"
           title="Outcome snapshots"
           description="Cross-industry delivery proof points."
-          image="/media/visuals/panel-case-studies.svg"
-          alt="Case study outcomes illustration"
+          image={heroImage("hero-case-studies-premium-v2.svg")}
+          alt="Enterprise case study outcomes and performance insights"
           aspect="wide"
-          fit="contain"
+          fit="cover"
         />
       </div>
 
