@@ -1,11 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { MouseEvent as ReactMouseEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { fetchGlobalNavigation, GlobalNavigation } from "../lib/cms";
 import NewsletterSignup from "./NewsletterSignup";
 import CookieConsentBanner from "./CookieConsentBanner";
+import DemoRequestWizardModal from "./DemoRequestWizardModal";
 
 const fallbackNavigation: GlobalNavigation = {
   headerLinks: [
@@ -82,7 +83,7 @@ const fallbackNavigation: GlobalNavigation = {
       ],
     },
   ],
-  cta: { label: "Book a demo", href: "/request-demo", group: "header" },
+  cta: { label: "Request a demo", href: "/request-demo", group: "header" },
   socialLinks: [
     {
       label: "LinkedIn",
@@ -343,6 +344,11 @@ function normalizeHeaderNavigation(headerLinks: GlobalNavigation["headerLinks"])
   return nextHeaderLinks;
 }
 
+function getRequestDemoLabel(label: string) {
+  if (/book a demo/i.test(label)) return "Request a demo";
+  return label;
+}
+
 function mergeGlobalNavigation(primary: GlobalNavigation | null, fallback: GlobalNavigation): GlobalNavigation {
   if (!primary) return fallback;
   const fallbackHeaderIndex = new Map(
@@ -377,6 +383,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [allowBackdropClose, setAllowBackdropClose] = useState(true);
+  const [demoWizardOpen, setDemoWizardOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchDialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -550,6 +557,49 @@ export default function Layout({ children }: { children: ReactNode }) {
     setDiscoveryOpen(false);
     window.localStorage.setItem("colaberry_discovery_prompt_dismissed", "true");
   };
+  const handleDemoCtaClick = (event: ReactMouseEvent<HTMLElement>, href?: string | null) => {
+    if (normalizePath(href || "") !== "/request-demo") return;
+    if (currentPath === "/request-demo") return;
+    event.preventDefault();
+    setDemoWizardOpen(true);
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest("a[href]") as HTMLAnchorElement | null;
+      if (!anchor) return;
+      if (anchor.dataset.demoModal === "off") return;
+      if (anchor.target === "_blank" || anchor.hasAttribute("download")) return;
+
+      let url: URL;
+      try {
+        url = new URL(anchor.href, window.location.origin);
+      } catch {
+        return;
+      }
+
+      if (url.origin !== window.location.origin) return;
+      if (normalizePath(url.pathname) !== "/request-demo") return;
+      if (url.searchParams.get("wizard") === "off" || url.searchParams.get("modal") === "off") return;
+      if (currentPath === "/request-demo") return;
+
+      event.preventDefault();
+      setMobileMenuOpen(false);
+      setDemoWizardOpen(true);
+    };
+
+    document.addEventListener("click", handleDocumentClick, true);
+    return () => {
+      document.removeEventListener("click", handleDocumentClick, true);
+    };
+  }, [currentPath]);
 
   return (
     <div className="flex min-h-dvh flex-col bg-transparent text-slate-900">
@@ -716,23 +766,10 @@ export default function Layout({ children }: { children: ReactNode }) {
                 href={globalNav.cta.href}
                 target={globalNav.cta.target ?? undefined}
                 rel={getLinkRel(globalNav.cta.target)}
-                className="btn btn-primary btn-sm ml-1"
+                className="btn btn-primary ml-1 h-10 px-4 text-sm"
+                onClick={(event) => handleDemoCtaClick(event, globalNav.cta?.href)}
               >
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
-                  <path
-                    d="M7 3v2M17 3v2M4 8h16M6 6h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M8.5 12.5h3M8.5 16h6.5"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span>{globalNav.cta.label}</span>
+                <span>{getRequestDemoLabel(globalNav.cta.label)}</span>
               </Link>
             ) : null}
           </nav>
@@ -882,24 +919,13 @@ export default function Layout({ children }: { children: ReactNode }) {
                   href={globalNav.cta.href}
                   target={globalNav.cta.target ?? undefined}
                   rel={getLinkRel(globalNav.cta.target)}
-                  className="btn btn-primary btn-sm mt-2 w-full justify-center"
-                  onClick={closeMobileMenu}
+                  className="btn btn-primary mt-2 h-10 w-full justify-center text-sm"
+                  onClick={(event) => {
+                    closeMobileMenu();
+                    handleDemoCtaClick(event, globalNav.cta?.href);
+                  }}
                 >
-                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
-                    <path
-                      d="M7 3v2M17 3v2M4 8h16M6 6h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M8.5 12.5h3M8.5 16h6.5"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span>{globalNav.cta.label}</span>
+                  <span>{getRequestDemoLabel(globalNav.cta.label)}</span>
                 </Link>
               ) : null}
             </div>
@@ -940,7 +966,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <Link href="/request-demo" className="btn btn-primary btn-compact">
-                Book a demo
+                Request a demo
               </Link>
               <Link href="/aixcelerator" className="btn btn-secondary btn-compact">
                 Explore platform
@@ -1182,6 +1208,12 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
       ) : null}
       <CookieConsentBanner />
+      <DemoRequestWizardModal
+        open={demoWizardOpen}
+        onClose={() => setDemoWizardOpen(false)}
+        sourcePage="header-cta-wizard"
+        sourcePath={router.asPath}
+      />
     </div>
   );
 }

@@ -156,7 +156,7 @@ export default function AssistantPage() {
         </div>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Link href="/request-demo" className="btn btn-primary">
-            Book a demo
+            Request a demo
           </Link>
           <Link href="/updates" className="btn btn-secondary">
             View latest updates

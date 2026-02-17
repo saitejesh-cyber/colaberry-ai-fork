@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { DEFAULT_DEMO_REQUEST_MESSAGE, submitDemoRequest } from "../lib/demoRequest";
 
 type DemoRequestFormProps = {
   sourcePage?: string;
@@ -6,9 +7,6 @@ type DemoRequestFormProps = {
 };
 
 type SubmissionState = "idle" | "submitting" | "success" | "error";
-
-const DEFAULT_MESSAGE =
-  "Share your goals, current stack, and the workflows you want to accelerate.";
 
 export default function DemoRequestForm({
   sourcePage = "request-demo",
@@ -33,36 +31,27 @@ export default function DemoRequestForm({
     setStatusMessage(null);
 
     try {
-      const response = await fetch("/api/demo-request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          email,
-          company,
-          role,
-          teamSize,
-          timeline,
-          message: message || DEFAULT_MESSAGE,
-          website,
-          sourcePage,
-          sourcePath,
-        }),
+      const payload = await submitDemoRequest({
+        name,
+        email,
+        company,
+        role,
+        teamSize,
+        timeline,
+        message,
+        website,
+        sourcePage,
+        sourcePath,
       });
 
-      const payload = (await response.json()) as {
-        ok?: boolean;
-        message?: string;
-      };
-
-      if (!response.ok || !payload?.ok) {
+      if (!payload.ok) {
         setState("error");
-        setStatusMessage(payload?.message || "Unable to send request right now.");
+        setStatusMessage(payload.message);
         return;
       }
 
       setState("success");
-      setStatusMessage(payload?.message || "Thanks! We will reach out shortly.");
+      setStatusMessage(payload.message);
       setName("");
       setEmail("");
       setCompany("");
@@ -184,7 +173,7 @@ export default function DemoRequestForm({
           onChange={(event) => setMessage(event.target.value)}
           rows={4}
           className="mt-2 w-full resize-none rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
-          placeholder={DEFAULT_MESSAGE}
+          placeholder={DEFAULT_DEMO_REQUEST_MESSAGE}
         />
       </label>
 

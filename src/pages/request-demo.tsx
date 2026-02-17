@@ -18,14 +18,14 @@ export default function RequestDemo() {
             <SectionHeader
               as="h1"
               size="xl"
-              title="Book a demo"
+              title="Request a demo"
               description="Tell us what you’re trying to launch and we’ll tailor a walkthrough across AIXcelerator, Agents, MCP, and the modular capability layers."
             />
           </div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <button type="submit" form="demo-request-form" className="btn btn-primary">
-              Email to book a demo
+              Submit demo request
             </button>
             <Link href="/aixcelerator" className="btn btn-secondary">
               Explore AIXcelerator

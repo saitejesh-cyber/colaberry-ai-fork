@@ -210,7 +210,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
                 </a>
               ) : (
                 <Link href="/request-demo" className="btn btn-primary">
-                  Book a demo
+                  Request a demo
                 </Link>
               )}
               <Link href="/aixcelerator/agents" className="btn btn-secondary">

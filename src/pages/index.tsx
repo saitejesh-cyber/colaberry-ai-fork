@@ -320,7 +320,7 @@ export default function Home({
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               <Link href="/request-demo" className="btn btn-primary">
-                Book a demo
+                Request a demo
               </Link>
               <Link href="/resources" className="btn btn-secondary">
                 Explore the catalog
@@ -1312,7 +1312,7 @@ function HeroBannerSlider({ slides, rootIndustries }: { slides: HeroSlide[]; roo
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link href="/request-demo" className="btn btn-primary">
-              Book a demo
+              Request a demo
             </Link>
             <Link
               href={activeSlide.href}

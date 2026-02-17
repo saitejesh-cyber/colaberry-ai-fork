@@ -32,7 +32,7 @@ export default function Industry() {
               href="/request-demo"
               className="btn btn-primary"
             >
-              Book a demo
+              Request a demo
             </Link>
             <button type="button" className="btn btn-secondary">
               Subscribe

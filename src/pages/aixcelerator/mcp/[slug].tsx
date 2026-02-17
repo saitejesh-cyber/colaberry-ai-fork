@@ -229,7 +229,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
                 </a>
               ) : (
                 <Link href="/request-demo" className="btn btn-primary">
-                  Book a demo
+                  Request a demo
                 </Link>
               )}
               {mcp.sourceUrl ? (
