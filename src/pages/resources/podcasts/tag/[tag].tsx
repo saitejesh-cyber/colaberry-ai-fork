@@ -122,7 +122,7 @@ export default function PodcastTagPage({
               {e.companies?.map((company) => (
                 <Link
                   key={company.slug}
-                  href={`/podcast/${company.slug}`}
+                  href={`/resources/podcasts/company?slug=${encodeURIComponent(company.slug)}`}
                   className="chip chip-brand rounded-full border border-brand-blue/20 bg-white/90 px-2.5 py-1 text-xs font-semibold text-brand-deep hover:text-brand-blue"
                 >
                   {company.name}

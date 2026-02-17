@@ -5,6 +5,10 @@ type MCP = {
   slug?: string;
   description?: string | null;
   industry?: string | null;
+  status?: string | null;
+  rating?: number | null;
+  usageCount?: number | null;
+  lastUpdated?: string | null;
   visibility?: string | null;
   source?: string | null;
   sourceName?: string | null;
@@ -34,12 +38,17 @@ export default function MCPCard({ mcp }: { mcp: MCP }) {
   const href = mcp.slug ? `/aixcelerator/mcp/${mcp.slug}` : "/aixcelerator/mcp";
   const summary = mcp.description || "Structured MCP server profile and integration metadata.";
   const industry = mcp.industry || "General";
+  const statusLabel = mcp.status ? mcp.status.charAt(0).toUpperCase() + mcp.status.slice(1) : "Live";
+  const lastUpdatedLabel = formatShortDate(mcp.lastUpdated);
+  const ratingLabel = typeof mcp.rating === "number" ? mcp.rating.toFixed(1) : null;
+  const usageLabel =
+    typeof mcp.usageCount === "number" && mcp.usageCount > 0 ? formatUsage(mcp.usageCount) : null;
 
   return (
     <Link href={href} className="group block" aria-label={`View MCP server ${mcp.name} details`}>
       <div className="surface-panel surface-hover surface-interactive border border-slate-200/80 bg-white/92 p-5 transition hover:-translate-y-1 hover:shadow-lg">
         <div className="flex items-center justify-between gap-3">
-          <span className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-brand-blue/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-deep">
+          <span className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-brand-blue/5 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-deep">
             <span className="h-1.5 w-1.5 rounded-full bg-brand-aqua" />
             MCP server
           </span>
@@ -65,6 +74,9 @@ export default function MCPCard({ mcp }: { mcp: MCP }) {
           <span className="chip chip-muted rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold">
             MCP
           </span>
+          <span className="chip chip-muted rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold">
+            {statusLabel}
+          </span>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -87,11 +99,31 @@ export default function MCPCard({ mcp }: { mcp: MCP }) {
           ) : null}
         </div>
 
-        <div className="mt-4 border-t border-slate-200/80 pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-          TLS • Auth-ready • Observability
+        <div className="mt-4 border-t border-slate-200/80 pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300">
+          {ratingLabel ? `Rating ${ratingLabel}` : "Quality monitored"}
+          {usageLabel ? ` • ${usageLabel}` : ""}
+          {lastUpdatedLabel ? ` • Updated ${lastUpdatedLabel}` : ""}
         </div>
         <div className="mt-1 text-xs font-semibold text-brand-deep">View server details</div>
       </div>
     </Link>
   );
+}
+
+function formatShortDate(value?: string | null) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function formatUsage(value: number) {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M uses`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K uses`;
+  return `${value} uses`;
 }

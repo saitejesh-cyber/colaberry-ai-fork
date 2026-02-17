@@ -22,8 +22,8 @@
   color-scheme: dark;
   --bg: #0a1120;
   --bg-alt: #0f172a;
-  --surface-strong: #0d182b;
-  --surface-soft: #111f35;
+  --surface-strong: #0b1627;
+  --surface-soft: #142645;
   --stroke: rgba(148, 163, 184, 0.34);
   --stroke-strong: rgba(148, 163, 184, 0.56);
   --shadow-sm: 0 14px 30px rgba(2, 6, 23, 0.42);
@@ -328,7 +328,7 @@ h6 {
 }
 
 .dark .surface-panel {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(11, 18, 32, 0.92) 100%);
+  background: linear-gradient(180deg, var(--surface-strong) 0%, var(--surface-soft) 100%);
   border-color: rgba(148, 163, 184, 0.34);
   box-shadow: 0 22px 48px rgba(2, 6, 23, 0.5);
 }
@@ -563,6 +563,7 @@ h6 {
 
 .surface-interactive {
   outline: none;
+  cursor: pointer;
 }
 
 .surface-interactive:focus-visible {
@@ -957,4 +958,17 @@ footer .footer-link:focus-visible {
 
 .rise-delay-3 {
   animation-delay: 0.24s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .rise-in {
+    animation: none !important;
+  }
 }

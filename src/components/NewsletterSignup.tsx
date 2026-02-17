@@ -82,7 +82,7 @@ export default function NewsletterSignup({
 
   return (
     <div className={compact ? "rounded-2xl border border-slate-200/80 bg-white/80 p-3 dark:border-slate-700/80 dark:bg-slate-900/70" : ""}>
-      <div className={compact ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500" : "text-sm font-semibold text-slate-900 dark:text-slate-100"}>
+      <div className={compact ? "text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300" : "text-sm font-semibold text-slate-900 dark:text-slate-100"}>
         {title}
       </div>
       <p className={compact ? "mt-1 text-xs text-slate-600 dark:text-slate-300" : "mt-1 text-sm text-slate-600 dark:text-slate-300"}>
@@ -120,7 +120,11 @@ export default function NewsletterSignup({
           {state === "submitting" ? "Subscribing..." : ctaLabel}
         </button>
       </form>
-      {message ? <p className={`mt-2 text-xs ${statusClass}`}>{message}</p> : null}
+      {message ? (
+        <p className={`mt-2 text-xs ${statusClass}`} role="status" aria-live="polite">
+          {message}
+        </p>
+      ) : null}
       {state === "success" && unsubscribeUrl ? (
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
           Need to opt out?

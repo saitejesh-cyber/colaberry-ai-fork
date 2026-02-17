@@ -77,7 +77,7 @@ export default function StatePanel({ variant, title, description, action }: Stat
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <StateIcon variant={variant} iconTone={variantStyle.iconTone} />
-          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase ${variantStyle.badge}`}>
+          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${variantStyle.badge}`}>
             {variantStyle.label}
           </span>
           <span className="text-sm font-semibold text-slate-900 dark:text-white">{title}</span>

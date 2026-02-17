@@ -17,6 +17,8 @@ type MCPPageProps = {
   fetchError: boolean;
 };
 
+type MCPSortMode = "alphabetical" | "latest" | "trending";
+
 export const getStaticProps: GetStaticProps<MCPPageProps> = async () => {
   const allowPrivate = process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
   const visibilityFilter = allowPrivate ? undefined : "public";
@@ -42,6 +44,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
   const [visibility, setVisibility] = useState<"all" | "public" | "private">(
     allowPrivate ? "all" : "public"
   );
+  const [sortMode, setSortMode] = useState<MCPSortMode>("trending");
   const mcpHighlights = [
     {
       title: "Connector patterns",
@@ -131,29 +134,33 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
   };
   const filteredMCPs = useMemo(() => {
     const query = effectiveSearch.trim().toLowerCase();
-    if (!allowPrivate) {
-      return mcps.filter((mcp) => {
-        const matchesVisibility =
-          (mcp.visibility || "public").toLowerCase() === "public";
-        return matchesVisibility && matchesFilters(mcp, query, industryFilter, statusFilter, sourceFilter, tagFilter);
-      });
-    }
-    if (visibility === "all") {
-      return mcps.filter((mcp) => matchesFilters(mcp, query, industryFilter, statusFilter, sourceFilter, tagFilter));
-    }
-    return mcps.filter(
-      (mcp) =>
-        (mcp.visibility || "public").toLowerCase() === visibility &&
-        matchesFilters(mcp, query, industryFilter, statusFilter, sourceFilter, tagFilter)
+    return filterByVisibility(mcps, allowPrivate, visibility).filter((mcp) =>
+      matchesFilters(mcp, query, industryFilter, statusFilter, sourceFilter, tagFilter)
     );
   }, [allowPrivate, effectiveSearch, industryFilter, mcps, sourceFilter, statusFilter, tagFilter, visibility]);
-  const shownCount = Math.min(visibleCount, filteredMCPs.length);
-  const visibleMCPs = useMemo(
-    () => filteredMCPs.slice(0, shownCount),
-    [filteredMCPs, shownCount]
+  const sortedMCPs = useMemo(
+    () => sortMCPs(filteredMCPs, sortMode),
+    [filteredMCPs, sortMode]
   );
-  const hasMore = shownCount < filteredMCPs.length;
-  const hasResults = filteredMCPs.length > 0;
+  const scopedMCPs = useMemo(
+    () => filterByVisibility(mcps, allowPrivate, visibility),
+    [allowPrivate, mcps, visibility]
+  );
+  const latestMCPs = useMemo(
+    () => sortMCPs(scopedMCPs, "latest").slice(0, 6),
+    [scopedMCPs]
+  );
+  const trendingMCPs = useMemo(
+    () => sortMCPs(scopedMCPs, "trending").slice(0, 6),
+    [scopedMCPs]
+  );
+  const shownCount = Math.min(visibleCount, sortedMCPs.length);
+  const visibleMCPs = useMemo(
+    () => sortedMCPs.slice(0, shownCount),
+    [shownCount, sortedMCPs]
+  );
+  const hasMore = shownCount < sortedMCPs.length;
+  const hasResults = sortedMCPs.length > 0;
 
   useEffect(() => {
     if (!hasMore) return;
@@ -162,14 +169,14 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          setVisibleCount((prev) => Math.min(prev + pageSize, filteredMCPs.length));
+          setVisibleCount((prev) => Math.min(prev + pageSize, sortedMCPs.length));
         }
       },
       { rootMargin: "300px" }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [filteredMCPs.length, hasMore, pageSize]);
+  }, [hasMore, pageSize, sortedMCPs.length]);
 
   return (
     <Layout>
@@ -234,7 +241,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
             ))}
           </div>
           <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
               Marketplace intent
             </div>
             <div className="mt-2 text-sm font-semibold text-slate-900">
@@ -293,6 +300,31 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
         </div>
       </section>
 
+      <section className="surface-panel mt-6 p-6">
+        <SectionHeader
+          kicker="Discovery signals"
+          title="Latest and trending MCP servers"
+          description="Monitor newest entries and high-interest connectors before diving into the full catalog."
+          size="md"
+        />
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <SignalRail
+            title="Latest additions"
+            description="Most recently updated server profiles."
+            items={latestMCPs}
+            emptyText="No recently updated MCP entries available."
+            detailType="latest"
+          />
+          <SignalRail
+            title="Trending now"
+            description="Servers with stronger usage, quality, and freshness signals."
+            items={trendingMCPs}
+            emptyText="Trending signals will appear after more MCP activity is recorded."
+            detailType="trending"
+          />
+        </div>
+      </section>
+
       <section className="surface-panel mt-8 p-6">
         <SectionHeader
           kicker="Filters"
@@ -312,7 +344,10 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                 type="search"
                 placeholder="Search MCP servers, industries, tags..."
                 value={effectiveSearch}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setVisibleCount(pageSize);
+                }}
                 className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2 pr-11 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
               />
               <svg
@@ -342,7 +377,10 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
             <select
               id="mcp-industry"
               value={industryFilter}
-              onChange={(event) => setIndustryFilter(event.target.value)}
+              onChange={(event) => {
+                setIndustryFilter(event.target.value);
+                setVisibleCount(pageSize);
+              }}
               className="w-full rounded-full border border-slate-200/80 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
             >
               <option value="all">All industries</option>
@@ -360,7 +398,10 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
             <select
               id="mcp-status"
               value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
+              onChange={(event) => {
+                setStatusFilter(event.target.value);
+                setVisibleCount(pageSize);
+              }}
               className="w-full rounded-full border border-slate-200/80 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
             >
               <option value="all">All statuses</option>
@@ -378,7 +419,10 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
             <select
               id="mcp-source"
               value={sourceFilter}
-              onChange={(event) => setSourceFilter(event.target.value)}
+              onChange={(event) => {
+                setSourceFilter(event.target.value);
+                setVisibleCount(pageSize);
+              }}
               className="w-full rounded-full border border-slate-200/80 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
             >
               <option value="all">All sources</option>
@@ -397,7 +441,10 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
               <select
                 id="mcp-tag"
                 value={tagFilter}
-                onChange={(event) => setTagFilter(event.target.value)}
+                onChange={(event) => {
+                  setTagFilter(event.target.value);
+                  setVisibleCount(pageSize);
+                }}
                 className="w-full rounded-full border border-slate-200/80 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
               >
                 <option value="all">All tags</option>
@@ -410,6 +457,36 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
             </div>
           )}
         </div>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-300">
+            Sort
+          </span>
+          {(
+            [
+              { value: "trending", label: "Trending" },
+              { value: "latest", label: "Latest" },
+              { value: "alphabetical", label: "A-Z" },
+            ] as { value: MCPSortMode; label: string }[]
+          ).map((option) => {
+            const active = sortMode === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  setSortMode(option.value);
+                  setVisibleCount(pageSize);
+                }}
+                aria-pressed={active}
+                className={`chip focus-ring rounded-full px-3 py-1 text-xs font-semibold ${
+                  active ? "chip-brand" : "chip-muted"
+                }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
         {allowPrivate && (
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {(["all", "public", "private"] as const).map((option) => {
@@ -418,7 +495,10 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                 <button
                   key={option}
                   type="button"
-                  onClick={() => setVisibility(option)}
+                  onClick={() => {
+                    setVisibility(option);
+                    setVisibleCount(pageSize);
+                  }}
                   aria-pressed={active}
                   className={`chip focus-ring rounded-full px-3 py-1 text-xs font-semibold ${
                     active ? "chip-brand" : "chip-muted"
@@ -431,7 +511,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
           </div>
         )}
         <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500" aria-live="polite">
-          Showing {shownCount} of {filteredMCPs.length} (loaded {mcps.length})
+          Showing {shownCount} of {sortedMCPs.length} (catalog {scopedMCPs.length})
         </div>
       </section>
 
@@ -456,7 +536,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
           hasMore ? (
             <button
               type="button"
-              onClick={() => setVisibleCount((prev) => Math.min(prev + pageSize, filteredMCPs.length))}
+              onClick={() => setVisibleCount((prev) => Math.min(prev + pageSize, sortedMCPs.length))}
               className="btn btn-secondary"
             >
               Load more MCP servers
@@ -479,6 +559,9 @@ function toMcpListItem(mcp: MCPServer): MCPServer {
     name: mcp.name,
     slug: mcp.slug,
     description: clipText(mcp.description, 220),
+    rating: typeof mcp.rating === "number" ? mcp.rating : null,
+    usageCount: typeof mcp.usageCount === "number" ? mcp.usageCount : null,
+    lastUpdated: mcp.lastUpdated ?? null,
     industry: mcp.industry ?? null,
     category: mcp.category ?? null,
     status: mcp.status ?? null,
@@ -542,6 +625,131 @@ function matchesFilters(
     .join(" ")
     .toLowerCase();
   return haystack.includes(query);
+}
+
+function filterByVisibility(
+  mcps: MCPServer[],
+  allowPrivate: boolean,
+  visibility: "all" | "public" | "private"
+) {
+  if (!allowPrivate) {
+    return mcps.filter((mcp) => (mcp.visibility || "public").toLowerCase() === "public");
+  }
+  if (visibility === "all") {
+    return mcps;
+  }
+  return mcps.filter((mcp) => (mcp.visibility || "public").toLowerCase() === visibility);
+}
+
+function sortMCPs(mcps: MCPServer[], mode: MCPSortMode) {
+  const sorted = [...mcps];
+  if (mode === "alphabetical") {
+    return sorted.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  if (mode === "latest") {
+    return sorted.sort((a, b) => compareDatesDesc(a.lastUpdated, b.lastUpdated) || a.name.localeCompare(b.name));
+  }
+  return sorted.sort((a, b) => {
+    const scoreDelta = scoreTrendingMCP(b) - scoreTrendingMCP(a);
+    if (scoreDelta !== 0) return scoreDelta;
+    return compareDatesDesc(a.lastUpdated, b.lastUpdated) || a.name.localeCompare(b.name);
+  });
+}
+
+function compareDatesDesc(a?: string | null, b?: string | null) {
+  const left = toTimestamp(a);
+  const right = toTimestamp(b);
+  return right - left;
+}
+
+function toTimestamp(value?: string | null) {
+  if (!value) return 0;
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function scoreTrendingMCP(mcp: MCPServer) {
+  const ratingScore = typeof mcp.rating === "number" ? Math.max(mcp.rating, 0) * 18 : 0;
+  const usageScore =
+    typeof mcp.usageCount === "number" && mcp.usageCount > 0
+      ? Math.log10(mcp.usageCount + 1) * 25
+      : 0;
+  const verifiedScore = mcp.verified ? 8 : 0;
+  const freshnessScore = getFreshnessScore(mcp.lastUpdated);
+  return ratingScore + usageScore + verifiedScore + freshnessScore;
+}
+
+function getFreshnessScore(value?: string | null) {
+  if (!value) return 0;
+  const timestamp = toTimestamp(value);
+  if (!timestamp) return 0;
+  const days = (Date.now() - timestamp) / (1000 * 60 * 60 * 24);
+  if (days <= 14) return 12;
+  if (days <= 45) return 8;
+  if (days <= 90) return 4;
+  return 0;
+}
+
+function formatShortDate(value?: string | null) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function SignalRail({
+  title,
+  description,
+  items,
+  emptyText,
+  detailType,
+}: {
+  title: string;
+  description: string;
+  items: MCPServer[];
+  emptyText: string;
+  detailType: "latest" | "trending";
+}) {
+  return (
+    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{description}</p>
+      {items.length === 0 ? (
+        <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">{emptyText}</p>
+      ) : (
+        <ul className="mt-3 grid gap-2">
+          {items.map((item) => {
+            const detail =
+              detailType === "latest"
+                ? formatShortDate(item.lastUpdated) || "Date pending"
+                : item.rating
+                ? `Rating ${item.rating.toFixed(1)}`
+                : item.usageCount
+                ? `${item.usageCount} uses`
+                : "Emerging";
+            return (
+              <li key={item.slug || item.id}>
+                <Link
+                  href={`/aixcelerator/mcp/${item.slug || item.id}`}
+                  className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-blue/30 hover:text-brand-deep"
+                >
+                  <span className="truncate pr-3">{item.name}</span>
+                  <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 group-hover:text-brand-deep">
+                    {detail}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </article>
+  );
 }
 
 function Stat({ title, value, note }: { title: string; value: string; note: string }) {

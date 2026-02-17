@@ -55,14 +55,14 @@ export default function PremiumMediaCard({
           <div className="media-premium-overlay" />
           {kicker ? (
             <div className="absolute left-3 top-3">
-              <div className="chip chip-brand rounded-full border border-brand-blue/20 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-deep">
+              <div className="chip chip-brand rounded-full border border-brand-blue/20 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-deep">
                 {kicker}
               </div>
             </div>
           ) : null}
           {meta ? (
             <div className="absolute right-3 top-3">
-              <div className="chip chip-muted rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-700">
+              <div className="chip chip-muted rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">
                 {meta}
               </div>
             </div>

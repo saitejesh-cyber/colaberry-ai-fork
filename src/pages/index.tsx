@@ -2,11 +2,34 @@ import Layout from "../components/Layout";
 import Image from "next/image";
 import Link from "next/link";
 import Head from "next/head";
+import type { GetStaticProps } from "next";
 import { useEffect, useState } from "react";
 import SectionHeader from "../components/SectionHeader";
+import {
+  fetchAgents,
+  fetchMCPServers,
+  fetchPodcastEpisodes,
+  type Agent,
+  type MCPServer,
+  type PodcastEpisode,
+} from "../lib/cms";
 import { heroImage } from "../lib/media";
 
-export default function Home() {
+type HomeProps = {
+  latestPodcasts: PodcastEpisode[];
+  latestAgents: Agent[];
+  trendingAgents: Agent[];
+  latestMCPs: MCPServer[];
+  trendingMCPs: MCPServer[];
+};
+
+export default function Home({
+  latestPodcasts,
+  latestAgents,
+  trendingAgents,
+  latestMCPs,
+  trendingMCPs,
+}: HomeProps) {
   const industries = [
     { name: "Agriculture", slug: "agriculture", icon: "leaf" as const },
     { name: "Energy", slug: "energy", icon: "droplet" as const },
@@ -267,7 +290,7 @@ export default function Home() {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
           <section className="surface-panel p-5 lg:p-6">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
               Operational snapshot
             </div>
             <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -280,7 +303,7 @@ export default function Home() {
                   key={kpi.label}
                   className="rounded-2xl border border-slate-200/80 bg-white/85 p-3 shadow-sm dark:border-slate-700/80"
                 >
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-300">
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-slate-300">
                     {kpi.label}
                   </div>
                   <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{kpi.value}</div>
@@ -301,7 +324,7 @@ export default function Home() {
 
           <div className="space-y-6">
             <section className="surface-panel p-5 lg:p-6">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
                 Search the catalog
               </div>
               <label htmlFor="catalog-search" className="sr-only">
@@ -336,7 +359,7 @@ export default function Home() {
             </section>
 
             <section className="surface-panel p-5 lg:p-6">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
                 Proof signals
               </div>
               <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -421,6 +444,84 @@ export default function Home() {
           {catalogs.map((catalog) => (
             <CatalogCard key={catalog.title} {...catalog} />
           ))}
+        </div>
+      </section>
+
+      <section className="mt-12 surface-panel p-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeader
+            kicker="Latest podcasts"
+            title="Recent episodes from the podcast catalog"
+            description="New conversations and narratives to help teams evaluate agents, MCP integrations, and delivery patterns."
+          />
+          <Link href="/resources/podcasts" className="btn btn-primary mt-3 sm:mt-0">
+            Browse all podcasts
+          </Link>
+        </div>
+        {latestPodcasts.length > 0 ? (
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {latestPodcasts.map((episode) => (
+              <PodcastPreviewCard key={episode.slug} episode={episode} />
+            ))}
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+            Podcast episodes will appear here after the next content sync.
+          </p>
+        )}
+      </section>
+
+      <section className="mt-12 surface-panel p-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeader
+            kicker="Agent signals"
+            title="Latest and trending agents"
+            description="Fresh agent profiles and high-interest assistants mapped to enterprise workflows."
+          />
+          <Link href="/aixcelerator/agents" className="btn btn-primary mt-3 sm:mt-0">
+            Open agent catalog
+          </Link>
+        </div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <AgentRail
+            title="Latest updates"
+            description="Most recently updated agent profiles."
+            items={latestAgents}
+            detailType="latest"
+          />
+          <AgentRail
+            title="Trending agents"
+            description="Stronger quality and usage signals."
+            items={trendingAgents}
+            detailType="trending"
+          />
+        </div>
+      </section>
+
+      <section className="mt-12 surface-panel p-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeader
+            kicker="MCP signals"
+            title="Latest and trending MCP servers"
+            description="Fresh connector inventory and high-interest MCP servers mapped to enterprise workflows."
+          />
+          <Link href="/aixcelerator/mcp" className="btn btn-primary mt-3 sm:mt-0">
+            Open MCP catalog
+          </Link>
+        </div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <McpRail
+            title="Latest updates"
+            description="Most recently updated MCP profiles."
+            items={latestMCPs}
+            detailType="latest"
+          />
+          <McpRail
+            title="Trending servers"
+            description="Stronger quality and usage signals."
+            items={trendingMCPs}
+            detailType="trending"
+          />
         </div>
       </section>
 
@@ -520,7 +621,7 @@ export default function Home() {
         <div className="mt-6 lg:col-span-7 lg:mt-0">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
                 Industry expertise
               </div>
               <div className="mt-1 text-sm font-semibold text-slate-900">
@@ -573,6 +674,43 @@ export default function Home() {
     </Layout>
   );
 }
+
+export const getStaticProps: GetStaticProps<HomeProps> = async () => {
+  const allowPrivate = process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
+  const visibilityFilter = allowPrivate ? undefined : "public";
+  try {
+    const latestPodcasts = await fetchPodcastEpisodes({ maxRecords: 4 });
+    const latestAgentsRaw = await fetchAgents(visibilityFilter, { maxRecords: 6, sortBy: "latest" });
+    const trendingAgentsRaw = await fetchAgents(visibilityFilter, { maxRecords: 300 });
+    const latestMCPRaw = await fetchMCPServers(visibilityFilter, { maxRecords: 6, sortBy: "latest" });
+    const trendingMCPRaw = await fetchMCPServers(visibilityFilter, { maxRecords: 300 });
+    const latestAgents = sortAgentsByDate(latestAgentsRaw).slice(0, 6);
+    const trendingAgents = sortAgentsByTrending(trendingAgentsRaw).slice(0, 6);
+    const latestMCPs = sortMCPByDate(latestMCPRaw).slice(0, 6);
+    const trendingMCPs = sortMCPByTrending(trendingMCPRaw).slice(0, 6);
+    return {
+      props: {
+        latestPodcasts,
+        latestAgents,
+        trendingAgents,
+        latestMCPs,
+        trendingMCPs,
+      },
+      revalidate: 600,
+    };
+  } catch {
+    return {
+      props: {
+        latestPodcasts: [],
+        latestAgents: [],
+        trendingAgents: [],
+        latestMCPs: [],
+        trendingMCPs: [],
+      },
+      revalidate: 180,
+    };
+  }
+};
 
 function PillarCard({
   title,
@@ -627,7 +765,7 @@ function CatalogCard({
           />
           <div className="media-premium-overlay" />
           <div className="absolute left-3 top-3">
-            <div className="chip chip-muted rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+            <div className="chip chip-muted rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-700">
               {meta}
             </div>
           </div>
@@ -643,6 +781,143 @@ function CatalogCard({
         </div>
       </div>
     </Link>
+  );
+}
+
+function PodcastPreviewCard({ episode }: { episode: PodcastEpisode }) {
+  const publishedLabel = formatPodcastDate(episode.publishedDate);
+  const episodeType = (episode.podcastType || "internal").toLowerCase();
+  const metaBadge = episodeType === "external" ? "External" : "Colaberry";
+  const primaryCompany = episode.companies?.[0]?.name;
+  const imageSrc = episode.coverImageUrl || heroImage("hero-podcasts-cinematic.webp");
+
+  return (
+    <Link
+      href={`/resources/podcasts/${episode.slug}`}
+      className="surface-panel surface-hover surface-interactive group flex h-full flex-col overflow-hidden border border-slate-200/80 bg-white/90 p-0"
+      aria-label={`Open podcast episode ${episode.title}`}
+    >
+      <div className="media-premium-frame border-0 border-b border-slate-200/80 rounded-none">
+        <div className="relative aspect-[16/10] w-full">
+          <Image
+            src={imageSrc}
+            alt={episode.coverImageAlt || episode.title}
+            fill
+            sizes="(min-width: 1536px) 25vw, (min-width: 1024px) 30vw, (min-width: 640px) 44vw, 95vw"
+            quality={88}
+            className="media-premium-image object-cover object-center"
+            unoptimized={Boolean(episode.coverImageUrl)}
+          />
+          <div className="media-premium-overlay" />
+          <div className="absolute left-3 top-3">
+            <span className="chip chip-muted rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-700">
+              {metaBadge}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col p-4">
+        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
+          {publishedLabel || "Publish date pending"}
+          {episode.duration ? ` • ${episode.duration}` : ""}
+        </div>
+        <div className="mt-2 line-clamp-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{episode.title}</div>
+        <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">
+          {primaryCompany ? `Tagged company: ${primaryCompany}` : "Episode detail, transcript, and share options available."}
+        </p>
+        <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-deep">
+          Open episode <span aria-hidden="true">→</span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function AgentRail({
+  title,
+  description,
+  items,
+  detailType,
+}: {
+  title: string;
+  description: string;
+  items: Agent[];
+  detailType: "latest" | "trending";
+}) {
+  return (
+    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{description}</p>
+      {items.length === 0 ? (
+        <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">Agent signals will appear after next refresh.</p>
+      ) : (
+        <ul className="mt-3 grid gap-2">
+          {items.map((agent) => (
+            <li key={agent.slug || agent.id}>
+              <Link
+                href={`/aixcelerator/agents/${agent.slug || agent.id}`}
+                className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2"
+              >
+                <span className="truncate pr-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{agent.name}</span>
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 group-hover:text-brand-deep">
+                  {detailType === "latest"
+                    ? formatPodcastDate(agent.lastUpdated) || "Updated"
+                    : agent.rating
+                    ? `R ${agent.rating.toFixed(1)}`
+                    : agent.usageCount
+                    ? formatUsageLabel(agent.usageCount)
+                    : "Trending"}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </article>
+  );
+}
+
+function McpRail({
+  title,
+  description,
+  items,
+  detailType,
+}: {
+  title: string;
+  description: string;
+  items: MCPServer[];
+  detailType: "latest" | "trending";
+}) {
+  return (
+    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{description}</p>
+      {items.length === 0 ? (
+        <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">MCP signals will appear after next refresh.</p>
+      ) : (
+        <ul className="mt-3 grid gap-2">
+          {items.map((mcp) => (
+            <li key={mcp.slug || mcp.id}>
+              <Link
+                href={`/aixcelerator/mcp/${mcp.slug || mcp.id}`}
+                className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2"
+              >
+                <span className="truncate pr-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{mcp.name}</span>
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 group-hover:text-brand-deep">
+                  {detailType === "latest"
+                    ? formatPodcastDate(mcp.lastUpdated) || "Updated"
+                    : mcp.rating
+                    ? `R ${mcp.rating.toFixed(1)}`
+                    : mcp.usageCount
+                    ? formatUsageLabel(mcp.usageCount)
+                    : "Trending"}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </article>
   );
 }
 
@@ -702,7 +977,97 @@ function FeatureCard({ title, description }: { title: string; description: strin
   );
 }
 
- 
+function formatPodcastDate(value?: string | null) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function sortAgentsByDate(agents: Agent[]) {
+  return [...agents].sort(
+    (a, b) => compareDateDesc(a.lastUpdated, b.lastUpdated) || a.name.localeCompare(b.name)
+  );
+}
+
+function sortAgentsByTrending(agents: Agent[]) {
+  return [...agents].sort((a, b) => {
+    const delta = scoreTrendingAgent(b) - scoreTrendingAgent(a);
+    if (delta !== 0) return delta;
+    return compareDateDesc(a.lastUpdated, b.lastUpdated) || a.name.localeCompare(b.name);
+  });
+}
+
+function sortMCPByDate(mcps: MCPServer[]) {
+  return [...mcps].sort((a, b) => compareDateDesc(a.lastUpdated, b.lastUpdated) || a.name.localeCompare(b.name));
+}
+
+function sortMCPByTrending(mcps: MCPServer[]) {
+  return [...mcps].sort((a, b) => {
+    const delta = scoreTrendingMcp(b) - scoreTrendingMcp(a);
+    if (delta !== 0) return delta;
+    return compareDateDesc(a.lastUpdated, b.lastUpdated) || a.name.localeCompare(b.name);
+  });
+}
+
+function compareDateDesc(left?: string | null, right?: string | null) {
+  return toTimestamp(right) - toTimestamp(left);
+}
+
+function toTimestamp(value?: string | null) {
+  if (!value) return 0;
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function scoreTrendingMcp(mcp: MCPServer) {
+  const ratingScore = typeof mcp.rating === "number" ? Math.max(mcp.rating, 0) * 18 : 0;
+  const usageScore =
+    typeof mcp.usageCount === "number" && mcp.usageCount > 0
+      ? Math.log10(mcp.usageCount + 1) * 25
+      : 0;
+  const verifiedScore = mcp.verified ? 8 : 0;
+  const freshnessScore = (() => {
+    const timestamp = toTimestamp(mcp.lastUpdated);
+    if (!timestamp) return 0;
+    const days = (Date.now() - timestamp) / (1000 * 60 * 60 * 24);
+    if (days <= 14) return 12;
+    if (days <= 45) return 8;
+    if (days <= 90) return 4;
+    return 0;
+  })();
+  return ratingScore + usageScore + verifiedScore + freshnessScore;
+}
+
+function scoreTrendingAgent(agent: Agent) {
+  const ratingScore = typeof agent.rating === "number" ? Math.max(agent.rating, 0) * 18 : 0;
+  const usageScore =
+    typeof agent.usageCount === "number" && agent.usageCount > 0
+      ? Math.log10(agent.usageCount + 1) * 25
+      : 0;
+  const verifiedScore = agent.verified ? 8 : 0;
+  const freshnessScore = (() => {
+    const timestamp = toTimestamp(agent.lastUpdated);
+    if (!timestamp) return 0;
+    const days = (Date.now() - timestamp) / (1000 * 60 * 60 * 24);
+    if (days <= 14) return 12;
+    if (days <= 45) return 8;
+    if (days <= 90) return 4;
+    return 0;
+  })();
+  return ratingScore + usageScore + verifiedScore + freshnessScore;
+}
+
+function formatUsageLabel(value: number) {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return String(value);
+}
 
 function Stat({
   title,
@@ -715,7 +1080,7 @@ function Stat({
 }) {
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
         {title}
       </div>
       <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
@@ -736,14 +1101,38 @@ type HeroSlide = {
 function HeroBannerSlider({ slides, rootIndustries }: { slides: HeroSlide[]; rootIndustries: string[] }) {
   const slideCount = slides.length;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [manualPaused, setManualPaused] = useState(false);
+  const [interactionPaused, setInteractionPaused] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  const isPaused = manualPaused || interactionPaused || prefersReducedMotion;
 
   useEffect(() => {
-    if (slideCount < 2) return;
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handleChange = () => setPrefersReducedMotion(media.matches);
+    handleChange();
+    if (media.addEventListener) {
+      media.addEventListener("change", handleChange);
+    } else {
+      media.addListener(handleChange);
+    }
+    return () => {
+      if (media.removeEventListener) {
+        media.removeEventListener("change", handleChange);
+      } else {
+        media.removeListener(handleChange);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (slideCount < 2 || isPaused) return;
     const timer = window.setInterval(() => {
       setActiveIndex((current) => (current + 1) % slideCount);
     }, 6200);
     return () => window.clearInterval(timer);
-  }, [slideCount]);
+  }, [slideCount, isPaused]);
 
   if (slideCount === 0) return null;
 
@@ -754,7 +1143,19 @@ function HeroBannerSlider({ slides, rootIndustries }: { slides: HeroSlide[]; roo
   };
 
   return (
-    <section className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-slate-950 shadow-[0_34px_72px_rgba(2,6,23,0.46)]">
+    <section
+      className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-slate-950 shadow-[0_34px_72px_rgba(2,6,23,0.46)]"
+      aria-roledescription="carousel"
+      aria-label="Hero highlights"
+      onMouseEnter={() => setInteractionPaused(true)}
+      onMouseLeave={() => setInteractionPaused(false)}
+      onFocusCapture={() => setInteractionPaused(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+          setInteractionPaused(false);
+        }
+      }}
+    >
       <div className="absolute inset-0">
         {slides.map((slide, index) => (
           <div
@@ -779,7 +1180,7 @@ function HeroBannerSlider({ slides, rootIndustries }: { slides: HeroSlide[]; roo
 
       <div className="relative z-10 flex min-h-[440px] flex-col justify-between p-7 sm:min-h-[520px] sm:p-10 lg:min-h-[560px] lg:p-12">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/30 bg-slate-950/45 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-100 shadow-sm backdrop-blur">
+          <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/30 bg-slate-950/45 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-100 shadow-sm backdrop-blur">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
             AI operations platform
           </div>
@@ -811,13 +1212,23 @@ function HeroBannerSlider({ slides, rootIndustries }: { slides: HeroSlide[]; roo
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-slate-950/45 px-3 py-2 text-xs font-semibold text-slate-100 backdrop-blur">
-            <span className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-slate-200">
+            <span className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-xs uppercase tracking-[0.14em] text-slate-200">
               {activeSlide.eyebrow}
             </span>
             <span>{activeSlide.title}</span>
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="focus-ring inline-flex h-9 items-center justify-center rounded-full border border-white/28 bg-slate-950/45 px-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:border-sky-300/60 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => setManualPaused((previous) => !previous)}
+              aria-pressed={manualPaused}
+              aria-label={manualPaused ? "Resume hero rotation" : "Pause hero rotation"}
+              disabled={prefersReducedMotion}
+            >
+              {manualPaused || prefersReducedMotion ? "Play" : "Pause"}
+            </button>
             <button
               type="button"
               className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/28 bg-slate-950/45 text-white transition hover:border-sky-300/60"

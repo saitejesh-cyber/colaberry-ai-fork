@@ -537,7 +537,7 @@ export default function InternalNewsletterReportPage() {
 function MetricCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white px-4 py-3">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</div>
+      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-300">{label}</div>
       <div className="mt-1 text-xl font-semibold text-slate-900">{value}</div>
     </div>
   );

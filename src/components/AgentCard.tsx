@@ -6,6 +6,9 @@ interface Agent {
   description?: string | null;
   industry?: string | null;
   status?: string | null;
+  rating?: number | null;
+  usageCount?: number | null;
+  lastUpdated?: string | null;
   visibility?: string | null;
   source?: string | null;
   sourceName?: string | null;
@@ -44,12 +47,16 @@ export default function AgentCard({ agent }: { agent: Agent }) {
     : "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:ring-emerald-500/40";
   const summary = agent.description || "Structured profile and delivery context available.";
   const industry = agent.industry || "General";
+  const ratingLabel = typeof agent.rating === "number" ? agent.rating.toFixed(1) : null;
+  const usageLabel =
+    typeof agent.usageCount === "number" && agent.usageCount > 0 ? formatUsage(agent.usageCount) : null;
+  const lastUpdatedLabel = formatShortDate(agent.lastUpdated);
 
   return (
     <Link href={href} className="group block" aria-label={`View agent ${agent.name} details`}>
       <div className="surface-panel surface-hover surface-interactive border border-slate-200/80 bg-white/92 p-5 transition hover:-translate-y-1 hover:shadow-lg">
         <div className="flex items-center justify-between gap-3">
-          <span className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-brand-blue/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-deep">
+          <span className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-brand-blue/5 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-deep">
             <span className="h-1.5 w-1.5 rounded-full bg-brand-aqua" />
             Agent profile
           </span>
@@ -77,6 +84,9 @@ export default function AgentCard({ agent }: { agent: Agent }) {
           >
             {isPrivate ? "Private" : "Public"}
           </span>
+          <span className="chip chip-muted rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold">
+            Agent
+          </span>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -99,11 +109,31 @@ export default function AgentCard({ agent }: { agent: Agent }) {
           ) : null}
         </div>
 
-        <div className="mt-4 border-t border-slate-200/80 pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-          Managed • Auditable • Versioned
+        <div className="mt-4 border-t border-slate-200/80 pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-300">
+          {ratingLabel ? `Rating ${ratingLabel}` : "Quality monitored"}
+          {usageLabel ? ` • ${usageLabel}` : ""}
+          {lastUpdatedLabel ? ` • Updated ${lastUpdatedLabel}` : ""}
         </div>
         <div className="mt-1 text-xs font-semibold text-brand-deep">View profile</div>
       </div>
     </Link>
   );
+}
+
+function formatShortDate(value?: string | null) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function formatUsage(value: number) {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M uses`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K uses`;
+  return `${value} uses`;
 }

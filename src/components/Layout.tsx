@@ -17,44 +17,28 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Overview", href: "/aixcelerator", order: 1 },
         { label: "Agents", href: "/aixcelerator/agents", order: 2 },
         { label: "MCP servers", href: "/aixcelerator/mcp", order: 3 },
-        { label: "Discovery assistant", href: "/assistant", order: 4 },
+        { label: "Use cases", href: "/use-cases", order: 4 },
+        { label: "Discovery assistant", href: "/assistant", order: 5 },
       ],
-    },
-    {
-      label: "Agents",
-      href: "/aixcelerator/agents",
-      order: 2,
-      group: "header",
-      children: [{ label: "Agents catalog", href: "/aixcelerator/agents", order: 1 }],
-    },
-    {
-      label: "MCP",
-      href: "/aixcelerator/mcp",
-      order: 3,
-      group: "header",
-      children: [{ label: "MCP servers", href: "/aixcelerator/mcp", order: 1 }],
     },
     {
       label: "Industries",
       href: "/industries",
-      order: 4,
+      order: 2,
       group: "header",
       children: [{ label: "All industries", href: "/industries", order: 1 }],
     },
     {
       label: "Solutions",
       href: "/solutions",
-      order: 5,
+      order: 3,
       group: "header",
-      children: [
-        { label: "Solutions overview", href: "/solutions", order: 1 },
-        { label: "Use cases", href: "/use-cases", order: 2 },
-      ],
+      children: [{ label: "Solutions overview", href: "/solutions", order: 1 }],
     },
     {
       label: "Resources",
       href: "/resources",
-      order: 6,
+      order: 4,
       group: "header",
       children: [
         { label: "Resources hub", href: "/resources", order: 1 },
@@ -68,7 +52,7 @@ const fallbackNavigation: GlobalNavigation = {
     {
       label: "Updates",
       href: "/updates",
-      order: 7,
+      order: 5,
       group: "header",
       children: [{ label: "News & product", href: "/updates", order: 1 }],
     },
@@ -243,6 +227,118 @@ function isActiveNavPath(currentPath: string, href: string, navPaths: string[]) 
   return !hasMoreSpecific;
 }
 
+const PLATFORM_CHILD_BLUEPRINT = [
+  { label: "Overview", href: "/aixcelerator" },
+  { label: "Agents", href: "/aixcelerator/agents" },
+  { label: "MCP servers", href: "/aixcelerator/mcp" },
+  { label: "Use cases", href: "/use-cases" },
+  { label: "Discovery assistant", href: "/assistant" },
+];
+
+const PLATFORM_CHILD_ALIASES: Record<string, string> = {
+  agents: "/aixcelerator/agents",
+  mcp: "/aixcelerator/mcp",
+  "mcp servers": "/aixcelerator/mcp",
+  "mcp server": "/aixcelerator/mcp",
+  "use cases": "/use-cases",
+  "use case": "/use-cases",
+  "discovery assistant": "/assistant",
+};
+
+function findPlatformChildBlueprint(link: GlobalNavigation["headerLinks"][number]) {
+  const normalizedPath = normalizePath(link.href);
+  const byPath = PLATFORM_CHILD_BLUEPRINT.find((entry) => normalizePath(entry.href) === normalizedPath);
+  if (byPath) return byPath;
+
+  const labelKey = link.label.trim().toLowerCase();
+  const aliasPath = PLATFORM_CHILD_ALIASES[labelKey];
+  if (!aliasPath) return null;
+  return PLATFORM_CHILD_BLUEPRINT.find((entry) => normalizePath(entry.href) === normalizePath(aliasPath)) || null;
+}
+
+function isPlatformLink(link: GlobalNavigation["headerLinks"][number]) {
+  const label = link.label.trim().toLowerCase();
+  return label === "platform" || normalizePath(link.href) === "/aixcelerator";
+}
+
+function normalizeHeaderNavigation(headerLinks: GlobalNavigation["headerLinks"]) {
+  if (!headerLinks.length) return headerLinks;
+
+  const platformIndex = headerLinks.findIndex(isPlatformLink);
+  if (platformIndex < 0) return headerLinks;
+
+  const platformLink = headerLinks[platformIndex];
+  const collectedChildren = new Map<string, GlobalNavigation["headerLinks"][number]>();
+  const upsertPlatformChild = (entry: GlobalNavigation["headerLinks"][number]) => {
+    const matchedBlueprint = findPlatformChildBlueprint(entry);
+    if (!matchedBlueprint) return;
+    const path = normalizePath(matchedBlueprint.href);
+    if (!collectedChildren.has(path)) {
+      collectedChildren.set(path, {
+        ...entry,
+        label: matchedBlueprint.label,
+        href: matchedBlueprint.href,
+      });
+    }
+  };
+
+  (platformLink.children || []).forEach((child) => upsertPlatformChild(child));
+
+  const nextHeaderLinks = headerLinks
+    .filter((link, index) => {
+      if (index === platformIndex) return false;
+      if (findPlatformChildBlueprint(link)) {
+        upsertPlatformChild({
+          label: link.label,
+          href: link.href,
+          target: link.target,
+          order: link.order,
+          group: link.group,
+        });
+        (link.children || []).forEach((child) => upsertPlatformChild(child));
+        return false;
+      }
+      return true;
+    })
+    .map((link) => {
+      if (link.label.trim().toLowerCase() !== "solutions" || !link.children?.length) {
+        return link;
+      }
+      const children = link.children.filter((child) => normalizePath(child.href) !== "/use-cases");
+      return children.length === link.children.length ? link : { ...link, children };
+    });
+
+  PLATFORM_CHILD_BLUEPRINT.forEach((entry) => {
+    if (!collectedChildren.has(normalizePath(entry.href))) {
+      collectedChildren.set(normalizePath(entry.href), {
+        label: entry.label,
+        href: entry.href,
+      });
+    }
+  });
+
+  const normalizedPlatformChildren = PLATFORM_CHILD_BLUEPRINT.map((entry, index) => {
+    const matched = collectedChildren.get(normalizePath(entry.href));
+    return {
+      ...matched,
+      label: matched?.label || entry.label,
+      href: matched?.href || entry.href,
+      order: index + 1,
+    };
+  });
+
+  const normalizedPlatform = {
+    ...platformLink,
+    label: "Platform",
+    href: "/aixcelerator",
+    children: normalizedPlatformChildren,
+  };
+
+  const insertAt = Math.min(platformIndex, nextHeaderLinks.length);
+  nextHeaderLinks.splice(insertAt, 0, normalizedPlatform);
+  return nextHeaderLinks;
+}
+
 function mergeGlobalNavigation(primary: GlobalNavigation | null, fallback: GlobalNavigation): GlobalNavigation {
   if (!primary) return fallback;
   const fallbackHeaderIndex = new Map(
@@ -256,9 +352,10 @@ function mergeGlobalNavigation(primary: GlobalNavigation | null, fallback: Globa
         return fallbackChildren.length ? { ...link, children: fallbackChildren } : link;
       })
     : fallback.headerLinks;
+  const normalizedHeaderLinks = normalizeHeaderNavigation(headerLinks);
 
   return {
-    headerLinks,
+    headerLinks: normalizedHeaderLinks,
     footerColumns: primary.footerColumns.length ? primary.footerColumns : fallback.footerColumns,
     cta: primary.cta?.label && primary.cta?.href ? primary.cta : fallback.cta,
     socialLinks: primary.socialLinks.length ? primary.socialLinks : fallback.socialLinks,
@@ -274,7 +371,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [allowBackdropClose, setAllowBackdropClose] = useState(true);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchDialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const currentPath = normalizePath(router.asPath || "/");
   const headerNavPaths = globalNav.headerLinks
     .map((link) => normalizePath(link.href))
@@ -288,6 +389,25 @@ export default function Layout({ children }: { children: ReactNode }) {
       setHasMounted(true);
     });
     return () => window.cancelAnimationFrame(rafId);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(pointer: coarse)");
+    const handleChange = () => setAllowBackdropClose(!media.matches);
+    handleChange();
+    if (media.addEventListener) {
+      media.addEventListener("change", handleChange);
+    } else {
+      media.addListener(handleChange);
+    }
+    return () => {
+      if (media.removeEventListener) {
+        media.removeEventListener("change", handleChange);
+      } else {
+        media.removeListener(handleChange);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -316,18 +436,53 @@ export default function Layout({ children }: { children: ReactNode }) {
     if (!searchOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setSearchOpen(false);
       }
+      if (event.key === "Tab") {
+        const dialog = searchDialogRef.current;
+        if (!dialog) return;
+        const focusable = Array.from(
+          dialog.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+          )
+        ).filter((el) => !el.hasAttribute("aria-hidden"));
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+        if (event.shiftKey && active === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && active === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
+    const backgroundNodes = [
+      document.querySelector("header"),
+      document.querySelector("main"),
+      document.querySelector("footer"),
+    ].filter(Boolean) as HTMLElement[];
+    backgroundNodes.forEach((node) => {
+      node.setAttribute("aria-hidden", "true");
+      node.setAttribute("inert", "");
+    });
     const focusTimer = window.setTimeout(() => {
       searchInputRef.current?.focus();
     }, 0);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
+      backgroundNodes.forEach((node) => {
+        node.removeAttribute("aria-hidden");
+        node.removeAttribute("inert");
+      });
+      previousFocusRef.current?.focus();
       window.clearTimeout(focusTimer);
     };
   }, [searchOpen]);
@@ -438,14 +593,28 @@ export default function Layout({ children }: { children: ReactNode }) {
                 .map((child) => normalizePath(child.href))
                 .filter((href) => !isExternalHref(href));
               const dropdownSurfaceClass = "border-slate-200/80 bg-white/95 text-slate-900 dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-100";
+              const menuKey = `${link.label}-${link.href}`;
+              const isOpen = openMenu === menuKey;
               return (
-                <div key={`${link.label}-${link.href}`} className="relative group">
+                <div
+                  key={menuKey}
+                  className="relative group"
+                  onMouseEnter={() => setOpenMenu(menuKey)}
+                  onMouseLeave={() => setOpenMenu((current) => (current === menuKey ? null : current))}
+                  onFocusCapture={() => setOpenMenu(menuKey)}
+                  onBlurCapture={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+                      setOpenMenu((current) => (current === menuKey ? null : current));
+                    }
+                  }}
+                >
                   <Link
                     href={link.href}
                     target={link.target ?? undefined}
                     rel={getLinkRel(link.target)}
                     className={`nav-link focus-ring inline-flex items-center gap-1.5 ${isParentActive ? "nav-link-active" : ""}`}
                     aria-haspopup={hasChildren ? "menu" : undefined}
+                    aria-expanded={hasChildren ? isOpen : undefined}
                   >
                     {link.label}
                     {hasChildren ? (
@@ -467,11 +636,15 @@ export default function Layout({ children }: { children: ReactNode }) {
                     ) : null}
                   </Link>
                   {hasChildren ? (
-                    <div className="pointer-events-none absolute left-0 top-full z-50 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+                    <div
+                      className={`absolute left-0 top-full z-50 pt-3 transition duration-150 ${isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
+                    >
                       <div
-                        className={`nav-dropdown-panel min-w-[14rem] translate-y-1 rounded-2xl border p-2.5 shadow-xl transition duration-150 group-hover:translate-y-0 group-focus-within:translate-y-0 ${dropdownSurfaceClass}`}
+                        className={`nav-dropdown-panel min-w-[14rem] rounded-2xl border p-2.5 shadow-xl transition duration-150 ${isOpen ? "translate-y-0" : "translate-y-1"} ${dropdownSurfaceClass}`}
+                        role="menu"
+                        aria-label={`${link.label} menu`}
                       >
-                        <div className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-slate-400">
                           Explore {link.label}
                         </div>
                         <div className="grid gap-1">
@@ -615,7 +788,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           >
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-slate-400">
                   Navigation
                 </div>
                 <div className="mt-1 text-base font-semibold text-slate-900 dark:text-white">
@@ -681,7 +854,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             </div>
 
             <div className="mt-3 rounded-2xl border border-slate-200/80 bg-white/90 p-3 dark:border-slate-700/80 dark:bg-slate-900/70">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-slate-400">
                 Preferences
               </div>
               <Link
@@ -737,7 +910,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <footer className="footer-surface mt-10 border-t border-slate-200/70 dark:border-slate-800/70">
         <div className="grid w-full grid-cols-1 gap-8 px-4 py-10 text-sm text-slate-800 dark:text-slate-200 sm:px-6 lg:grid-cols-[1.35fr_1fr_1fr_auto] lg:px-8">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-deep dark:border-brand-teal/30 dark:bg-slate-900/70">
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-deep dark:border-brand-teal/30 dark:bg-slate-900/70">
               Enterprise AI destination
             </div>
             <div className="flex items-center gap-2">
@@ -853,12 +1026,18 @@ export default function Layout({ children }: { children: ReactNode }) {
       {searchOpen ? (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-950/40 px-4 py-6 backdrop-blur-sm"
-          onClick={closeSearch}
+          onClick={(event) => {
+            if (!allowBackdropClose) return;
+            if (event.currentTarget === event.target) {
+              closeSearch();
+            }
+          }}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="global-search-title"
+            ref={searchDialogRef}
             className="w-full max-w-2xl rounded-3xl border border-slate-200/70 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-950"
             onClick={(event) => event.stopPropagation()}
           >

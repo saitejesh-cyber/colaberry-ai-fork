@@ -463,7 +463,7 @@ export default function SearchPage({ query, results, fetchError }: SearchPagePro
                           <div className="mt-1 text-sm text-slate-600">{item.description}</div>
                         ) : null}
                       </div>
-                      <span className="rounded-full border border-brand-blue/20 bg-white px-2.5 py-1 text-[11px] font-semibold text-brand-deep">
+                      <span className="rounded-full border border-brand-blue/20 bg-white px-2.5 py-1 text-xs font-semibold text-brand-deep">
                         {item.type}
                       </span>
                     </div>

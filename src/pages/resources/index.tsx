@@ -51,7 +51,7 @@ export default function Resources() {
       </Head>
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
         <div className="flex flex-col gap-3">
-          <div className="chip chip-brand inline-flex w-fit items-center gap-2 rounded-full border border-brand-blue/25 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm">
+          <div className="chip chip-brand inline-flex w-fit items-center gap-2 rounded-full border border-brand-blue/25 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
             Modular layer
           </div>
@@ -87,7 +87,7 @@ export default function Resources() {
       </div>
 
       <div className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-4 sm:mt-8">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
           Search resources
         </div>
         <label htmlFor="resource-search" className="sr-only">
@@ -174,7 +174,7 @@ export default function Resources() {
       </div>
 
       <div className="surface-panel mt-10 p-6 sm:mt-12">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
           How this evolves
         </div>
         <div className="mt-3 grid gap-3 text-sm text-slate-700 sm:grid-cols-2">

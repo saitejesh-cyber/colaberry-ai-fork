@@ -134,7 +134,7 @@ function NavCard({
           <div className="flex items-center gap-2">
             <div className="text-sm font-semibold text-slate-900">{title}</div>
             {badge ? (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
                 {badge}
               </span>
             ) : null}
@@ -162,7 +162,7 @@ function RoadmapItem({
     <div className="surface-panel border border-slate-200/70 p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="text-base font-semibold text-slate-900">{title}</div>
-        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-700">
+        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
           {status}
         </span>
       </div>

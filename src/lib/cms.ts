@@ -682,22 +682,47 @@ function mapMCPServer(item: any): MCPServer {
   };
 }
 
-export async function fetchPodcastEpisodes() {
-  const json = await fetchCMSJson<CMSCollectionResponse>(
-    `${CMS_URL}/api/podcast-episodes` +
-      `?sort=publishedDate:desc` +
-      `&filters[podcastStatus][$eq]=published` +
-      `&publicationState=live` +
-      `&populate[tags][fields][0]=name` +
-      `&populate[tags][fields][1]=slug` +
-      `&populate[companies][fields][0]=name` +
-      `&populate[companies][fields][1]=slug` +
-      `&populate[coverImage][fields][0]=url` +
-      `&populate[coverImage][fields][1]=alternativeText` +
-      `&populate[platformLinks]=*`,
-    { cacheMs: CMS_CACHE_TTL_MS }
-  );
-  return json?.data?.map(mapEpisode) || [];
+export async function fetchPodcastEpisodes(options: { maxRecords?: number } = {}) {
+  const pageSize = 100;
+  const maxRecords =
+    typeof options.maxRecords === "number" && options.maxRecords > 0
+      ? Math.floor(options.maxRecords)
+      : Number.POSITIVE_INFINITY;
+  let page = 1;
+  const results: PodcastEpisode[] = [];
+
+  while (true) {
+    const json = await fetchCMSJson<CMSCollectionResponse>(
+      `${CMS_URL}/api/podcast-episodes` +
+        `?sort=publishedDate:desc` +
+        `&filters[podcastStatus][$eq]=published` +
+        `&publicationState=live` +
+        `&pagination[page]=${page}` +
+        `&pagination[pageSize]=${pageSize}` +
+        `&populate[tags][fields][0]=name` +
+        `&populate[tags][fields][1]=slug` +
+        `&populate[companies][fields][0]=name` +
+        `&populate[companies][fields][1]=slug` +
+        `&populate[coverImage][fields][0]=url` +
+        `&populate[coverImage][fields][1]=alternativeText` +
+        `&populate[platformLinks]=*`,
+      { cacheMs: CMS_CACHE_TTL_MS }
+    );
+
+    const data = json?.data || [];
+    if (!data.length) break;
+
+    const remaining = maxRecords - results.length;
+    const rows = remaining < data.length ? data.slice(0, remaining) : data;
+    results.push(...rows.map(mapEpisode));
+    if (results.length >= maxRecords) break;
+
+    const pageCount = json?.meta?.pagination?.pageCount || page;
+    if (page >= pageCount) break;
+    page += 1;
+  }
+
+  return results;
 }
 
 export async function fetchGlobalNavigation(): Promise<GlobalNavigation | null> {
@@ -865,9 +890,14 @@ export async function fetchUseCaseBySlug(slug: string) {
 
 export async function fetchAgents(
   visibility?: "public" | "private",
-  options: { maxRecords?: number } = {}
+  options: { maxRecords?: number; sortBy?: "name" | "latest" } = {}
 ) {
   const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
+  const sortBy = options.sortBy === "latest" ? "latest" : "name";
+  const sortQuery =
+    sortBy === "latest"
+      ? `&sort[0]=lastUpdated:desc&sort[1]=updatedAt:desc&sort[2]=name:asc`
+      : `&sort=name:asc`;
   const listFields =
     `&fields[0]=name` +
     `&fields[1]=slug` +
@@ -877,7 +907,10 @@ export async function fetchAgents(
     `&fields[5]=visibility` +
     `&fields[6]=source` +
     `&fields[7]=sourceName` +
-    `&fields[8]=verified`;
+    `&fields[8]=verified` +
+    `&fields[9]=usageCount` +
+    `&fields[10]=rating` +
+    `&fields[11]=lastUpdated`;
   const pageSize = 100;
   const maxRecords =
     typeof options.maxRecords === "number" && options.maxRecords > 0
@@ -889,7 +922,8 @@ export async function fetchAgents(
   while (true) {
     const json = await fetchCMSJson<CMSCollectionResponse>(
       `${CMS_URL}/api/agents` +
-        `?sort=name:asc` +
+        `?` +
+        `${sortQuery.replace(/^&/, "")}` +
         `${visibilityFilter}` +
         `&publicationState=live` +
         `${listFields}` +
@@ -925,9 +959,14 @@ export async function fetchAgents(
 
 export async function fetchMCPServers(
   visibility?: "public" | "private",
-  options: { maxRecords?: number } = {}
+  options: { maxRecords?: number; sortBy?: "name" | "latest" } = {}
 ) {
   const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
+  const sortBy = options.sortBy === "latest" ? "latest" : "name";
+  const sortQuery =
+    sortBy === "latest"
+      ? `&sort[0]=lastUpdated:desc&sort[1]=updatedAt:desc&sort[2]=name:asc`
+      : `&sort=name:asc`;
   const listFields =
     `&fields[0]=name` +
     `&fields[1]=slug` +
@@ -938,7 +977,10 @@ export async function fetchMCPServers(
     `&fields[6]=visibility` +
     `&fields[7]=source` +
     `&fields[8]=sourceName` +
-    `&fields[9]=verified`;
+    `&fields[9]=verified` +
+    `&fields[10]=usageCount` +
+    `&fields[11]=rating` +
+    `&fields[12]=lastUpdated`;
   const pageSize = 100;
   const maxRecords =
     typeof options.maxRecords === "number" && options.maxRecords > 0
@@ -950,7 +992,8 @@ export async function fetchMCPServers(
   while (true) {
     const json = await fetchCMSJson<CMSCollectionResponse>(
       `${CMS_URL}/api/mcp-servers` +
-        `?sort=name:asc` +
+        `?` +
+        `${sortQuery.replace(/^&/, "")}` +
         `${visibilityFilter}` +
         `&publicationState=live` +
         `${listFields}` +

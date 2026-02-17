@@ -223,7 +223,7 @@ export default function PodcastDetail({ episode }: PodcastDetailProps) {
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6">
           <div ref={playerRef} className="surface-panel border border-slate-200/80 bg-white/90 p-6">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
               Listen to the podcast
             </div>
             <div className="mt-3">
@@ -334,7 +334,7 @@ export default function PodcastDetail({ episode }: PodcastDetailProps) {
               {episode.companies.map((company) => (
                 <Link
                   key={company.slug}
-                  href={`/podcast/${company.slug}`}
+                  href={`/resources/podcasts/company?slug=${encodeURIComponent(company.slug)}`}
                   className="chip chip-brand rounded-full border border-brand-blue/20 bg-white/80 px-2.5 py-1 text-xs font-semibold text-brand-deep hover:text-brand-blue"
                 >
                   {company.name}
@@ -454,7 +454,7 @@ export default function PodcastDetail({ episode }: PodcastDetailProps) {
                 {episode.companies.map((company) => (
                   <Link
                     key={company.slug}
-                    href={`/podcast/${company.slug}`}
+                    href={`/resources/podcasts/company?slug=${encodeURIComponent(company.slug)}`}
                     className="chip chip-brand rounded-full border border-brand-blue/20 bg-white/80 px-3 py-1 text-xs font-semibold text-brand-deep hover:text-brand-blue"
                   >
                     {company.name}

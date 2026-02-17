@@ -198,7 +198,7 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
                     </span>
                     {item.rating ? (
                       <span
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase ${ratingTone(
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${ratingTone(
                           item.rating
                         )}`}
                       >
