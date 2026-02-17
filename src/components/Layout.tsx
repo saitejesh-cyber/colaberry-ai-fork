@@ -5,6 +5,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { fetchGlobalNavigation, GlobalNavigation } from "../lib/cms";
 import NewsletterSignup from "./NewsletterSignup";
+import CookieConsentBanner from "./CookieConsentBanner";
 
 const fallbackNavigation: GlobalNavigation = {
   headerLinks: [
@@ -124,7 +125,10 @@ const fallbackNavigation: GlobalNavigation = {
       group: "social",
     },
   ],
-  legalLinks: [],
+  legalLinks: [
+    { label: "Privacy Policy", href: "/privacy-policy", order: 1, group: "legal" },
+    { label: "Cookie Policy", href: "/cookie-policy", order: 2, group: "legal" },
+  ],
 };
 
 const SOCIAL_ICON_PATHS: Record<string, ReactNode> = {
@@ -1177,6 +1181,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
       ) : null}
+      <CookieConsentBanner />
     </div>
   );
 }
