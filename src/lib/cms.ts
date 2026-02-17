@@ -815,9 +815,14 @@ export async function fetchArticleBySlug(slug: string) {
 
 export async function fetchUseCases(
   visibility?: "public" | "private",
-  options: { maxRecords?: number } = {}
+  options: { maxRecords?: number; sortBy?: "latest" | "title" } = {}
 ) {
   const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
+  const sortBy = options.sortBy === "title" ? "title" : "latest";
+  const sortQuery =
+    sortBy === "title"
+      ? `&sort=title:asc`
+      : `&sort[0]=lastUpdated:desc&sort[1]=updatedAt:desc&sort[2]=title:asc`;
   const pageSize = 50;
   const maxRecords =
     typeof options.maxRecords === "number" && options.maxRecords > 0
@@ -829,7 +834,8 @@ export async function fetchUseCases(
   while (true) {
     const json = await fetchCMSJson<CMSCollectionResponse>(
       `${CMS_URL}/api/use-cases` +
-        `?sort=lastUpdated:desc` +
+        `?` +
+        `${sortQuery.replace(/^&/, "")}` +
         `${visibilityFilter}` +
         `&publicationState=live` +
         `&fields[0]=title` +

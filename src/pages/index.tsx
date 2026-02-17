@@ -9,9 +9,11 @@ import {
   fetchAgents,
   fetchMCPServers,
   fetchPodcastEpisodes,
+  fetchUseCases,
   type Agent,
   type MCPServer,
   type PodcastEpisode,
+  type UseCase,
 } from "../lib/cms";
 import { heroImage } from "../lib/media";
 
@@ -19,6 +21,8 @@ type HomeProps = {
   latestPodcasts: PodcastEpisode[];
   latestAgents: Agent[];
   trendingAgents: Agent[];
+  latestUseCases: UseCase[];
+  trendingUseCases: UseCase[];
   latestMCPs: MCPServer[];
   trendingMCPs: MCPServer[];
 };
@@ -27,6 +31,8 @@ export default function Home({
   latestPodcasts,
   latestAgents,
   trendingAgents,
+  latestUseCases,
+  trendingUseCases,
   latestMCPs,
   trendingMCPs,
 }: HomeProps) {
@@ -501,6 +507,33 @@ export default function Home({
       <section className="mt-12 surface-panel p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeader
+            kicker="Use case signals"
+            title="Latest and trending use cases"
+            description="Fresh outcome playbooks and high-interest deployment patterns."
+          />
+          <Link href="/use-cases" className="btn btn-primary mt-3 sm:mt-0">
+            Open use case catalog
+          </Link>
+        </div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <UseCaseRail
+            title="Latest updates"
+            description="Most recently updated use case profiles."
+            items={latestUseCases}
+            detailType="latest"
+          />
+          <UseCaseRail
+            title="Trending use cases"
+            description="Use cases with stronger linkage and delivery signals."
+            items={trendingUseCases}
+            detailType="trending"
+          />
+        </div>
+      </section>
+
+      <section className="mt-12 surface-panel p-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeader
             kicker="MCP signals"
             title="Latest and trending MCP servers"
             description="Fresh connector inventory and high-interest MCP servers mapped to enterprise workflows."
@@ -682,10 +715,14 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
     const latestPodcasts = await fetchPodcastEpisodes({ maxRecords: 4 });
     const latestAgentsRaw = await fetchAgents(visibilityFilter, { maxRecords: 6, sortBy: "latest" });
     const trendingAgentsRaw = await fetchAgents(visibilityFilter, { maxRecords: 300 });
+    const latestUseCasesRaw = await fetchUseCases(visibilityFilter, { maxRecords: 6, sortBy: "latest" });
+    const trendingUseCasesRaw = await fetchUseCases(visibilityFilter, { maxRecords: 300, sortBy: "latest" });
     const latestMCPRaw = await fetchMCPServers(visibilityFilter, { maxRecords: 6, sortBy: "latest" });
     const trendingMCPRaw = await fetchMCPServers(visibilityFilter, { maxRecords: 300 });
     const latestAgents = sortAgentsByDate(latestAgentsRaw).slice(0, 6);
     const trendingAgents = sortAgentsByTrending(trendingAgentsRaw).slice(0, 6);
+    const latestUseCases = sortUseCasesByDate(latestUseCasesRaw).slice(0, 6);
+    const trendingUseCases = sortUseCasesByTrending(trendingUseCasesRaw).slice(0, 6);
     const latestMCPs = sortMCPByDate(latestMCPRaw).slice(0, 6);
     const trendingMCPs = sortMCPByTrending(trendingMCPRaw).slice(0, 6);
     return {
@@ -693,6 +730,8 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
         latestPodcasts,
         latestAgents,
         trendingAgents,
+        latestUseCases,
+        trendingUseCases,
         latestMCPs,
         trendingMCPs,
       },
@@ -704,6 +743,8 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
         latestPodcasts: [],
         latestAgents: [],
         trendingAgents: [],
+        latestUseCases: [],
+        trendingUseCases: [],
         latestMCPs: [],
         trendingMCPs: [],
       },
@@ -877,6 +918,48 @@ function AgentRail({
   );
 }
 
+function UseCaseRail({
+  title,
+  description,
+  items,
+  detailType,
+}: {
+  title: string;
+  description: string;
+  items: UseCase[];
+  detailType: "latest" | "trending";
+}) {
+  return (
+    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{description}</p>
+      {items.length === 0 ? (
+        <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">Use case signals will appear after next refresh.</p>
+      ) : (
+        <ul className="mt-3 grid gap-2">
+          {items.map((useCase) => (
+            <li key={useCase.slug || useCase.id}>
+              <Link
+                href={`/use-cases/${useCase.slug || useCase.id}`}
+                className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2"
+              >
+                <span className="truncate pr-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{useCase.title}</span>
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 group-hover:text-brand-deep">
+                  {detailType === "latest"
+                    ? formatPodcastDate(useCase.lastUpdated) || "Updated"
+                    : useCase.verified
+                    ? "Verified"
+                    : `${useCase.agents.length + useCase.mcpServers.length} links`}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </article>
+  );
+}
+
 function McpRail({
   title,
   description,
@@ -1003,6 +1086,20 @@ function sortAgentsByTrending(agents: Agent[]) {
   });
 }
 
+function sortUseCasesByDate(useCases: UseCase[]) {
+  return [...useCases].sort(
+    (a, b) => compareDateDesc(a.lastUpdated, b.lastUpdated) || a.title.localeCompare(b.title)
+  );
+}
+
+function sortUseCasesByTrending(useCases: UseCase[]) {
+  return [...useCases].sort((a, b) => {
+    const delta = scoreTrendingUseCase(b) - scoreTrendingUseCase(a);
+    if (delta !== 0) return delta;
+    return compareDateDesc(a.lastUpdated, b.lastUpdated) || a.title.localeCompare(b.title);
+  });
+}
+
 function sortMCPByDate(mcps: MCPServer[]) {
   return [...mcps].sort((a, b) => compareDateDesc(a.lastUpdated, b.lastUpdated) || a.name.localeCompare(b.name));
 }
@@ -1061,6 +1158,26 @@ function scoreTrendingAgent(agent: Agent) {
     return 0;
   })();
   return ratingScore + usageScore + verifiedScore + freshnessScore;
+}
+
+function scoreTrendingUseCase(useCase: UseCase) {
+  const linkageScore = Math.min(useCase.agents.length * 5 + useCase.mcpServers.length * 4, 30);
+  const verifiedScore = useCase.verified ? 8 : 0;
+  const completenessScore =
+    (useCase.summary ? 2 : 0) +
+    (useCase.longDescription ? 4 : 0) +
+    (useCase.outcomes ? 3 : 0) +
+    (useCase.metrics ? 3 : 0);
+  const freshnessScore = (() => {
+    const timestamp = toTimestamp(useCase.lastUpdated);
+    if (!timestamp) return 0;
+    const days = (Date.now() - timestamp) / (1000 * 60 * 60 * 24);
+    if (days <= 14) return 12;
+    if (days <= 45) return 8;
+    if (days <= 90) return 4;
+    return 0;
+  })();
+  return linkageScore + verifiedScore + completenessScore + freshnessScore;
 }
 
 function formatUsageLabel(value: number) {
