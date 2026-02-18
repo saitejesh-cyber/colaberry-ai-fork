@@ -8,13 +8,19 @@ import RichText from "../../../components/RichText";
 import SectionHeader from "../../../components/SectionHeader";
 import PodcastPlayer from "../../../components/PodcastPlayer";
 import TranscriptTimeline from "../../../components/TranscriptTimeline";
-import { fetchPodcastBySlug, type PodcastEpisode, type PlatformLink } from "../../../lib/cms";
+import {
+  fetchPodcastBySlug,
+  fetchRelatedPodcastEpisodes,
+  type PodcastEpisode,
+  type PlatformLink,
+} from "../../../lib/cms";
 import sanitizeHtml from "sanitize-html";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { logPodcastEvent } from "../../../lib/podcastTelemetry";
 
 type PodcastDetailProps = {
   episode: PodcastEpisode;
+  relatedEpisodes: PodcastEpisode[];
 };
 
 type RouteParams = {
@@ -34,6 +40,13 @@ export const getServerSideProps: GetServerSideProps<PodcastDetailProps, RoutePar
     return { notFound: true };
   }
 
+  let relatedEpisodes: PodcastEpisode[] = [];
+  try {
+    relatedEpisodes = await fetchRelatedPodcastEpisodes(episode, { limit: 4 });
+  } catch {
+    relatedEpisodes = [];
+  }
+
   const rawTranscript = typeof episode.transcript === "string" ? episode.transcript : "";
   const sanitizedTranscript = rawTranscript
     ? sanitizeHtml(rawTranscript, {
@@ -51,11 +64,12 @@ export const getServerSideProps: GetServerSideProps<PodcastDetailProps, RoutePar
         ...episode,
         transcript: sanitizedTranscript || episode.transcript || null,
       },
+      relatedEpisodes,
     },
   };
 };
 
-export default function PodcastDetail({ episode }: PodcastDetailProps) {
+export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetailProps) {
   const platformLabels: Record<string, string> = {
     apple: "Apple Podcasts",
     spotify: "Spotify",
@@ -67,7 +81,11 @@ export default function PodcastDetail({ episode }: PodcastDetailProps) {
   const preferNative = Boolean(episode.useNativePlayer && episode.audioUrl);
   const embedCode = preferNative ? null : episode.buzzsproutEmbedCode;
   const audioUrl = episode.audioUrl;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai").replace(/\/$/, "");
+  const canonicalUrl = `${siteUrl}/resources/podcasts/${episode.slug}`;
+  const metaDescription =
+    (typeof episode.description === "string" && episode.description.trim()) ||
+    "Podcast episode with player, transcript, and structured metadata for enterprise AI discovery.";
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<HTMLDivElement | null>(null);
@@ -119,11 +137,37 @@ export default function PodcastDetail({ episode }: PodcastDetailProps) {
   }, [audioUrl]);
 
   const resolvedShareUrl = useMemo(() => {
-    if (baseUrl) {
-      return `${baseUrl.replace(/\/$/, "")}/resources/podcasts/${episode.slug}`;
-    }
-    return `https://colaberry.ai/resources/podcasts/${episode.slug}`;
-  }, [baseUrl, episode.slug]);
+    return canonicalUrl;
+  }, [canonicalUrl]);
+
+  const jsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "PodcastEpisode",
+      name: episode.title,
+      description: metaDescription,
+      datePublished: episode.publishedDate || undefined,
+      url: canonicalUrl,
+      associatedMedia: episode.audioUrl
+        ? {
+            "@type": "MediaObject",
+            contentUrl: episode.audioUrl,
+            encodingFormat: "audio/mpeg",
+          }
+        : undefined,
+      isPartOf: {
+        "@type": "PodcastSeries",
+        name: "Colaberry AI Podcast",
+        url: `${siteUrl}/resources/podcasts`,
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "Colaberry AI",
+        url: siteUrl,
+      },
+    }),
+    [canonicalUrl, episode.audioUrl, episode.publishedDate, episode.title, metaDescription, siteUrl]
+  );
 
   const shareLinks = useMemo(() => {
     const url = encodeURIComponent(resolvedShareUrl);
@@ -189,6 +233,14 @@ export default function PodcastDetail({ episode }: PodcastDetailProps) {
     <Layout>
       <Head>
         <title>{`${episode.title} | Podcast | Colaberry AI`}</title>
+        <meta name="description" content={metaDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={`${episode.title} | Podcast | Colaberry AI`} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={canonicalUrl} />
+        {episode.coverImageUrl ? <meta property="og:image" content={episode.coverImageUrl} /> : null}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
       <div className="flex flex-col gap-3">
         <SectionHeader
@@ -466,6 +518,43 @@ export default function PodcastDetail({ episode }: PodcastDetailProps) {
         </aside>
       </div>
 
+      {relatedEpisodes.length > 0 ? (
+        <section className="mt-6 surface-panel border border-slate-200/80 bg-white/90 p-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <SectionHeader
+              as="h2"
+              size="md"
+              kicker="Related"
+              title="More podcast episodes"
+              description="Continue listening with closely related episodes from the catalog."
+            />
+            <Link href="/resources/podcasts" className="btn btn-secondary btn-sm mt-2 sm:mt-0">
+              Full podcast catalog
+            </Link>
+          </div>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            {relatedEpisodes.map((item) => (
+              <li key={item.slug}>
+                <Link
+                  href={`/resources/podcasts/${item.slug}`}
+                  className="focus-ring flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white/90 p-4 transition hover:border-brand-blue/40"
+                >
+                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    {formatDate(item.publishedDate) || "Date pending"}
+                  </span>
+                  <span className="mt-2 line-clamp-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    {item.title}
+                  </span>
+                  <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-deep">
+                    Open episode <span aria-hidden="true">→</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {showMiniPlayer && (
         <div className="pointer-events-none fixed bottom-4 left-1/2 z-50 w-[min(100%-2rem,64rem)] -translate-x-1/2">
           <div className="pointer-events-auto surface-panel border border-slate-200/80 bg-white/95 p-3 shadow-lg backdrop-blur">
@@ -521,4 +610,16 @@ export default function PodcastDetail({ episode }: PodcastDetailProps) {
       )}
     </Layout>
   );
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 }

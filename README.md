@@ -67,3 +67,24 @@ npm run import:podcasts:csv -- --file ./data/podcasts.csv
 - `--no-create-relations` skip auto-creating missing tags/companies
 - `--strict` stop on first invalid row
 - `--limit 20` import only first N rows
+
+## Production Data Readiness Audit
+
+Run a data gate check against Strapi before release:
+
+```bash
+npm run audit:data
+```
+
+Optional threshold overrides:
+
+```bash
+npm run audit:data -- --min-podcasts 200 --min-agents 40 --min-mcp 40 --min-use-cases 30 --verbose true
+```
+
+This verifies:
+
+- published counts for podcasts, agents, MCP servers, and use cases
+- podcast playability coverage (audio/embed presence)
+- publish-date completeness for podcasts
+- rich profile coverage on agent/MCP/use-case detail records

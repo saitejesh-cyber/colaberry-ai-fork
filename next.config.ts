@@ -27,6 +27,13 @@ const nextConfig: NextConfig = {
         pathname: "/media/hero/**",
         search: "?v=*",
       },
+      {
+        pathname: "/media/podcast/**",
+      },
+      {
+        pathname: "/media/podcast/**",
+        search: "?v=*",
+      },
     ],
   },
   async rewrites() {

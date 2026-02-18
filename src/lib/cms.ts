@@ -118,6 +118,7 @@ export type PodcastEpisode = {
   title: string;
   slug: string;
   publishedDate: string | null;
+  updatedAt?: string | null;
   podcastType?: string | null;
   description?: any;
   transcript?: any;
@@ -132,12 +133,19 @@ export type PodcastEpisode = {
   audioUrl?: string | null;
   buzzsproutEmbedCode?: string | null;
   useNativePlayer?: boolean | null;
+  viewCount?: number | null;
+  playCount?: number | null;
+  shareCount?: number | null;
+  subscribeCount?: number | null;
+  clickCount?: number | null;
   tags: Tag[];
   companies: Company[];
   platformLinks: PlatformLink[];
   coverImageUrl?: string | null;
   coverImageAlt?: string | null;
 };
+
+export type PodcastSortBy = "latest" | "trending";
 
 export type Agent = {
   id: number;
@@ -552,6 +560,7 @@ function mapEpisode(item: any): PodcastEpisode {
     title: attrs?.title ?? "",
     slug: attrs?.slug ?? "",
     publishedDate: attrs?.publishedDate ?? null,
+    updatedAt: attrs?.updatedAt ?? null,
     podcastType: attrs?.podcastType ?? null,
     description: attrs?.description ?? null,
     transcript: attrs?.transcript ?? null,
@@ -566,6 +575,11 @@ function mapEpisode(item: any): PodcastEpisode {
     audioUrl: attrs?.audioUrl ?? null,
     buzzsproutEmbedCode: attrs?.buzzsproutEmbedCode ?? null,
     useNativePlayer: attrs?.useNativePlayer ?? null,
+    viewCount: typeof attrs?.viewCount === "number" ? attrs.viewCount : null,
+    playCount: typeof attrs?.playCount === "number" ? attrs.playCount : null,
+    shareCount: typeof attrs?.shareCount === "number" ? attrs.shareCount : null,
+    subscribeCount: typeof attrs?.subscribeCount === "number" ? attrs.subscribeCount : null,
+    clickCount: typeof attrs?.clickCount === "number" ? attrs.clickCount : null,
     tags,
     companies,
     platformLinks: attrs?.platformLinks ?? [],
@@ -682,8 +696,37 @@ function mapMCPServer(item: any): MCPServer {
   };
 }
 
-export async function fetchPodcastEpisodes(options: { maxRecords?: number } = {}) {
+function getTimestamp(value?: string | null) {
+  if (!value) return 0;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getCount(value?: number | null) {
+  return typeof value === "number" && Number.isFinite(value) ? Math.max(0, value) : 0;
+}
+
+export function getPodcastTrendingScore(episode: PodcastEpisode, now = Date.now()) {
+  const views = getCount(episode.viewCount);
+  const plays = getCount(episode.playCount);
+  const shares = getCount(episode.shareCount);
+  const subscribes = getCount(episode.subscribeCount);
+  const clicks = getCount(episode.clickCount);
+  const engagement = views + plays * 6 + shares * 4 + subscribes * 5 + clicks * 2;
+
+  const publishedTs = getTimestamp(episode.publishedDate || episode.updatedAt || null);
+  if (!publishedTs) return engagement;
+
+  const ageDays = Math.max((now - publishedTs) / 86_400_000, 0);
+  const recencyBoost =
+    ageDays <= 30 ? 1.35 : ageDays <= 90 ? 1.2 : ageDays <= 180 ? 1.08 : ageDays <= 365 ? 1.02 : 1;
+  const freshness = Math.max(0, 24 - ageDays * 0.08);
+  return engagement * recencyBoost + freshness;
+}
+
+export async function fetchPodcastEpisodes(options: { maxRecords?: number; sortBy?: PodcastSortBy } = {}) {
   const pageSize = 100;
+  const sortBy = options.sortBy || "latest";
   const maxRecords =
     typeof options.maxRecords === "number" && options.maxRecords > 0
       ? Math.floor(options.maxRecords)
@@ -720,6 +763,15 @@ export async function fetchPodcastEpisodes(options: { maxRecords?: number } = {}
     const pageCount = json?.meta?.pagination?.pageCount || page;
     if (page >= pageCount) break;
     page += 1;
+  }
+
+  if (sortBy === "trending") {
+    const now = Date.now();
+    results.sort((a, b) => {
+      const scoreDiff = getPodcastTrendingScore(b, now) - getPodcastTrendingScore(a, now);
+      if (Math.abs(scoreDiff) > 0.001) return scoreDiff;
+      return getTimestamp(b.publishedDate || b.updatedAt || null) - getTimestamp(a.publishedDate || a.updatedAt || null);
+    });
   }
 
   return results;
@@ -1101,6 +1153,51 @@ function rankRelatedMCPServers(seed: MCPServer, candidates: MCPServer[], limit: 
     .sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
     .slice(0, limit)
     .map((entry) => entry.candidate);
+}
+
+function rankRelatedPodcastEpisodes(
+  seed: PodcastEpisode,
+  candidates: PodcastEpisode[],
+  limit: number
+) {
+  const seedTagSet = new Set((seed.tags || []).map(normalizeTagKey).filter(Boolean));
+  const seedCompanySet = new Set(
+    (seed.companies || [])
+      .map((company) => normalizeTagKey({ name: company.name, slug: company.slug }))
+      .filter(Boolean)
+  );
+  const seedType = (seed.podcastType || "internal").toLowerCase();
+
+  return candidates
+    .filter((candidate) => candidate.slug && candidate.slug !== seed.slug)
+    .map((candidate) => {
+      const candidateType = (candidate.podcastType || "internal").toLowerCase();
+      const sharedTags = (candidate.tags || [])
+        .map(normalizeTagKey)
+        .filter((tag) => tag && seedTagSet.has(tag)).length;
+      const sharedCompanies = (candidate.companies || [])
+        .map((company) => normalizeTagKey({ name: company.name, slug: company.slug }))
+        .filter((company) => company && seedCompanySet.has(company)).length;
+      const sameType = candidateType === seedType ? 2 : 0;
+      const recency = getTimestamp(candidate.publishedDate || candidate.updatedAt || null) / 1_000_000_000_000;
+      return {
+        candidate,
+        score: sharedTags * 4 + sharedCompanies * 3 + sameType + recency,
+      };
+    })
+    .sort((a, b) => b.score - a.score || a.candidate.title.localeCompare(b.candidate.title))
+    .slice(0, limit)
+    .map((entry) => entry.candidate);
+}
+
+export async function fetchRelatedPodcastEpisodes(
+  episode: PodcastEpisode,
+  options: { limit?: number } = {}
+): Promise<PodcastEpisode[]> {
+  if (!episode.slug) return [];
+  const limit = Math.max(options.limit || 4, 1);
+  const candidates = await fetchPodcastEpisodes({ maxRecords: 500 });
+  return rankRelatedPodcastEpisodes(episode, candidates, limit);
 }
 
 export async function fetchRelatedAgents(

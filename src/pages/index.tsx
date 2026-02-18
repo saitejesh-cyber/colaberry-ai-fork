@@ -17,18 +17,55 @@ import {
 } from "../lib/cms";
 import { heroImage } from "../lib/media";
 
+type HomePodcastSignal = {
+  id: number;
+  slug: string;
+  title: string;
+  publishedDate: string | null;
+  podcastType?: string | null;
+};
+
+type HomeAgentSignal = {
+  id: number;
+  slug: string;
+  name: string;
+  lastUpdated?: string | null;
+  rating?: number | null;
+  usageCount?: number | null;
+};
+
+type HomeUseCaseSignal = {
+  id: number;
+  slug: string;
+  title: string;
+  lastUpdated?: string | null;
+  verified?: boolean | null;
+  linkedCount: number;
+};
+
+type HomeMcpSignal = {
+  id: number;
+  slug: string;
+  name: string;
+  lastUpdated?: string | null;
+  rating?: number | null;
+  usageCount?: number | null;
+};
+
 type HomeProps = {
-  latestPodcasts: PodcastEpisode[];
-  latestAgents: Agent[];
-  trendingAgents: Agent[];
-  latestUseCases: UseCase[];
-  trendingUseCases: UseCase[];
-  latestMCPs: MCPServer[];
-  trendingMCPs: MCPServer[];
+  latestPodcasts: HomePodcastSignal[];
+  trendingPodcasts: HomePodcastSignal[];
+  latestAgents: HomeAgentSignal[];
+  trendingAgents: HomeAgentSignal[];
+  latestUseCases: HomeUseCaseSignal[];
+  trendingUseCases: HomeUseCaseSignal[];
+  latestMCPs: HomeMcpSignal[];
+  trendingMCPs: HomeMcpSignal[];
 };
 
 export default function Home({
   latestPodcasts,
+  trendingPodcasts,
   latestAgents,
   trendingAgents,
   latestUseCases,
@@ -457,24 +494,27 @@ export default function Home({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeader
             kicker="Latest podcasts"
-            title="Recent episodes from the podcast catalog"
-            description="New conversations and narratives to help teams evaluate agents, MCP integrations, and delivery patterns."
+            title="Latest and trending podcast signals"
+            description="Recent episodes and high-engagement conversations to help teams evaluate agents, MCP integrations, and delivery patterns."
           />
           <Link href="/resources/podcasts" className="btn btn-primary mt-3 sm:mt-0">
             Browse all podcasts
           </Link>
         </div>
-        {latestPodcasts.length > 0 ? (
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {latestPodcasts.map((episode) => (
-              <PodcastPreviewCard key={episode.slug} episode={episode} />
-            ))}
-          </div>
-        ) : (
-          <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
-            Podcast episodes will appear here after the next content sync.
-          </p>
-        )}
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <PodcastRail
+            title="Latest episodes"
+            description="Most recently published episodes from the full archive."
+            items={latestPodcasts}
+            detailType="latest"
+          />
+          <PodcastRail
+            title="Trending episodes"
+            description="Higher-engagement episodes based on play, share, and view signals."
+            items={trendingPodcasts}
+            detailType="trending"
+          />
+        </div>
       </section>
 
       <section className="mt-12 surface-panel p-6">
@@ -712,22 +752,26 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   const allowPrivate = process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
   const visibilityFilter = allowPrivate ? undefined : "public";
   try {
-    const latestPodcasts = await fetchPodcastEpisodes({ maxRecords: 4 });
+    const latestPodcasts = await fetchPodcastEpisodes({ maxRecords: 6, sortBy: "latest" });
+    const trendingPodcasts = await fetchPodcastEpisodes({ maxRecords: 80, sortBy: "trending" });
     const latestAgentsRaw = await fetchAgents(visibilityFilter, { maxRecords: 6, sortBy: "latest" });
     const trendingAgentsRaw = await fetchAgents(visibilityFilter, { maxRecords: 300 });
     const latestUseCasesRaw = await fetchUseCases(visibilityFilter, { maxRecords: 6, sortBy: "latest" });
     const trendingUseCasesRaw = await fetchUseCases(visibilityFilter, { maxRecords: 300, sortBy: "latest" });
     const latestMCPRaw = await fetchMCPServers(visibilityFilter, { maxRecords: 6, sortBy: "latest" });
     const trendingMCPRaw = await fetchMCPServers(visibilityFilter, { maxRecords: 300 });
-    const latestAgents = sortAgentsByDate(latestAgentsRaw).slice(0, 6);
-    const trendingAgents = sortAgentsByTrending(trendingAgentsRaw).slice(0, 6);
-    const latestUseCases = sortUseCasesByDate(latestUseCasesRaw).slice(0, 6);
-    const trendingUseCases = sortUseCasesByTrending(trendingUseCasesRaw).slice(0, 6);
-    const latestMCPs = sortMCPByDate(latestMCPRaw).slice(0, 6);
-    const trendingMCPs = sortMCPByTrending(trendingMCPRaw).slice(0, 6);
+    const latestAgents = sortAgentsByDate(latestAgentsRaw).slice(0, 6).map(toHomeAgentSignal);
+    const trendingAgents = sortAgentsByTrending(trendingAgentsRaw).slice(0, 6).map(toHomeAgentSignal);
+    const latestUseCases = sortUseCasesByDate(latestUseCasesRaw).slice(0, 6).map(toHomeUseCaseSignal);
+    const trendingUseCases = sortUseCasesByTrending(trendingUseCasesRaw)
+      .slice(0, 6)
+      .map(toHomeUseCaseSignal);
+    const latestMCPs = sortMCPByDate(latestMCPRaw).slice(0, 6).map(toHomeMcpSignal);
+    const trendingMCPs = sortMCPByTrending(trendingMCPRaw).slice(0, 6).map(toHomeMcpSignal);
     return {
       props: {
-        latestPodcasts,
+        latestPodcasts: latestPodcasts.map(toHomePodcastSignal),
+        trendingPodcasts: trendingPodcasts.slice(0, 6).map(toHomePodcastSignal),
         latestAgents,
         trendingAgents,
         latestUseCases,
@@ -741,6 +785,7 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
     return {
       props: {
         latestPodcasts: [],
+        trendingPodcasts: [],
         latestAgents: [],
         trendingAgents: [],
         latestUseCases: [],
@@ -825,52 +870,52 @@ function CatalogCard({
   );
 }
 
-function PodcastPreviewCard({ episode }: { episode: PodcastEpisode }) {
-  const publishedLabel = formatPodcastDate(episode.publishedDate);
-  const episodeType = (episode.podcastType || "internal").toLowerCase();
-  const metaBadge = episodeType === "external" ? "External" : "Colaberry";
-  const primaryCompany = episode.companies?.[0]?.name;
-  const imageSrc = episode.coverImageUrl || heroImage("hero-podcasts-cinematic.webp");
-
+function PodcastRail({
+  title,
+  description,
+  items,
+  detailType,
+}: {
+  title: string;
+  description: string;
+  items: HomePodcastSignal[];
+  detailType: "latest" | "trending";
+}) {
   return (
-    <Link
-      href={`/resources/podcasts/${episode.slug}`}
-      className="surface-panel surface-hover surface-interactive group flex h-full flex-col overflow-hidden border border-slate-200/80 bg-white/90 p-0"
-      aria-label={`Open podcast episode ${episode.title}`}
-    >
-      <div className="media-premium-frame border-0 border-b border-slate-200/80 rounded-none">
-        <div className="relative aspect-[16/10] w-full">
-          <Image
-            src={imageSrc}
-            alt={episode.coverImageAlt || episode.title}
-            fill
-            sizes="(min-width: 1536px) 25vw, (min-width: 1024px) 30vw, (min-width: 640px) 44vw, 95vw"
-            quality={88}
-            className="media-premium-image object-cover object-center"
-            unoptimized={Boolean(episode.coverImageUrl)}
-          />
-          <div className="media-premium-overlay" />
-          <div className="absolute left-3 top-3">
-            <span className="chip chip-muted rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-700">
-              {metaBadge}
-            </span>
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-1 flex-col p-4">
-        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
-          {publishedLabel || "Publish date pending"}
-          {episode.duration ? ` • ${episode.duration}` : ""}
-        </div>
-        <div className="mt-2 line-clamp-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{episode.title}</div>
-        <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">
-          {primaryCompany ? `Tagged company: ${primaryCompany}` : "Episode detail, transcript, and share options available."}
+    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{description}</p>
+      {items.length === 0 ? (
+        <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">
+          Podcast signals will appear after next content sync.
         </p>
-        <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-deep">
-          Open episode <span aria-hidden="true">→</span>
-        </div>
-      </div>
-    </Link>
+      ) : (
+        <ul className="mt-3 grid gap-2">
+          {items.map((episode) => (
+            <li key={episode.slug}>
+              <Link
+                href={`/resources/podcasts/${episode.slug}`}
+                className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/70"
+              >
+                <div className="min-w-0">
+                  <div className="line-clamp-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    {episode.title}
+                  </div>
+                  <div className="mt-1 text-xs text-slate-500 dark:text-slate-300">
+                    {detailType === "latest"
+                      ? formatPodcastDate(episode.publishedDate) || "Date pending"
+                      : `${(episode.podcastType || "internal").toLowerCase() === "external" ? "External" : "Colaberry"} signal`}
+                  </div>
+                </div>
+                <span className="ml-3 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
+                  →
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </article>
   );
 }
 
@@ -882,7 +927,7 @@ function AgentRail({
 }: {
   title: string;
   description: string;
-  items: Agent[];
+  items: HomeAgentSignal[];
   detailType: "latest" | "trending";
 }) {
   return (
@@ -926,7 +971,7 @@ function UseCaseRail({
 }: {
   title: string;
   description: string;
-  items: UseCase[];
+  items: HomeUseCaseSignal[];
   detailType: "latest" | "trending";
 }) {
   return (
@@ -949,7 +994,7 @@ function UseCaseRail({
                     ? formatPodcastDate(useCase.lastUpdated) || "Updated"
                     : useCase.verified
                     ? "Verified"
-                    : `${useCase.agents.length + useCase.mcpServers.length} links`}
+                    : `${useCase.linkedCount} links`}
                 </span>
               </Link>
             </li>
@@ -968,7 +1013,7 @@ function McpRail({
 }: {
   title: string;
   description: string;
-  items: MCPServer[];
+  items: HomeMcpSignal[];
   detailType: "latest" | "trending";
 }) {
   return (
@@ -1070,6 +1115,49 @@ function formatPodcastDate(value?: string | null) {
     day: "numeric",
     timeZone: "UTC",
   });
+}
+
+function toHomePodcastSignal(item: PodcastEpisode): HomePodcastSignal {
+  return {
+    id: item.id,
+    slug: item.slug,
+    title: item.title,
+    publishedDate: item.publishedDate || null,
+    podcastType: item.podcastType || null,
+  };
+}
+
+function toHomeAgentSignal(item: Agent): HomeAgentSignal {
+  return {
+    id: item.id,
+    slug: item.slug,
+    name: item.name,
+    lastUpdated: item.lastUpdated || null,
+    rating: typeof item.rating === "number" ? item.rating : null,
+    usageCount: typeof item.usageCount === "number" ? item.usageCount : null,
+  };
+}
+
+function toHomeUseCaseSignal(item: UseCase): HomeUseCaseSignal {
+  return {
+    id: item.id,
+    slug: item.slug,
+    title: item.title,
+    lastUpdated: item.lastUpdated || null,
+    verified: Boolean(item.verified),
+    linkedCount: (item.agents?.length || 0) + (item.mcpServers?.length || 0),
+  };
+}
+
+function toHomeMcpSignal(item: MCPServer): HomeMcpSignal {
+  return {
+    id: item.id,
+    slug: item.slug,
+    name: item.name,
+    lastUpdated: item.lastUpdated || null,
+    rating: typeof item.rating === "number" ? item.rating : null,
+    usageCount: typeof item.usageCount === "number" ? item.usageCount : null,
+  };
 }
 
 function sortAgentsByDate(agents: Agent[]) {
