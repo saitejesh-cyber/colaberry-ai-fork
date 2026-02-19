@@ -1,7 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
-import { MouseEvent as ReactMouseEvent, ReactNode, useEffect, useRef, useState } from "react";
+import {
+  CSSProperties,
+  MouseEvent as ReactMouseEvent,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/router";
 import { fetchGlobalNavigation, GlobalNavigation } from "../lib/cms";
 import NewsletterSignup from "./NewsletterSignup";
@@ -19,8 +27,9 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Overview", href: "/aixcelerator", order: 1 },
         { label: "Agents", href: "/aixcelerator/agents", order: 2 },
         { label: "MCP servers", href: "/aixcelerator/mcp", order: 3 },
-        { label: "Use cases", href: "/use-cases", order: 4 },
-        { label: "Discovery assistant", href: "/assistant", order: 5 },
+        { label: "Skills", href: "/aixcelerator/skills", order: 4 },
+        { label: "Use cases", href: "/use-cases", order: 5 },
+        { label: "Discovery assistant", href: "/assistant", order: 6 },
       ],
     },
     {
@@ -66,10 +75,11 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Platform", href: "/aixcelerator", order: 1, group: "Product" },
         { label: "Agents", href: "/aixcelerator/agents", order: 2, group: "Product" },
         { label: "MCP servers", href: "/aixcelerator/mcp", order: 3, group: "Product" },
-        { label: "Discovery assistant", href: "/assistant", order: 4, group: "Product" },
-        { label: "Solutions", href: "/solutions", order: 5, group: "Product" },
-        { label: "Use cases", href: "/use-cases", order: 6, group: "Product" },
-        { label: "Industries", href: "/industries", order: 7, group: "Product" },
+        { label: "Skills", href: "/aixcelerator/skills", order: 4, group: "Product" },
+        { label: "Discovery assistant", href: "/assistant", order: 5, group: "Product" },
+        { label: "Solutions", href: "/solutions", order: 6, group: "Product" },
+        { label: "Use cases", href: "/use-cases", order: 7, group: "Product" },
+        { label: "Industries", href: "/industries", order: 8, group: "Product" },
       ],
     },
     {
@@ -236,6 +246,7 @@ const PLATFORM_CHILD_BLUEPRINT = [
   { label: "Overview", href: "/aixcelerator" },
   { label: "Agents", href: "/aixcelerator/agents" },
   { label: "MCP servers", href: "/aixcelerator/mcp" },
+  { label: "Skills", href: "/aixcelerator/skills" },
   { label: "Use cases", href: "/use-cases" },
   { label: "Discovery assistant", href: "/assistant" },
 ];
@@ -245,6 +256,8 @@ const PLATFORM_CHILD_ALIASES: Record<string, string> = {
   mcp: "/aixcelerator/mcp",
   "mcp servers": "/aixcelerator/mcp",
   "mcp server": "/aixcelerator/mcp",
+  skills: "/aixcelerator/skills",
+  skill: "/aixcelerator/skills",
   "use cases": "/use-cases",
   "use case": "/use-cases",
   "discovery assistant": "/assistant",
@@ -373,6 +386,78 @@ function mergeGlobalNavigation(primary: GlobalNavigation | null, fallback: Globa
   };
 }
 
+type WorkspaceLink = {
+  label: string;
+  href: string;
+  target?: string | null;
+};
+
+type WorkspaceSection = {
+  title: string;
+  links: WorkspaceLink[];
+};
+
+function dedupeWorkspaceLinks(links: WorkspaceLink[]) {
+  const seen = new Set<string>();
+  return links.filter((link) => {
+    const key = `${normalizePath(link.href)}|${link.label}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function getHeaderLinkByLabel(nav: GlobalNavigation, label: string) {
+  const target = label.trim().toLowerCase();
+  return nav.headerLinks.find((link) => link.label.trim().toLowerCase() === target);
+}
+
+function buildWorkspaceSections(nav: GlobalNavigation): WorkspaceSection[] {
+  const platformLink = nav.headerLinks.find(isPlatformLink) || fallbackNavigation.headerLinks[0];
+  const resourcesLink =
+    getHeaderLinkByLabel(nav, "resources") || getHeaderLinkByLabel(fallbackNavigation, "resources");
+  const updatesLink =
+    getHeaderLinkByLabel(nav, "updates") || getHeaderLinkByLabel(fallbackNavigation, "updates");
+  const industriesLink =
+    getHeaderLinkByLabel(nav, "industries") || getHeaderLinkByLabel(fallbackNavigation, "industries");
+  const solutionsLink =
+    getHeaderLinkByLabel(nav, "solutions") || getHeaderLinkByLabel(fallbackNavigation, "solutions");
+
+  const platformChildren = (platformLink.children || []).map((child) => ({
+    label: child.label,
+    href: child.href,
+    target: child.target,
+  }));
+  const platformSectionLinks = dedupeWorkspaceLinks([
+    { label: "Overview", href: platformLink.href, target: platformLink.target },
+    ...platformChildren,
+  ]).filter((link) => normalizePath(link.href) !== "/assistant");
+
+  const resourceChildren = (resourcesLink?.children || []).filter((child) =>
+    ["podcasts", "white papers", "articles", "books", "case studies", "resources hub"].includes(
+      child.label.trim().toLowerCase()
+    )
+  );
+  const catalogLinks = dedupeWorkspaceLinks([
+    { label: "Search catalog", href: "/search" },
+    { label: "Discovery assistant", href: "/assistant" },
+    ...resourceChildren.map((child) => ({ label: child.label, href: child.href, target: child.target })),
+    updatesLink ? { label: "News & product", href: updatesLink.href, target: updatesLink.target } : null,
+  ].filter(Boolean) as WorkspaceLink[]);
+
+  const exploreLinks = dedupeWorkspaceLinks([
+    industriesLink ? { label: "Industries", href: industriesLink.href, target: industriesLink.target } : null,
+    solutionsLink ? { label: "Solutions", href: solutionsLink.href, target: solutionsLink.target } : null,
+    resourcesLink ? { label: "Resources", href: resourcesLink.href, target: resourcesLink.target } : null,
+  ].filter(Boolean) as WorkspaceLink[]);
+
+  return [
+    { title: "Platform", links: platformSectionLinks },
+    { title: "Catalog", links: catalogLinks },
+    { title: "Explore", links: exploreLinks },
+  ].filter((section) => section.links.length > 0);
+}
+
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -381,6 +466,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [workspaceRailCollapsed, setWorkspaceRailCollapsed] = useState(false);
+  const [workspaceMobileRailOpen, setWorkspaceMobileRailOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [allowBackdropClose, setAllowBackdropClose] = useState(true);
   const [demoWizardOpen, setDemoWizardOpen] = useState(false);
@@ -388,9 +475,31 @@ export default function Layout({ children }: { children: ReactNode }) {
   const searchDialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const currentPath = normalizePath(router.asPath || "/");
+  const isCatalogWorkspace =
+    currentPath === "/aixcelerator" ||
+    currentPath.startsWith("/aixcelerator/") ||
+    currentPath === "/use-cases" ||
+    currentPath.startsWith("/use-cases/") ||
+    currentPath === "/search";
   const headerNavPaths = globalNav.headerLinks
     .map((link) => normalizePath(link.href))
     .filter((href) => !isExternalHref(href));
+  const workspaceSections = useMemo(() => buildWorkspaceSections(globalNav), [globalNav]);
+  const workspaceNavPaths = useMemo(
+    () =>
+      workspaceSections
+        .flatMap((section) => section.links)
+        .map((link) => normalizePath(link.href))
+        .filter((href) => !isExternalHref(href)),
+    [workspaceSections]
+  );
+  const workspaceGridStyle = useMemo(
+    () =>
+      ({
+        "--workspace-rail-width": workspaceRailCollapsed ? "5.5rem" : "17rem",
+      } as CSSProperties),
+    [workspaceRailCollapsed]
+  );
 
   useEffect(() => {
     const rafId = window.requestAnimationFrame(() => {
@@ -515,6 +624,22 @@ export default function Layout({ children }: { children: ReactNode }) {
   }, [mobileMenuOpen]);
 
   useEffect(() => {
+    if (!workspaceMobileRailOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setWorkspaceMobileRailOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [workspaceMobileRailOpen]);
+
+  useEffect(() => {
     const dismissed = window.localStorage.getItem("colaberry_discovery_prompt_dismissed");
     if (dismissed) return;
     const timer = window.setTimeout(() => {
@@ -526,6 +651,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleRouteChangeStart = () => {
       setMobileMenuOpen(false);
+      setWorkspaceMobileRailOpen(false);
       setSearchOpen(false);
     };
     router.events.on("routeChangeStart", handleRouteChangeStart);
@@ -551,6 +677,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const closeMobileMenu = () => setMobileMenuOpen(false);
   const openMobileMenu = () => {
     setSearchOpen(false);
+    setWorkspaceMobileRailOpen(false);
     setMobileMenuOpen(true);
   };
   const dismissDiscovery = () => {
@@ -640,96 +767,117 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
 
           <nav className="hidden items-center gap-1.5 text-sm lg:flex">
-            {globalNav.headerLinks.map((link) => {
-              const hasChildren = !!link.children?.length;
-              const isParentActive = isActiveNavPath(currentPath, link.href, headerNavPaths);
-              const childNavPaths = (link.children || [])
-                .map((child) => normalizePath(child.href))
-                .filter((href) => !isExternalHref(href));
-              const dropdownSurfaceClass = "border-slate-200/80 bg-white/95 text-slate-900 dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-100";
-              const menuKey = `${link.label}-${link.href}`;
-              const isOpen = openMenu === menuKey;
-              return (
-                <div
-                  key={menuKey}
-                  className="relative group"
-                  onMouseEnter={() => setOpenMenu(menuKey)}
-                  onMouseLeave={() => setOpenMenu((current) => (current === menuKey ? null : current))}
-                  onFocusCapture={() => setOpenMenu(menuKey)}
-                  onBlurCapture={(event) => {
-                    if (!event.currentTarget.contains(event.relatedTarget as Node)) {
-                      setOpenMenu((current) => (current === menuKey ? null : current));
-                    }
-                  }}
+            {isCatalogWorkspace ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setWorkspaceRailCollapsed((current) => !current)}
+                  className="btn btn-ghost btn-sm"
+                  aria-label={workspaceRailCollapsed ? "Expand catalog menu" : "Collapse catalog menu"}
                 >
-                  <Link
-                    href={link.href}
-                    target={link.target ?? undefined}
-                    rel={getLinkRel(link.target)}
-                    className={`nav-link focus-ring inline-flex items-center gap-1.5 ${isParentActive ? "nav-link-active" : ""}`}
-                    aria-haspopup={hasChildren ? "menu" : undefined}
-                    aria-expanded={hasChildren ? isOpen : undefined}
+                  <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="none">
+                    <path
+                      d="M4 5h12M4 10h12M4 15h12"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span>{workspaceRailCollapsed ? "Expand menu" : "Collapse menu"}</span>
+                </button>
+                <Link href="/assistant" className="btn btn-ghost btn-sm">
+                  Assistant
+                </Link>
+              </>
+            ) : (
+              globalNav.headerLinks.map((link) => {
+                const hasChildren = !!link.children?.length;
+                const isParentActive = isActiveNavPath(currentPath, link.href, headerNavPaths);
+                const childNavPaths = (link.children || [])
+                  .map((child) => normalizePath(child.href))
+                  .filter((href) => !isExternalHref(href));
+                const dropdownSurfaceClass = "border-slate-200/80 bg-white/95 text-slate-900 dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-100";
+                const menuKey = `${link.label}-${link.href}`;
+                const isOpen = openMenu === menuKey;
+                return (
+                  <div
+                    key={menuKey}
+                    className="relative group"
+                    onMouseEnter={() => setOpenMenu(menuKey)}
+                    onMouseLeave={() => setOpenMenu((current) => (current === menuKey ? null : current))}
+                    onFocusCapture={() => setOpenMenu(menuKey)}
+                    onBlurCapture={(event) => {
+                      if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+                        setOpenMenu((current) => (current === menuKey ? null : current));
+                      }
+                    }}
                   >
-                    {link.label}
-                    {hasChildren ? (
-                      <svg
-                        viewBox="0 0 20 20"
-                        aria-hidden="true"
-                        className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-y-[1px] group-hover:text-brand-ink"
-                        fill="currentColor"
-                      >
-                        <path
-                          d="M5.5 7.5 10 12l4.5-4.5"
-                          stroke="currentColor"
-                          strokeWidth="1.6"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          fill="none"
-                        />
-                      </svg>
-                    ) : null}
-                  </Link>
-                  {hasChildren ? (
-                    <div
-                      className={`absolute left-0 top-full z-50 pt-3 transition duration-150 ${isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
+                    <Link
+                      href={link.href}
+                      target={link.target ?? undefined}
+                      rel={getLinkRel(link.target)}
+                      className={`nav-link focus-ring inline-flex items-center gap-1.5 ${isParentActive ? "nav-link-active" : ""}`}
+                      aria-haspopup={hasChildren ? "menu" : undefined}
+                      aria-expanded={hasChildren ? isOpen : undefined}
                     >
+                      {link.label}
+                      {hasChildren ? (
+                        <svg
+                          viewBox="0 0 20 20"
+                          aria-hidden="true"
+                          className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-y-[1px] group-hover:text-brand-ink"
+                          fill="currentColor"
+                        >
+                          <path
+                            d="M5.5 7.5 10 12l4.5-4.5"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                        </svg>
+                      ) : null}
+                    </Link>
+                    {hasChildren ? (
                       <div
-                        className={`nav-dropdown-panel min-w-[14rem] rounded-2xl border p-2.5 shadow-xl transition duration-150 ${isOpen ? "translate-y-0" : "translate-y-1"} ${dropdownSurfaceClass}`}
-                        role="menu"
-                        aria-label={`${link.label} menu`}
+                        className={`absolute left-0 top-full z-50 pt-3 transition duration-150 ${isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
                       >
-                        <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-slate-400">
-                          Explore {link.label}
-                        </div>
-                        <div className="grid gap-1">
-                          {link.children?.map((child) => {
-                            const isChildActive = isActiveNavPath(currentPath, child.href, childNavPaths);
-                            return (
-                              <Link
-                                key={`${child.label}-${child.href}`}
-                                href={child.href}
-                                target={child.target ?? undefined}
-                                rel={getLinkRel(child.target)}
-                                className={`nav-dropdown-link focus-ring flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium ${isChildActive ? "nav-dropdown-link-active" : ""}`}
-                                role="menuitem"
-                              >
-                                <span>{child.label}</span>
-                                <span className="text-slate-400">→</span>
-                              </Link>
-                            );
-                          })}
+                        <div
+                          className={`nav-dropdown-panel min-w-[14rem] rounded-2xl border p-2.5 shadow-xl transition duration-150 ${isOpen ? "translate-y-0" : "translate-y-1"} ${dropdownSurfaceClass}`}
+                          role="menu"
+                          aria-label={`${link.label} menu`}
+                        >
+                          <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-slate-400">
+                            Explore {link.label}
+                          </div>
+                          <div className="grid gap-1">
+                            {link.children?.map((child) => {
+                              const isChildActive = isActiveNavPath(currentPath, child.href, childNavPaths);
+                              return (
+                                <Link
+                                  key={`${child.label}-${child.href}`}
+                                  href={child.href}
+                                  target={child.target ?? undefined}
+                                  rel={getLinkRel(child.target)}
+                                  className={`nav-dropdown-link focus-ring flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium ${isChildActive ? "nav-dropdown-link-active" : ""}`}
+                                  role="menuitem"
+                                >
+                                  <span>{child.label}</span>
+                                  <span className="text-slate-400">→</span>
+                                </Link>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
+                    ) : null}
+                  </div>
+                );
+              })
+            )}
 
             <div className="ml-2 flex items-center gap-2 border-l border-slate-200/80 pl-3 dark:border-slate-700/80">
-              <Link href="/assistant" className="btn btn-ghost btn-sm">
-                Assistant
-              </Link>
               <button
                 type="button"
                 onClick={openSearch}
@@ -775,6 +923,22 @@ export default function Layout({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="flex items-center gap-1.5 lg:hidden">
+            {isCatalogWorkspace ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setWorkspaceMobileRailOpen(true);
+                }}
+                className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-slate-200/70 bg-white/85 px-3 text-sm font-semibold text-slate-700 hover:border-brand-blue/35 hover:text-brand-deep dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100"
+                aria-label="Open catalog sidebar"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
+                  <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+                <span>Catalog</span>
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={openSearch}
@@ -933,9 +1097,126 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
       ) : null}
 
-      <main id="main-content" className="main-offset relative w-full flex-1 px-4 sm:px-6 lg:px-8">
-        {children}
-      </main>
+      {isCatalogWorkspace && workspaceMobileRailOpen ? (
+        <div
+          className="fixed inset-0 z-[58] bg-slate-950/45 backdrop-blur-sm lg:hidden"
+          onClick={() => setWorkspaceMobileRailOpen(false)}
+        >
+          <aside
+            className="absolute left-0 top-0 flex h-full w-[min(88vw,340px)] flex-col border-r border-slate-200/70 bg-white/95 p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-950/95"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-300">
+                  Catalog menu
+                </div>
+                <div className="mt-1 text-base font-semibold text-slate-900 dark:text-white">
+                  Aixcelerator workspace
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setWorkspaceMobileRailOpen(false)}
+                className="btn btn-ghost btn-icon"
+                aria-label="Close catalog sidebar"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                  <path d="M6 6 18 18M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-4 flex-1 overflow-y-auto">
+              {workspaceSections.map((section) => (
+                <div key={section.title} className="mb-4">
+                  <div className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-300">
+                    {section.title}
+                  </div>
+                  <div className="mt-2 grid gap-1">
+                    {section.links.map((link) => {
+                      const isActive = isActiveNavPath(currentPath, link.href, workspaceNavPaths);
+                      return (
+                        <MobileLink
+                          key={`${section.title}-${link.label}-${link.href}`}
+                          href={link.href}
+                          target={link.target}
+                          active={isActive}
+                          onClick={() => setWorkspaceMobileRailOpen(false)}
+                          className="text-sm font-semibold"
+                        >
+                          {link.label}
+                        </MobileLink>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/assistant"
+              className="btn btn-secondary btn-sm mt-2 w-full justify-center"
+              onClick={() => setWorkspaceMobileRailOpen(false)}
+            >
+              Open assistant
+            </Link>
+          </aside>
+        </div>
+      ) : null}
+
+      {isCatalogWorkspace ? (
+        <div className="w-full flex-1 lg:grid lg:grid-cols-[var(--workspace-rail-width)_minmax(0,1fr)] lg:gap-6 lg:px-8" style={workspaceGridStyle}>
+          <aside className="hidden lg:block">
+            <div className="main-offset sticky top-0 h-screen pb-6">
+              <div className="surface-panel h-full overflow-y-auto p-3">
+                {workspaceSections.map((section) => (
+                  <div key={section.title} className="mb-4">
+                    <div className={`px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-300 ${workspaceRailCollapsed ? "text-center" : ""}`}>
+                      {workspaceRailCollapsed ? section.title.charAt(0) : section.title}
+                    </div>
+                    <div className="mt-2 grid gap-1">
+                      {section.links.map((link) => {
+                        const isActive = isActiveNavPath(currentPath, link.href, workspaceNavPaths);
+                        return (
+                          <Link
+                            key={`${section.title}-${link.label}-${link.href}`}
+                            href={link.href}
+                            target={link.target ?? undefined}
+                            rel={getLinkRel(link.target)}
+                            title={workspaceRailCollapsed ? link.label : undefined}
+                            className={`focus-ring flex items-center gap-2 rounded-xl border px-2.5 py-2 text-sm font-semibold transition ${
+                              isActive
+                                ? "border-brand-blue/40 bg-brand-blue/10 text-brand-deep dark:border-sky-300/55 dark:bg-sky-900/35 dark:text-sky-100"
+                                : "border-slate-200/70 bg-white/80 text-slate-700 hover:border-brand-blue/35 hover:text-brand-deep dark:border-slate-700 dark:bg-slate-900/75 dark:text-slate-200 dark:hover:border-sky-300/45 dark:hover:text-sky-100"
+                            } ${workspaceRailCollapsed ? "justify-center" : ""}`}
+                          >
+                            <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold ${isActive ? "border-brand-blue/45 bg-white/90 text-brand-deep dark:border-sky-200/60 dark:bg-slate-900/85 dark:text-sky-100" : "border-slate-200/80 bg-white/90 text-slate-500 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-300"}`}>
+                              {link.label
+                                .split(" ")
+                                .map((token) => token[0])
+                                .join("")
+                                .slice(0, 2)
+                                .toUpperCase()}
+                            </span>
+                            {!workspaceRailCollapsed ? <span className="line-clamp-1">{link.label}</span> : null}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+          <main id="main-content" className="main-offset relative min-w-0 px-4 sm:px-6 lg:px-0">
+            {children}
+          </main>
+        </div>
+      ) : (
+        <main id="main-content" className="main-offset relative w-full flex-1 px-4 sm:px-6 lg:px-8">
+          {children}
+        </main>
+      )}
 
       <footer className="footer-surface mt-10 border-t border-slate-200/70 dark:border-slate-800/70">
         <div className="grid w-full grid-cols-1 gap-8 px-4 py-10 text-sm text-slate-800 dark:text-slate-200 sm:px-6 lg:grid-cols-[1.35fr_1fr_1fr_auto] lg:px-8">
@@ -1107,7 +1388,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     id="global-search-input"
                     name="q"
                     type="search"
-                    placeholder="Search agents, MCP servers, resources, updates..."
+                    placeholder="Search agents, MCP servers, skills, resources, updates..."
                     className="w-full rounded-full border border-slate-200 bg-white px-4 py-3 pr-12 text-sm text-slate-900 placeholder:text-slate-500 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
@@ -1135,13 +1416,14 @@ export default function Layout({ children }: { children: ReactNode }) {
               </div>
             </form>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {[
-                { label: "Discovery assistant", href: "/assistant" },
-                { label: "Agents catalog", href: "/aixcelerator/agents" },
-                { label: "MCP servers", href: "/aixcelerator/mcp" },
-                { label: "Solutions overview", href: "/solutions" },
-                { label: "Resources hub", href: "/resources" },
-                { label: "Industry playbooks", href: "/industries" },
+                {[
+                  { label: "Discovery assistant", href: "/assistant" },
+                  { label: "Agents catalog", href: "/aixcelerator/agents" },
+                  { label: "MCP servers", href: "/aixcelerator/mcp" },
+                  { label: "Skills catalog", href: "/aixcelerator/skills" },
+                  { label: "Solutions overview", href: "/solutions" },
+                  { label: "Resources hub", href: "/resources" },
+                  { label: "Industry playbooks", href: "/industries" },
                 { label: "News & updates", href: "/updates" },
               ].map((item) => (
                 <Link
@@ -1185,13 +1467,14 @@ export default function Layout({ children }: { children: ReactNode }) {
               </button>
             </div>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Jump straight into the catalog or explore validated MCP infrastructure and resources.
+              Jump straight into agents, MCPs, and skills-or explore validated resources and industry playbooks.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {[
                 { label: "Discovery assistant", href: "/assistant" },
                 { label: "Agents catalog", href: "/aixcelerator/agents" },
                 { label: "MCP servers", href: "/aixcelerator/mcp" },
+                { label: "Skills catalog", href: "/aixcelerator/skills" },
                 { label: "Resources hub", href: "/resources" },
                 { label: "Industry playbooks", href: "/industries" },
               ].map((item) => (
@@ -1205,6 +1488,29 @@ export default function Layout({ children }: { children: ReactNode }) {
               ))}
             </div>
           </div>
+        </div>
+      ) : null}
+      {isCatalogWorkspace && !mobileMenuOpen && !workspaceMobileRailOpen && !searchOpen ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-5 z-30 flex justify-center px-4 lg:inset-x-auto lg:right-8 lg:px-0">
+          <form
+            action="/search"
+            method="get"
+            className="pointer-events-auto flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/95 p-2 shadow-xl dark:border-slate-700 dark:bg-slate-950/95 lg:w-[36rem]"
+          >
+            <label htmlFor="workspace-ask" className="sr-only">
+              Ask about this page
+            </label>
+            <input
+              id="workspace-ask"
+              name="q"
+              type="search"
+              placeholder="Ask this page: agents, MCP servers, skills, use cases..."
+              className="w-full rounded-xl border border-transparent bg-transparent px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-blue/35 focus:outline-none dark:text-slate-100 dark:placeholder:text-slate-500"
+            />
+            <button type="submit" className="btn btn-primary btn-sm whitespace-nowrap">
+              Ask
+            </button>
+          </form>
         </div>
       ) : null}
       <CookieConsentBanner />

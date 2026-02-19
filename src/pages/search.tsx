@@ -9,17 +9,20 @@ import {
   Article,
   MCPServer,
   PodcastEpisode,
+  Skill,
   UseCase,
   fetchAgents,
   fetchArticles,
   fetchMCPServers,
   fetchPodcastEpisodes,
+  fetchSkills,
   fetchUseCases,
 } from "../lib/cms";
 import { getIndustryDisplayName } from "../data/caseStudies";
 
 type SearchResultType =
   | "Agents"
+  | "Skills"
   | "MCP Servers"
   | "Use Cases"
   | "Podcasts"
@@ -44,6 +47,7 @@ type SearchPageProps = {
 
 const TYPE_ORDER: SearchResultType[] = [
   "Agents",
+  "Skills",
   "MCP Servers",
   "Use Cases",
   "Podcasts",
@@ -53,6 +57,7 @@ const TYPE_ORDER: SearchResultType[] = [
 ];
 const TYPE_LIMITS: Record<SearchResultType, number> = {
   Agents: 12,
+  Skills: 12,
   "MCP Servers": 12,
   "Use Cases": 10,
   Podcasts: 8,
@@ -75,6 +80,13 @@ const STATIC_PAGES: Array<Omit<SearchResult, "id">> = [
     description: "Governed catalog of enterprise agents and assistants.",
     href: "/aixcelerator/agents",
     meta: "Agents",
+  },
+  {
+    type: "Pages",
+    title: "Skills catalog",
+    description: "Reusable capability units for official, workflow, domain, and orchestration tasks.",
+    href: "/aixcelerator/skills",
+    meta: "Skills",
   },
   {
     type: "Pages",
@@ -168,6 +180,41 @@ function buildAgentResults(query: string, agents: Agent[]): SearchResult[] {
       description: agent.description || "Agent catalog entry",
       href: `/aixcelerator/agents/${agent.slug}`,
       meta: [agent.industry, agent.status].filter(Boolean).join(" · ") || "Agent",
+    }));
+}
+
+function buildSkillResults(query: string, skills: Skill[]): SearchResult[] {
+  return skills
+    .filter((skill) =>
+      matchesQuery(query, [
+        skill.name,
+        skill.summary,
+        skill.longDescription,
+        skill.category,
+        skill.skillType,
+        skill.provider,
+        skill.industry,
+        skill.status,
+        skill.inputs,
+        skill.outputs,
+        skill.toolsRequired,
+        ...(skill.tags || []).map((tag) => tag.name || tag.slug || ""),
+        ...(skill.companies || []).map((company) => company.name || company.slug || ""),
+        ...(skill.agents || []).map((agent) => agent.name || agent.slug || ""),
+        ...(skill.mcpServers || []).map((mcp) => mcp.name || mcp.slug || ""),
+        ...(skill.useCases || []).map((useCase) => useCase.name || useCase.slug || ""),
+      ])
+    )
+    .map((skill) => ({
+      id: `skill-${skill.id}`,
+      type: "Skills",
+      title: skill.name,
+      description: skill.summary || "Reusable skill profile",
+      href: `/aixcelerator/skills/${skill.slug}`,
+      meta:
+        [skill.category || skill.skillType, skill.provider || skill.sourceName, skill.industry]
+          .filter(Boolean)
+          .join(" · ") || "Skill",
     }));
 }
 
@@ -328,8 +375,9 @@ export const getServerSideProps: GetServerSideProps<SearchPageProps> = async ({ 
   const visibilityFilter = allowPrivate ? undefined : "public";
   let fetchError = false;
 
-  const [agentsResult, mcpsResult, useCasesResult, podcastsResult, articlesResult] = await Promise.allSettled([
+  const [agentsResult, skillsResult, mcpsResult, useCasesResult, podcastsResult, articlesResult] = await Promise.allSettled([
     fetchAgents(visibilityFilter, { maxRecords: 600 }),
+    fetchSkills(visibilityFilter, { maxRecords: 600 }),
     fetchMCPServers(visibilityFilter, { maxRecords: 600 }),
     fetchUseCases(visibilityFilter, { maxRecords: 600 }),
     fetchPodcastEpisodes(),
@@ -337,12 +385,14 @@ export const getServerSideProps: GetServerSideProps<SearchPageProps> = async ({ 
   ]);
 
   const agents = agentsResult.status === "fulfilled" ? agentsResult.value : [];
+  const skills = skillsResult.status === "fulfilled" ? skillsResult.value : [];
   const mcps = mcpsResult.status === "fulfilled" ? mcpsResult.value : [];
   const useCases = useCasesResult.status === "fulfilled" ? useCasesResult.value : [];
   const podcasts = podcastsResult.status === "fulfilled" ? podcastsResult.value : [];
   const articles = articlesResult.status === "fulfilled" ? articlesResult.value : [];
   if (
     agentsResult.status === "rejected" ||
+    skillsResult.status === "rejected" ||
     mcpsResult.status === "rejected" ||
     useCasesResult.status === "rejected" ||
     podcastsResult.status === "rejected" ||
@@ -353,6 +403,7 @@ export const getServerSideProps: GetServerSideProps<SearchPageProps> = async ({ 
 
   const results = [
     ...buildAgentResults(normalizedQuery, agents),
+    ...buildSkillResults(normalizedQuery, skills),
     ...buildMcpResults(normalizedQuery, mcps),
     ...buildUseCaseResults(normalizedQuery, useCases),
     ...buildPodcastResults(normalizedQuery, podcasts),
@@ -392,7 +443,7 @@ export default function SearchPage({ query, results, fetchError }: SearchPagePro
             size="xl"
             kicker="Search"
             title={query ? `Results for \"${query}\"` : "Search the catalog"}
-            description="Search across agents, MCP servers, use cases, podcasts, case studies, and core pages."
+            description="Search across agents, MCP servers, skills, use cases, podcasts, case studies, and core pages."
           />
         </div>
         <div className="surface-panel p-5">
@@ -408,7 +459,7 @@ export default function SearchPage({ query, results, fetchError }: SearchPagePro
               name="q"
               type="search"
               defaultValue={query}
-              placeholder="Search agents, MCP servers, use cases, podcasts..."
+              placeholder="Search agents, MCP servers, skills, use cases, podcasts..."
               className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
             />
             <button type="submit" className="btn btn-primary btn-sm">
@@ -416,7 +467,7 @@ export default function SearchPage({ query, results, fetchError }: SearchPagePro
             </button>
           </form>
           <p className="mt-2 text-xs text-slate-500">
-            Try keywords like industry names, agent types, MCP servers, or podcast topics.
+            Try keywords like industry names, skill categories, agent types, MCP servers, or podcast topics.
           </p>
         </div>
       </div>
@@ -426,7 +477,7 @@ export default function SearchPage({ query, results, fetchError }: SearchPagePro
           <StatePanel
             variant="empty"
             title="Start with a search term"
-            description="Enter a keyword to explore agents, MCP servers, use cases, podcasts, and case studies."
+            description="Enter a keyword to explore agents, MCP servers, skills, use cases, podcasts, and case studies."
           />
         </div>
       ) : null}

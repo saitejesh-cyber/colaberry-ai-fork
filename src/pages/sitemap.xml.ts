@@ -5,6 +5,7 @@ import {
   fetchArticles,
   fetchMCPServers,
   fetchPodcastEpisodes,
+  fetchSkills,
   fetchUseCases,
 } from "../lib/cms";
 
@@ -20,6 +21,7 @@ const STATIC_ROUTES: Array<{ path: string; changefreq: SitemapUrl["changefreq"];
   { path: "/aixcelerator", changefreq: "weekly", priority: "0.9" },
   { path: "/aixcelerator/agents", changefreq: "daily", priority: "0.9" },
   { path: "/aixcelerator/mcp", changefreq: "daily", priority: "0.9" },
+  { path: "/aixcelerator/skills", changefreq: "daily", priority: "0.9" },
   { path: "/use-cases", changefreq: "daily", priority: "0.8" },
   { path: "/industries", changefreq: "weekly", priority: "0.8" },
   { path: "/solutions", changefreq: "weekly", priority: "0.8" },
@@ -38,9 +40,10 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   const allowPrivate = process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
   const visibilityFilter = allowPrivate ? undefined : "public";
 
-  const [agentsResult, mcpResult, useCaseResult, podcastResult, articleResult] = await Promise.allSettled([
+  const [agentsResult, mcpResult, skillsResult, useCaseResult, podcastResult, articleResult] = await Promise.allSettled([
     fetchAgents(visibilityFilter, { maxRecords: 1000 }),
     fetchMCPServers(visibilityFilter, { maxRecords: 1000 }),
+    fetchSkills(visibilityFilter, { maxRecords: 1000 }),
     fetchUseCases(visibilityFilter, { maxRecords: 1000 }),
     fetchPodcastEpisodes(),
     fetchArticles({ maxRecords: 1000 }),
@@ -78,6 +81,18 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
       urls.push({
         loc: `${siteUrl}/aixcelerator/mcp/${server.slug}`,
         lastmod: toIsoDate(server.lastUpdated),
+        changefreq: "weekly",
+        priority: "0.7",
+      });
+    });
+  }
+
+  if (skillsResult.status === "fulfilled") {
+    skillsResult.value.forEach((skill) => {
+      if (!skill.slug) return;
+      urls.push({
+        loc: `${siteUrl}/aixcelerator/skills/${skill.slug}`,
+        lastmod: toIsoDate(skill.lastUpdated),
         changefreq: "weekly",
         priority: "0.7",
       });

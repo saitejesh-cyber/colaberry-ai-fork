@@ -7,10 +7,12 @@ import { useEffect, useState } from "react";
 import SectionHeader from "../components/SectionHeader";
 import {
   fetchAgents,
+  fetchSkills,
   fetchMCPServers,
   fetchPodcastEpisodes,
   fetchUseCases,
   type Agent,
+  type Skill,
   type MCPServer,
   type PodcastEpisode,
   type UseCase,
@@ -52,11 +54,23 @@ type HomeMcpSignal = {
   usageCount?: number | null;
 };
 
+type HomeSkillSignal = {
+  id: number;
+  slug: string;
+  name: string;
+  category?: string | null;
+  lastUpdated?: string | null;
+  rating?: number | null;
+  usageCount?: number | null;
+};
+
 type HomeProps = {
   latestPodcasts: HomePodcastSignal[];
   trendingPodcasts: HomePodcastSignal[];
   latestAgents: HomeAgentSignal[];
   trendingAgents: HomeAgentSignal[];
+  latestSkills: HomeSkillSignal[];
+  trendingSkills: HomeSkillSignal[];
   latestUseCases: HomeUseCaseSignal[];
   trendingUseCases: HomeUseCaseSignal[];
   latestMCPs: HomeMcpSignal[];
@@ -68,6 +82,8 @@ export default function Home({
   trendingPodcasts,
   latestAgents,
   trendingAgents,
+  latestSkills,
+  trendingSkills,
   latestUseCases,
   trendingUseCases,
   latestMCPs,
@@ -100,6 +116,7 @@ export default function Home({
   const heroTags = [
     "Agents",
     "MCP servers",
+    "Skills",
     "Podcasts",
     "Case studies",
     "Books",
@@ -121,6 +138,11 @@ export default function Home({
       href: "/aixcelerator/mcp",
     },
     {
+      title: "Reusable skills",
+      description: "Capability units covering official, workflow, and orchestration tasks.",
+      href: "/aixcelerator/skills",
+    },
+    {
       title: "Industry workspaces",
       description: "Outcome-driven case studies and domain-aligned playbooks.",
       href: "/industries",
@@ -140,7 +162,7 @@ export default function Home({
   const heroKpis = [
     {
       label: "Catalog coverage",
-      value: "Agents + MCP",
+      value: "Agents + MCP + Skills",
       note: "Unified discovery layer for operations and integration teams.",
     },
     {
@@ -221,6 +243,13 @@ export default function Home({
       image: heroImage("hero-mcp-cinematic.webp"),
     },
     {
+      href: "/aixcelerator/skills",
+      title: "Skills catalog",
+      description: "Reusable capability units for official, workflow, domain, and orchestration tasks.",
+      meta: "Skills",
+      image: heroImage("hero-platform-cinematic.webp"),
+    },
+    {
       href: "/solutions",
       title: "Use cases + playbooks",
       description: "Solution blueprints mapped to outcomes and operating models.",
@@ -293,7 +322,7 @@ export default function Home({
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai";
   const metaDescription =
-    "Colaberry AI is a marketplace and destination for AI agents, MCP servers, podcasts, case studies, and trusted research-built for SEO and LLM indexing.";
+    "Colaberry AI is a marketplace and destination for AI agents, MCP servers, skills, podcasts, case studies, and trusted research-built for SEO and LLM indexing.";
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -547,6 +576,33 @@ export default function Home({
       <section className="mt-12 surface-panel p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeader
+            kicker="Skill signals"
+            title="Latest and trending skills"
+            description="Reusable capability units teams can link to agents, MCP servers, and workflow automation."
+          />
+          <Link href="/aixcelerator/skills" className="btn btn-primary mt-3 sm:mt-0">
+            Open skills catalog
+          </Link>
+        </div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <SkillRail
+            title="Latest updates"
+            description="Most recently updated skill profiles."
+            items={latestSkills}
+            detailType="latest"
+          />
+          <SkillRail
+            title="Trending skills"
+            description="Stronger quality and usage signals."
+            items={trendingSkills}
+            detailType="trending"
+          />
+        </div>
+      </section>
+
+      <section className="mt-12 surface-panel p-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeader
             kicker="Use case signals"
             title="Latest and trending use cases"
             description="Fresh outcome playbooks and high-interest deployment patterns."
@@ -751,51 +807,90 @@ export default function Home({
 export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   const allowPrivate = process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
   const visibilityFilter = allowPrivate ? undefined : "public";
-  try {
-    const latestPodcasts = await fetchPodcastEpisodes({ maxRecords: 6, sortBy: "latest" });
-    const trendingPodcasts = await fetchPodcastEpisodes({ maxRecords: 80, sortBy: "trending" });
-    const latestAgentsRaw = await fetchAgents(visibilityFilter, { maxRecords: 6, sortBy: "latest" });
-    const trendingAgentsRaw = await fetchAgents(visibilityFilter, { maxRecords: 300 });
-    const latestUseCasesRaw = await fetchUseCases(visibilityFilter, { maxRecords: 6, sortBy: "latest" });
-    const trendingUseCasesRaw = await fetchUseCases(visibilityFilter, { maxRecords: 300, sortBy: "latest" });
-    const latestMCPRaw = await fetchMCPServers(visibilityFilter, { maxRecords: 6, sortBy: "latest" });
-    const trendingMCPRaw = await fetchMCPServers(visibilityFilter, { maxRecords: 300 });
-    const latestAgents = sortAgentsByDate(latestAgentsRaw).slice(0, 6).map(toHomeAgentSignal);
-    const trendingAgents = sortAgentsByTrending(trendingAgentsRaw).slice(0, 6).map(toHomeAgentSignal);
-    const latestUseCases = sortUseCasesByDate(latestUseCasesRaw).slice(0, 6).map(toHomeUseCaseSignal);
-    const trendingUseCases = sortUseCasesByTrending(trendingUseCasesRaw)
-      .slice(0, 6)
-      .map(toHomeUseCaseSignal);
-    const latestMCPs = sortMCPByDate(latestMCPRaw).slice(0, 6).map(toHomeMcpSignal);
-    const trendingMCPs = sortMCPByTrending(trendingMCPRaw).slice(0, 6).map(toHomeMcpSignal);
-    return {
-      props: {
-        latestPodcasts: latestPodcasts.map(toHomePodcastSignal),
-        trendingPodcasts: trendingPodcasts.slice(0, 6).map(toHomePodcastSignal),
-        latestAgents,
-        trendingAgents,
-        latestUseCases,
-        trendingUseCases,
-        latestMCPs,
-        trendingMCPs,
-      },
-      revalidate: 600,
-    };
-  } catch {
-    return {
-      props: {
-        latestPodcasts: [],
-        trendingPodcasts: [],
-        latestAgents: [],
-        trendingAgents: [],
-        latestUseCases: [],
-        trendingUseCases: [],
-        latestMCPs: [],
-        trendingMCPs: [],
-      },
-      revalidate: 180,
-    };
-  }
+  const fetchOrEmpty = async <T,>(label: string, task: () => Promise<T>, fallback: T): Promise<T> => {
+    try {
+      return await task();
+    } catch (error) {
+      console.error(`[home:getStaticProps] ${label} failed`, error);
+      return fallback;
+    }
+  };
+
+  const latestPodcasts = await fetchOrEmpty(
+    "latestPodcasts",
+    () => fetchPodcastEpisodes({ maxRecords: 6, sortBy: "latest" }),
+    [] as PodcastEpisode[]
+  );
+  const trendingPodcasts = await fetchOrEmpty(
+    "trendingPodcasts",
+    () => fetchPodcastEpisodes({ maxRecords: 80, sortBy: "trending" }),
+    [] as PodcastEpisode[]
+  );
+  const latestAgentsRaw = await fetchOrEmpty(
+    "latestAgents",
+    () => fetchAgents(visibilityFilter, { maxRecords: 6, sortBy: "latest" }),
+    [] as Agent[]
+  );
+  const trendingAgentsRaw = await fetchOrEmpty(
+    "trendingAgents",
+    () => fetchAgents(visibilityFilter, { maxRecords: 300 }),
+    [] as Agent[]
+  );
+  const latestSkillsRaw = await fetchOrEmpty(
+    "latestSkills",
+    () => fetchSkills(visibilityFilter, { maxRecords: 6, sortBy: "latest" }),
+    [] as Skill[]
+  );
+  const trendingSkillsRaw = await fetchOrEmpty(
+    "trendingSkills",
+    () => fetchSkills(visibilityFilter, { maxRecords: 300, sortBy: "latest" }),
+    [] as Skill[]
+  );
+  const latestUseCasesRaw = await fetchOrEmpty(
+    "latestUseCases",
+    () => fetchUseCases(visibilityFilter, { maxRecords: 6, sortBy: "latest" }),
+    [] as UseCase[]
+  );
+  const trendingUseCasesRaw = await fetchOrEmpty(
+    "trendingUseCases",
+    () => fetchUseCases(visibilityFilter, { maxRecords: 300, sortBy: "latest" }),
+    [] as UseCase[]
+  );
+  const latestMCPRaw = await fetchOrEmpty(
+    "latestMCP",
+    () => fetchMCPServers(visibilityFilter, { maxRecords: 6, sortBy: "latest" }),
+    [] as MCPServer[]
+  );
+  const trendingMCPRaw = await fetchOrEmpty(
+    "trendingMCP",
+    () => fetchMCPServers(visibilityFilter, { maxRecords: 300 }),
+    [] as MCPServer[]
+  );
+
+  const latestAgents = sortAgentsByDate(latestAgentsRaw).slice(0, 6).map(toHomeAgentSignal);
+  const trendingAgents = sortAgentsByTrending(trendingAgentsRaw).slice(0, 6).map(toHomeAgentSignal);
+  const latestSkills = sortSkillsByDate(latestSkillsRaw).slice(0, 6).map(toHomeSkillSignal);
+  const trendingSkills = sortSkillsByTrending(trendingSkillsRaw).slice(0, 6).map(toHomeSkillSignal);
+  const latestUseCases = sortUseCasesByDate(latestUseCasesRaw).slice(0, 6).map(toHomeUseCaseSignal);
+  const trendingUseCases = sortUseCasesByTrending(trendingUseCasesRaw).slice(0, 6).map(toHomeUseCaseSignal);
+  const latestMCPs = sortMCPByDate(latestMCPRaw).slice(0, 6).map(toHomeMcpSignal);
+  const trendingMCPs = sortMCPByTrending(trendingMCPRaw).slice(0, 6).map(toHomeMcpSignal);
+
+  return {
+    props: {
+      latestPodcasts: latestPodcasts.map(toHomePodcastSignal),
+      trendingPodcasts: trendingPodcasts.slice(0, 6).map(toHomePodcastSignal),
+      latestAgents,
+      trendingAgents,
+      latestSkills,
+      trendingSkills,
+      latestUseCases,
+      trendingUseCases,
+      latestMCPs,
+      trendingMCPs,
+    },
+    revalidate: 600,
+  };
 };
 
 function PillarCard({
@@ -953,6 +1048,57 @@ function AgentRail({
                     : agent.usageCount
                     ? formatUsageLabel(agent.usageCount)
                     : "Trending"}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </article>
+  );
+}
+
+function SkillRail({
+  title,
+  description,
+  items,
+  detailType,
+}: {
+  title: string;
+  description: string;
+  items: HomeSkillSignal[];
+  detailType: "latest" | "trending";
+}) {
+  return (
+    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{description}</p>
+      {items.length === 0 ? (
+        <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">Skill signals will appear after next refresh.</p>
+      ) : (
+        <ul className="mt-3 grid gap-2">
+          {items.map((skill) => (
+            <li key={skill.slug || skill.id}>
+              <Link
+                href={`/aixcelerator/skills/${skill.slug || skill.id}`}
+                className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <div className="line-clamp-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    {skill.name}
+                  </div>
+                  <div className="mt-1 text-xs text-slate-500 dark:text-slate-300">
+                    {detailType === "latest"
+                      ? formatPodcastDate(skill.lastUpdated) || "Updated"
+                      : skill.rating
+                      ? `R ${skill.rating.toFixed(1)}`
+                      : skill.usageCount
+                      ? formatUsageLabel(skill.usageCount)
+                      : skill.category || "Trending"}
+                  </div>
+                </div>
+                <span className="ml-3 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
+                  →
                 </span>
               </Link>
             </li>
@@ -1138,6 +1284,18 @@ function toHomeAgentSignal(item: Agent): HomeAgentSignal {
   };
 }
 
+function toHomeSkillSignal(item: Skill): HomeSkillSignal {
+  return {
+    id: item.id,
+    slug: item.slug,
+    name: item.name,
+    category: item.category || item.skillType || null,
+    lastUpdated: item.lastUpdated || null,
+    rating: typeof item.rating === "number" ? item.rating : null,
+    usageCount: typeof item.usageCount === "number" ? item.usageCount : null,
+  };
+}
+
 function toHomeUseCaseSignal(item: UseCase): HomeUseCaseSignal {
   return {
     id: item.id,
@@ -1178,6 +1336,20 @@ function sortUseCasesByDate(useCases: UseCase[]) {
   return [...useCases].sort(
     (a, b) => compareDateDesc(a.lastUpdated, b.lastUpdated) || a.title.localeCompare(b.title)
   );
+}
+
+function sortSkillsByDate(skills: Skill[]) {
+  return [...skills].sort(
+    (a, b) => compareDateDesc(a.lastUpdated, b.lastUpdated) || a.name.localeCompare(b.name)
+  );
+}
+
+function sortSkillsByTrending(skills: Skill[]) {
+  return [...skills].sort((a, b) => {
+    const delta = scoreTrendingSkill(b) - scoreTrendingSkill(a);
+    if (delta !== 0) return delta;
+    return compareDateDesc(a.lastUpdated, b.lastUpdated) || a.name.localeCompare(b.name);
+  });
 }
 
 function sortUseCasesByTrending(useCases: UseCase[]) {
@@ -1266,6 +1438,36 @@ function scoreTrendingUseCase(useCase: UseCase) {
     return 0;
   })();
   return linkageScore + verifiedScore + completenessScore + freshnessScore;
+}
+
+function scoreTrendingSkill(skill: Skill) {
+  const ratingScore = typeof skill.rating === "number" ? Math.max(skill.rating, 0) * 18 : 0;
+  const usageScore =
+    typeof skill.usageCount === "number" && skill.usageCount > 0
+      ? Math.log10(skill.usageCount + 1) * 25
+      : 0;
+  const verifiedScore = skill.verified ? 8 : 0;
+  const linkageScore = Math.min(
+    (skill.agents?.length || 0) * 3 + (skill.mcpServers?.length || 0) * 3 + (skill.useCases?.length || 0) * 4,
+    24
+  );
+  const completenessScore =
+    (skill.summary ? 2 : 0) +
+    (skill.longDescription ? 4 : 0) +
+    (skill.inputs ? 2 : 0) +
+    (skill.outputs ? 2 : 0) +
+    (skill.toolsRequired ? 2 : 0) +
+    (skill.modelsSupported ? 2 : 0);
+  const freshnessScore = (() => {
+    const timestamp = toTimestamp(skill.lastUpdated);
+    if (!timestamp) return 0;
+    const days = (Date.now() - timestamp) / (1000 * 60 * 60 * 24);
+    if (days <= 14) return 12;
+    if (days <= 45) return 8;
+    if (days <= 90) return 4;
+    return 0;
+  })();
+  return ratingScore + usageScore + verifiedScore + linkageScore + completenessScore + freshnessScore;
 }
 
 function formatUsageLabel(value: number) {

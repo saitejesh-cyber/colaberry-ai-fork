@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Strapi responses are polymorphic across populate modes and normalized by mapper functions in this module. */
-const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL!;
+const CMS_URL = (process.env.NEXT_PUBLIC_CMS_URL || process.env.CMS_URL || "").trim().replace(/\/$/, "");
+const CMS_API_TOKEN = (process.env.CMS_API_TOKEN || process.env.NEXT_PUBLIC_CMS_API_TOKEN || "").trim();
 const CMS_CACHE_TTL_MS = Number(process.env.NEXT_PUBLIC_CMS_CACHE_TTL_MS || 300000);
 
 type CacheEntry<T> = {
@@ -35,6 +36,12 @@ async function fetchCMSJson<T>(
   url: string,
   options: { cacheMs?: number; allowStaleOnError?: boolean } = {}
 ): Promise<T> {
+  if (!CMS_URL || !/^https?:\/\//i.test(CMS_URL)) {
+    throw new Error("CMS URL is not configured. Set NEXT_PUBLIC_CMS_URL (or CMS_URL) to an absolute URL.");
+  }
+  if (!/^https?:\/\//i.test(url)) {
+    throw new Error(`Invalid CMS request URL: ${url}`);
+  }
   const cacheMs = Number.isFinite(options.cacheMs) ? Number(options.cacheMs) : CMS_CACHE_TTL_MS;
   const now = Date.now();
   const cached = cmsCache.get(url);
@@ -48,7 +55,14 @@ async function fetchCMSJson<T>(
     return inflight as Promise<T>;
   }
 
-  const request = fetch(url, { cache: "no-store" })
+  const request = fetch(url, {
+    cache: "no-store",
+    headers: CMS_API_TOKEN
+      ? {
+          Authorization: `Bearer ${CMS_API_TOKEN}`,
+        }
+      : undefined,
+  })
     .then(async (res) => {
       if (!res.ok) {
         throw new Error(`CMS request failed: ${res.status}`);
@@ -304,6 +318,46 @@ export type UseCase = {
   coverImageAlt?: string | null;
 };
 
+export type Skill = {
+  id: number;
+  name: string;
+  slug: string;
+  summary?: string | null;
+  longDescription?: string | null;
+  category?: string | null;
+  provider?: string | null;
+  status?: string | null;
+  visibility?: "public" | "private" | string | null;
+  source?: "internal" | "external" | "partner" | string | null;
+  sourceUrl?: string | null;
+  sourceName?: string | null;
+  verified?: boolean | null;
+  industry?: string | null;
+  skillType?: string | null;
+  inputs?: string | null;
+  outputs?: string | null;
+  prerequisites?: string | null;
+  toolsRequired?: string | null;
+  modelsSupported?: string | null;
+  securityNotes?: string | null;
+  keyBenefits?: string | null;
+  limitations?: string | null;
+  requirements?: string | null;
+  exampleWorkflow?: string | null;
+  usageCount?: number | null;
+  rating?: number | null;
+  lastUpdated?: string | null;
+  docsUrl?: string | null;
+  demoUrl?: string | null;
+  tags: Tag[];
+  companies: Company[];
+  agents: UseCaseReference[];
+  mcpServers: UseCaseReference[];
+  useCases: UseCaseReference[];
+  coverImageUrl?: string | null;
+  coverImageAlt?: string | null;
+};
+
 function mapNavLink(item: any): GlobalNavLink {
   const attrs = item?.attributes ?? item;
   const rawOrder = attrs?.order;
@@ -483,9 +537,20 @@ function mapArticle(item: any): Article {
 function mapUseCaseReference(item: any): UseCaseReference {
   const attrs = item?.attributes ?? item;
   return {
-    name: attrs?.name ?? "",
+    name: attrs?.name ?? attrs?.title ?? "",
     slug: attrs?.slug ?? "",
   };
+}
+
+function mapReferenceList(value: any): UseCaseReference[] {
+  const list = Array.isArray(value?.data)
+    ? value.data
+    : Array.isArray(value)
+    ? value
+    : [];
+  return list
+    .map(mapUseCaseReference)
+    .filter((entry: UseCaseReference) => Boolean(entry.name || entry.slug));
 }
 
 function mapUseCase(item: any): UseCase {
@@ -537,6 +602,78 @@ function mapUseCase(item: any): UseCase {
     companies,
     agents: agents.filter((entry: UseCaseReference) => Boolean(entry.name || entry.slug)),
     mcpServers: mcpServers.filter((entry: UseCaseReference) => Boolean(entry.name || entry.slug)),
+    coverImageUrl,
+    coverImageAlt,
+  };
+}
+
+function mapSkill(item: any): Skill {
+  const attrs = item?.attributes ?? item;
+  const tags = attrs?.tags?.data?.map(mapTag) ?? (attrs?.tags ?? []).map(mapTag);
+  const companies =
+    attrs?.companies?.data?.map(mapCompany) ??
+    (attrs?.companies ?? []).map(mapCompany);
+  const agentsPrimary = mapReferenceList(attrs?.agents);
+  const agents = agentsPrimary.length
+    ? agentsPrimary
+    : mapReferenceList(attrs?.relatedAgents);
+  const mcpPrimary = mapReferenceList(attrs?.mcpServers);
+  const mcpSecondary = mapReferenceList(attrs?.relatedMcpServers);
+  const mcpServers = mcpPrimary.length
+    ? mcpPrimary
+    : mcpSecondary.length
+    ? mcpSecondary
+    : mapReferenceList(attrs?.relatedMCPServers);
+  const useCasesPrimary = mapReferenceList(attrs?.useCases);
+  const useCases = useCasesPrimary.length
+    ? useCasesPrimary
+    : mapReferenceList(attrs?.relatedUseCases);
+  const rawCoverUrl =
+    attrs?.coverImage?.data?.attributes?.url ??
+    attrs?.coverImage?.attributes?.url ??
+    null;
+  const coverImageUrl = normalizeMediaUrl(rawCoverUrl);
+  const coverImageAlt =
+    attrs?.coverImage?.data?.attributes?.alternativeText ??
+    attrs?.coverImage?.attributes?.alternativeText ??
+    null;
+
+  return {
+    id: item?.id ?? attrs?.id ?? 0,
+    name: attrs?.name ?? "",
+    slug: attrs?.slug ?? "",
+    summary: attrs?.summary ?? attrs?.description ?? null,
+    longDescription: attrs?.longDescription ?? null,
+    category: attrs?.category ?? null,
+    provider: attrs?.provider ?? null,
+    status: attrs?.status ?? null,
+    visibility: attrs?.visibility ?? null,
+    source: attrs?.source ?? null,
+    sourceUrl: attrs?.sourceUrl ?? null,
+    sourceName: attrs?.sourceName ?? null,
+    verified: attrs?.verified ?? null,
+    industry: attrs?.industry ?? null,
+    skillType: attrs?.skillType ?? null,
+    inputs: attrs?.inputs ?? null,
+    outputs: attrs?.outputs ?? null,
+    prerequisites: attrs?.prerequisites ?? null,
+    toolsRequired: attrs?.toolsRequired ?? attrs?.tools ?? null,
+    modelsSupported: attrs?.modelsSupported ?? null,
+    securityNotes: attrs?.securityNotes ?? null,
+    keyBenefits: attrs?.keyBenefits ?? null,
+    limitations: attrs?.limitations ?? null,
+    requirements: attrs?.requirements ?? null,
+    exampleWorkflow: attrs?.exampleWorkflow ?? null,
+    usageCount: typeof attrs?.usageCount === "number" ? attrs.usageCount : null,
+    rating: typeof attrs?.rating === "number" ? attrs.rating : null,
+    lastUpdated: attrs?.lastUpdated ?? attrs?.updatedAt ?? null,
+    docsUrl: attrs?.docsUrl ?? null,
+    demoUrl: attrs?.demoUrl ?? null,
+    tags,
+    companies,
+    agents,
+    mcpServers,
+    useCases,
     coverImageUrl,
     coverImageAlt,
   };
@@ -944,6 +1081,107 @@ export async function fetchUseCaseBySlug(slug: string) {
     { cacheMs: CMS_CACHE_TTL_MS }
   );
   return json?.data?.[0] ? mapUseCase(json.data[0]) : null;
+}
+
+export async function fetchSkills(
+  visibility?: "public" | "private",
+  options: { maxRecords?: number; sortBy?: "name" | "latest" } = {}
+) {
+  const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
+  const sortBy = options.sortBy === "latest" ? "latest" : "name";
+  const sortQuery =
+    sortBy === "latest"
+      ? `&sort[0]=lastUpdated:desc&sort[1]=updatedAt:desc&sort[2]=name:asc`
+      : `&sort=name:asc`;
+  const listFields =
+    `&fields[0]=name` +
+    `&fields[1]=slug` +
+    `&fields[2]=summary` +
+    `&fields[3]=category` +
+    `&fields[4]=provider` +
+    `&fields[5]=industry` +
+    `&fields[6]=status` +
+    `&fields[7]=visibility` +
+    `&fields[8]=source` +
+    `&fields[9]=sourceName` +
+    `&fields[10]=verified` +
+    `&fields[11]=usageCount` +
+    `&fields[12]=rating` +
+    `&fields[13]=lastUpdated`;
+  const pageSize = 100;
+  const maxRecords =
+    typeof options.maxRecords === "number" && options.maxRecords > 0
+      ? Math.floor(options.maxRecords)
+      : Number.POSITIVE_INFINITY;
+  let page = 1;
+  const results: Skill[] = [];
+
+  while (true) {
+    let json: CMSCollectionResponse | null = null;
+    try {
+      json = await fetchCMSJson<CMSCollectionResponse>(
+        `${CMS_URL}/api/skills` +
+          `?` +
+          `${sortQuery.replace(/^&/, "")}` +
+          `${visibilityFilter}` +
+          `&publicationState=live` +
+          `${listFields}` +
+          `&pagination[page]=${page}` +
+          `&pagination[pageSize]=${pageSize}` +
+          `&populate[tags][fields][0]=name` +
+          `&populate[tags][fields][1]=slug` +
+          `&populate[companies][fields][0]=name` +
+          `&populate[companies][fields][1]=slug` +
+          `&populate[agents][fields][0]=name` +
+          `&populate[agents][fields][1]=slug` +
+          `&populate[mcpServers][fields][0]=name` +
+          `&populate[mcpServers][fields][1]=slug` +
+          `&populate[useCases][fields][0]=title` +
+          `&populate[useCases][fields][1]=slug` +
+          `&populate[relatedUseCases][fields][0]=title` +
+          `&populate[relatedUseCases][fields][1]=slug` +
+          `&populate[coverImage][fields][0]=url` +
+          `&populate[coverImage][fields][1]=alternativeText`,
+        { cacheMs: CMS_CACHE_TTL_MS }
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (message.includes("CMS request failed: 404") && page === 1 && results.length === 0) {
+        return [];
+      }
+      throw error;
+    }
+
+    if (!json) break;
+    const data = json?.data || [];
+    const remaining = Math.max(maxRecords - results.length, 0);
+    if (remaining <= 0) {
+      break;
+    }
+    results.push(...data.slice(0, remaining).map(mapSkill));
+    if (results.length >= maxRecords) {
+      break;
+    }
+
+    const pagination = json?.meta?.pagination;
+    if (!pagination || page >= pagination.pageCount) {
+      break;
+    }
+    page += 1;
+  }
+
+  return results;
+}
+
+export async function fetchSkillBySlug(slug: string) {
+  const json = await fetchCMSJson<CMSCollectionResponse>(
+    `${CMS_URL}/api/skills` +
+      `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
+      `&publicationState=live` +
+      `&populate=*`,
+    { cacheMs: CMS_CACHE_TTL_MS }
+  );
+  return json?.data?.[0] ? mapSkill(json.data[0]) : null;
 }
 
 export async function fetchAgents(
