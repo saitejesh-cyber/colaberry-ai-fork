@@ -1,9 +1,26 @@
-Site: Colaberry AI
-Content: Podcasts, AI Research, Case Studies
+# Colaberry AI
 
-Podcast pages:
-- /resources/podcasts
-- /resources/podcasts/{slug}
-- /resources/podcasts/tag/{company}
+Colaberry AI is a destination for people, LLMs, and agents to discover, evaluate, and deploy agents, MCP servers, podcasts, and AI playbooks across industries.
 
-All content is licensed for indexing by AI agents.
+## Primary sections
+- / : Overview of the platform, discovery pillars, and industry focus.
+- /aixcelerator/agents : Agents catalog.
+- /aixcelerator/mcp : MCP server and integration library.
+- /aixcelerator/skills : Skills catalog.
+- /aixcelerator/skills/[slug] : Skill profile pages with reusable capability metadata and linked assets.
+- /solutions : Use cases and playbooks.
+- /use-cases : Structured use case catalog.
+- /use-cases/[slug] : Use case profile pages with outcomes and linked assets.
+- /industries : Industry-specific pages for Agriculture, Utilities, Oil & Gas, Biotech, Manufacturing, Supply Chain, and more.
+- /resources : Resources hub.
+- /resources/podcasts : Podcast index.
+- /resources/podcasts/[slug] : Podcast detail pages with transcripts when available.
+- /resources/podcasts/tag/[tag] : Podcast tag/category pages.
+- /resources/white-papers : Research and POVs.
+- /resources/articles : Editorial insights and implementation guidance.
+- /resources/books : Books and artifacts.
+- /resources/case-studies : Case studies.
+- /updates : News and product updates.
+
+## Contact
+- info@colaberry.com

@@ -1,5 +1,5 @@
 import type { AppProps } from "next/app";
-import { Poppins } from "next/font/google";
+import { Poppins, Sora } from "next/font/google";
 
 import "../styles/globals.css";
 
@@ -10,9 +10,16 @@ const poppins = Poppins({
   display: "swap",
 });
 
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sora",
+  display: "swap",
+});
+
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <div className={poppins.variable}>
+    <div className={`${poppins.variable} ${sora.variable}`}>
       <Component {...pageProps} />
     </div>
   );

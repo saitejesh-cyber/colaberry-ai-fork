@@ -33,13 +33,21 @@ export const coreCapabilities: PlatformCapability[] = [
     href: "/aixcelerator/mcp",
     status: "available",
   },
+  {
+    layer: "core",
+    title: "Skills",
+    description:
+      "Organize reusable capability units across official toolkits, workflow automation, and orchestration patterns.",
+    href: "/aixcelerator/skills",
+    status: "available",
+  },
 ];
 
 export const modularLayers: PlatformCapability[] = [
   {
     layer: "layer",
     title: "Podcasts",
-    description: "Internal publishing plus curated external aggregation.",
+    description: "Internal publishing plus curated external ai podcast.",
     href: "/resources/podcasts",
     status: "available",
   },

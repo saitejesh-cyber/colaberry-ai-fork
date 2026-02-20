@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440" viewBox="0 0 2560 1440" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="80" x2="2450" y2="1360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#03060E"/>
+      <stop offset="0.45" stop-color="#09182F"/>
+      <stop offset="0.78" stop-color="#112A4A"/>
+      <stop offset="1" stop-color="#1A395D"/>
+    </linearGradient>
+    <radialGradient id="haloA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1840 500) rotate(136) scale(810 550)">
+      <stop stop-color="#66C8FF" stop-opacity="0.52"/>
+      <stop offset="0.55" stop-color="#2ED5FF" stop-opacity="0.23"/>
+      <stop offset="1" stop-color="#2ED5FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="haloB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1940 920) rotate(18) scale(680 350)">
+      <stop stop-color="#F5B865" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#F5B865" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ticker" x1="1400" y1="1120" x2="2310" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#82D0FF"/>
+      <stop offset="0.52" stop-color="#BDE8FF"/>
+      <stop offset="1" stop-color="#FFD79A"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#17314E" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#10223C" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="leftFade" x1="1080" y1="720" x2="90" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#040A14" stop-opacity="0.06"/>
+      <stop offset="0.47" stop-color="#040A14" stop-opacity="0.62"/>
+      <stop offset="1" stop-color="#040A14" stop-opacity="0.95"/>
+    </linearGradient>
+    <pattern id="grid" width="88" height="88" patternUnits="userSpaceOnUse">
+      <path d="M88 0H0V88" stroke="#9AB5D6" stroke-opacity="0.1"/>
+    </pattern>
+    <filter id="blur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.54" numOctaves="2" seed="22"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.05"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="2560" height="1440" fill="url(#bg)"/>
+  <rect width="2560" height="1440" fill="url(#grid)"/>
+  <rect width="2560" height="1440" fill="url(#haloA)"/>
+  <rect width="2560" height="1440" fill="url(#haloB)"/>
+
+  <g opacity="0.93">
+    <rect x="1380" y="250" width="860" height="980" rx="36" fill="#0B182B" fill-opacity="0.38" stroke="#7CBDEB" stroke-opacity="0.34"/>
+    <rect x="1450" y="320" width="720" height="130" rx="18" fill="url(#panel)" stroke="#87CBFF" stroke-opacity="0.42"/>
+    <rect x="1450" y="480" width="720" height="130" rx="18" fill="url(#panel)" stroke="#87CBFF" stroke-opacity="0.42"/>
+    <rect x="1450" y="640" width="720" height="130" rx="18" fill="url(#panel)" stroke="#87CBFF" stroke-opacity="0.42"/>
+    <rect x="1450" y="800" width="720" height="320" rx="22" fill="url(#panel)" stroke="#87CBFF" stroke-opacity="0.35"/>
+  </g>
+
+  <g stroke="#95D2FF" stroke-opacity="0.62" stroke-width="2" fill="none">
+    <path d="M1520 375H2110"/>
+    <path d="M1520 415H2040"/>
+    <path d="M1520 535H2110"/>
+    <path d="M1520 575H2040"/>
+    <path d="M1520 695H2110"/>
+    <path d="M1520 735H2040"/>
+    <path d="M1520 890H2110"/>
+    <path d="M1520 930H2050"/>
+    <path d="M1520 970H1970"/>
+  </g>
+
+  <g stroke="url(#ticker)" stroke-width="6" stroke-linecap="round" fill="none">
+    <path d="M1520 1110C1670 1030 1820 980 1970 900C2100 840 2210 760 2310 680"/>
+  </g>
+  <g stroke="#9CD8FF" stroke-opacity="0.74" stroke-width="2.6" stroke-linecap="round" fill="none">
+    <path d="M1520 1060C1680 990 1830 940 1980 870C2110 810 2210 750 2310 710"/>
+  </g>
+
+  <g fill="#E2F3FF">
+    <circle cx="1970" cy="900" r="7"/>
+    <circle cx="2210" cy="760" r="7"/>
+    <circle cx="2310" cy="680" r="7"/>
+  </g>
+
+  <circle cx="2040" cy="500" r="170" fill="#F5B865" fill-opacity="0.16" filter="url(#blur)"/>
+  <circle cx="1810" cy="900" r="250" fill="#2ED5FF" fill-opacity="0.14" filter="url(#blur)"/>
+
+  <rect x="0" y="0" width="1180" height="1440" fill="url(#leftFade)"/>
+  <rect x="0" y="0" width="2560" height="1440" filter="url(#grain)" opacity="0.45"/>
+</svg>

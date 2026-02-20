@@ -2,6 +2,8 @@ import { useRouter } from "next/router";
 import Layout from "../../components/Layout";
 import { getIndustryCaseStudies, getIndustryDisplayName } from "../../data/caseStudies";
 import Link from "next/link";
+import SectionHeader from "../../components/SectionHeader";
+import MediaPanel from "../../components/MediaPanel";
 
 export default function Industry() {
   const { industry } = useRouter().query;
@@ -16,22 +18,23 @@ export default function Industry() {
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
             Industry workspace
           </div>
-          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-            {industryName} AI Platform
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-            A workspace designed for people, LLMs, and agents-bringing together MCP servers, agent
-            catalogs, and domain intelligence tailored for {industryName}.
-          </p>
+          <div className="mt-5">
+            <SectionHeader
+              as="h1"
+              size="xl"
+              title={`${industryName} AI Platform`}
+              description={`A workspace designed for people, LLMs, and agents-bringing together MCP servers, agent catalogs, and domain intelligence tailored for ${industryName}.`}
+            />
+          </div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/request-demo"
-              className="inline-flex items-center justify-center rounded-lg bg-slate-900 bg-gradient-to-r from-brand-blue to-brand-aqua px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800 hover:from-brand-deep hover:to-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+              className="btn btn-primary"
             >
-              Book a demo
+              Request a demo
             </Link>
-            <button className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 hover:bg-slate-50">
+            <button type="button" className="btn btn-secondary">
               Subscribe
             </button>
           </div>
@@ -49,8 +52,18 @@ export default function Industry() {
         </div>
 
         <div className="lg:col-span-5">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="text-sm font-semibold text-slate-900">Workspace summary</div>
+          <MediaPanel
+            kicker="Workspace preview"
+            title={`${industryName} signals`}
+            description="Domain coverage mapped to governed AI delivery."
+            image="/media/visuals/panel-industry.svg"
+            alt="Industry workspace illustration"
+            aspect="wide"
+            fit="contain"
+            className="mb-6"
+          />
+          <div className="surface-panel p-6">
+            <div className="text-base font-semibold text-slate-900">Workspace summary</div>
             <div className="mt-1 text-sm text-slate-600">
               Default subscriptions and recommended starting points.
             </div>
@@ -64,19 +77,14 @@ export default function Industry() {
         </div>
       </div>
 
-      <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-6 sm:mt-12">
+      <section className="mt-12 surface-panel p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Case studies
-            </div>
-            <h2 className="mt-2 text-xl font-semibold text-slate-900">
-              Real outcomes in {industryName}
-            </h2>
-            <p className="mt-1 max-w-3xl text-sm text-slate-600">
-              Challenges, solutions, and measurable outcomes drawn from Colaberry industry work.
-            </p>
-          </div>
+          <SectionHeader
+            kicker="Case studies"
+            title={`Real outcomes in ${industryName}`}
+            description="Challenges, solutions, and measurable outcomes drawn from Colaberry industry work."
+            size="md"
+          />
           <div className="text-xs text-slate-500">
             {caseStudies?.items.length ? `${caseStudies.items.length} use cases` : "More coming soon"}
           </div>
@@ -109,8 +117,8 @@ function CaseStudyCard({
   };
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="text-sm font-semibold text-slate-900">{item.title}</div>
+    <div className="surface-panel border border-slate-200/80 bg-white/90 p-5">
+      <div className="text-base font-semibold text-slate-900">{item.title}</div>
 
       <div className="mt-4 grid gap-4">
         <Section title="Challenge" items={item.challenge} />
@@ -140,8 +148,8 @@ function Section({ title, items }: { title: string; items: string[] }) {
 
 function InfoCard({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="text-sm font-semibold text-slate-900">{title}</div>
+    <div className="surface-panel border border-slate-200/80 bg-white/90 p-5">
+      <div className="text-base font-semibold text-slate-900">{title}</div>
       <div className="mt-1 text-sm leading-relaxed text-slate-600">{body}</div>
     </div>
   );
@@ -149,7 +157,7 @@ function InfoCard({ title, body }: { title: string; body: string }) {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+    <div className="rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm">
       <div className="text-xs font-medium text-slate-600">{label}</div>
       <div className="mt-1 text-sm font-semibold text-slate-900">{value}</div>
     </div>

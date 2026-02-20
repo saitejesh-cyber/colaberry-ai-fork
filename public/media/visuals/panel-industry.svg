@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" fill="none">
+  <defs>
+    <linearGradient id="bg-industry" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="55%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
+    </linearGradient>
+    <linearGradient id="accent-industry" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2F6FED"/>
+      <stop offset="100%" stop-color="#1A8E9B"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" rx="72" fill="url(#bg-industry)"/>
+  <g opacity="0.2">
+    <circle cx="260" cy="260" r="180" fill="#dbeafe"/>
+    <circle cx="960" cy="300" r="200" fill="#cffafe"/>
+    <circle cx="940" cy="940" r="210" fill="#e0e7ff"/>
+  </g>
+  <g stroke="#cbd5f5" stroke-width="2" opacity="0.5">
+    <path d="M190 320h820M190 460h820M190 600h820M190 740h820M190 880h820"/>
+    <path d="M300 260v680M520 260v680M740 260v680M960 260v680"/>
+  </g>
+  <g fill="#ffffff" stroke="#e2e8f0" stroke-width="2">
+    <rect x="220" y="350" width="240" height="80" rx="20"/>
+    <rect x="520" y="350" width="240" height="80" rx="20"/>
+    <rect x="820" y="350" width="160" height="80" rx="20"/>
+    <rect x="220" y="520" width="240" height="80" rx="20"/>
+    <rect x="520" y="520" width="240" height="80" rx="20"/>
+    <rect x="820" y="520" width="160" height="80" rx="20"/>
+    <rect x="220" y="690" width="240" height="80" rx="20"/>
+    <rect x="520" y="690" width="240" height="80" rx="20"/>
+    <rect x="820" y="690" width="160" height="80" rx="20"/>
+  </g>
+  <g fill="url(#accent-industry)" opacity="0.9">
+    <rect x="240" y="370" width="100" height="12" rx="6"/>
+    <rect x="540" y="370" width="120" height="12" rx="6"/>
+    <rect x="840" y="370" width="80" height="12" rx="6"/>
+    <rect x="240" y="540" width="120" height="12" rx="6"/>
+    <rect x="540" y="540" width="110" height="12" rx="6"/>
+    <rect x="840" y="540" width="90" height="12" rx="6"/>
+    <rect x="240" y="710" width="110" height="12" rx="6"/>
+    <rect x="540" y="710" width="120" height="12" rx="6"/>
+    <rect x="840" y="710" width="70" height="12" rx="6"/>
+  </g>
+</svg>

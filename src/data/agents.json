@@ -3,12 +3,16 @@
     "name": "Crop Stress Detection Agent",
     "industry": "AgTech",
     "status": "Live",
+    "visibility": "Public",
+    "slug": "crop-stress-detection-agent",
     "description": "Detects crop stress using satellite and weather data."
   },
   {
     "name": "Invoice Validation Agent",
     "industry": "Operations",
     "status": "Concept",
+    "visibility": "Private",
+    "slug": "invoice-validation-agent",
     "description": "Validates invoices against purchase orders."
   }
 ]

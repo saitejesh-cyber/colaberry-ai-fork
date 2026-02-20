@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440" viewBox="0 0 2560 1440" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="80" x2="2450" y2="1360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#03060E"/>
+      <stop offset="0.45" stop-color="#09182F"/>
+      <stop offset="0.78" stop-color="#112A4A"/>
+      <stop offset="1" stop-color="#1A395D"/>
+    </linearGradient>
+    <radialGradient id="haloA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1830 500) rotate(138) scale(820 550)">
+      <stop stop-color="#66C8FF" stop-opacity="0.54"/>
+      <stop offset="0.55" stop-color="#2BD5FF" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#2BD5FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="haloB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1940 920) rotate(18) scale(680 340)">
+      <stop stop-color="#F5B865" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#F5B865" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#17314E" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#10223C" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="1360" y1="1100" x2="2290" y2="450" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#82D0FF"/>
+      <stop offset="0.52" stop-color="#BDE8FF"/>
+      <stop offset="1" stop-color="#FFD79A"/>
+    </linearGradient>
+    <linearGradient id="leftFade" x1="1080" y1="720" x2="90" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#040A14" stop-opacity="0.06"/>
+      <stop offset="0.47" stop-color="#040A14" stop-opacity="0.62"/>
+      <stop offset="1" stop-color="#040A14" stop-opacity="0.95"/>
+    </linearGradient>
+    <pattern id="grid" width="88" height="88" patternUnits="userSpaceOnUse">
+      <path d="M88 0H0V88" stroke="#9AB5D6" stroke-opacity="0.1"/>
+    </pattern>
+    <filter id="blur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.54" numOctaves="2" seed="16"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.05"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="2560" height="1440" fill="url(#bg)"/>
+  <rect width="2560" height="1440" fill="url(#grid)"/>
+  <rect width="2560" height="1440" fill="url(#haloA)"/>
+  <rect width="2560" height="1440" fill="url(#haloB)"/>
+
+  <g opacity="0.92">
+    <rect x="1360" y="240" width="880" height="980" rx="36" fill="#0B182B" fill-opacity="0.38" stroke="#7CBDEB" stroke-opacity="0.34"/>
+    <rect x="1440" y="320" width="700" height="220" rx="24" fill="url(#panel)" stroke="#87CBFF" stroke-opacity="0.45"/>
+    <rect x="1440" y="570" width="700" height="220" rx="24" fill="url(#panel)" stroke="#87CBFF" stroke-opacity="0.45"/>
+    <rect x="1440" y="820" width="700" height="320" rx="24" fill="url(#panel)" stroke="#87CBFF" stroke-opacity="0.36"/>
+  </g>
+
+  <g stroke="#95D2FF" stroke-opacity="0.62" stroke-width="2" fill="none">
+    <path d="M1510 390H2050"/>
+    <path d="M1510 430H1970"/>
+    <path d="M1510 470H1900"/>
+    <path d="M1510 640H2050"/>
+    <path d="M1510 680H1980"/>
+    <path d="M1510 720H1900"/>
+    <path d="M1510 900H2050"/>
+    <path d="M1510 940H2000"/>
+    <path d="M1510 980H1940"/>
+    <path d="M1510 1020H1880"/>
+  </g>
+
+  <g stroke="url(#accent)" stroke-width="6" stroke-linecap="round" fill="none">
+    <path d="M1510 1130C1660 1050 1810 1000 1960 920C2070 860 2190 790 2290 710"/>
+  </g>
+  <g stroke="#9CD8FF" stroke-opacity="0.74" stroke-width="2.6" stroke-linecap="round" fill="none">
+    <path d="M1510 1080C1670 1010 1820 960 1970 890C2100 830 2200 770 2290 740"/>
+  </g>
+
+  <g fill="#E2F3FF">
+    <circle cx="1960" cy="920" r="7"/>
+    <circle cx="2190" cy="790" r="7"/>
+    <circle cx="2290" cy="710" r="7"/>
+  </g>
+
+  <circle cx="2040" cy="500" r="170" fill="#F5B865" fill-opacity="0.16" filter="url(#blur)"/>
+  <circle cx="1800" cy="900" r="250" fill="#2BD5FF" fill-opacity="0.14" filter="url(#blur)"/>
+
+  <rect x="0" y="0" width="1180" height="1440" fill="url(#leftFade)"/>
+  <rect x="0" y="0" width="2560" height="1440" filter="url(#grain)" opacity="0.45"/>
+</svg>
