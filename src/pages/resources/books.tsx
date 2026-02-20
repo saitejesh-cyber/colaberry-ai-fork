@@ -52,12 +52,12 @@ export default function Books() {
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
           <Link
-            href="https://github.com/colaberry/trust-before-intelligence-book/blob/main/manuscript/01_chapter_0_trust_before_intelligence.md"
+            href="https://trustbeforeintelligence.ai/"
             target="_blank"
             rel="noreferrer"
             className="btn btn-primary"
           >
-            Read the opening chapter
+            Visit Trust Before Intelligence
           </Link>
           <Link
             href="/resources"
