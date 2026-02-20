@@ -805,10 +805,24 @@ button:focus-visible {
     linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(241, 245, 249, 0.96) 100%);
 }
 
+.footer-callout-panel {
+  background:
+    radial-gradient(560px 260px at 80% 12%, rgba(56, 189, 248, 0.3), transparent 66%),
+    radial-gradient(640px 280px at 15% 80%, rgba(14, 165, 233, 0.2), transparent 72%),
+    linear-gradient(130deg, #020617 0%, #0b1a3f 58%, #0b2c52 100%);
+}
+
 .dark .footer-surface {
   background:
     radial-gradient(760px 320px at 12% -8%, rgba(59, 130, 246, 0.18), transparent 72%),
     linear-gradient(180deg, rgba(2, 6, 23, 0.95) 0%, rgba(10, 17, 32, 0.93) 100%);
+}
+
+.dark .footer-callout-panel {
+  background:
+    radial-gradient(560px 260px at 82% 12%, rgba(34, 211, 238, 0.22), transparent 66%),
+    radial-gradient(640px 280px at 10% 88%, rgba(29, 78, 216, 0.22), transparent 74%),
+    linear-gradient(130deg, #010816 0%, #09152f 58%, #10254a 100%);
 }
 
 footer .footer-link {

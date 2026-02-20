@@ -1511,6 +1511,7 @@ function HeroBannerSlider({ slides, rootIndustries }: { slides: HeroSlide[]; roo
   const [manualPaused, setManualPaused] = useState(false);
   const [interactionPaused, setInteractionPaused] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const isPaused = manualPaused || interactionPaused || prefersReducedMotion;
 
@@ -1541,9 +1542,24 @@ function HeroBannerSlider({ slides, rootIndustries }: { slides: HeroSlide[]; roo
     return () => window.clearInterval(timer);
   }, [slideCount, isPaused]);
 
+  useEffect(() => {
+    if (slideCount < 2 || isPaused) return;
+    const cycleMs = 6200;
+    const startAt = window.performance.now();
+    let frameId = 0;
+    const tick = () => {
+      const elapsed = (window.performance.now() - startAt) % cycleMs;
+      setProgress((elapsed / cycleMs) * 100);
+      frameId = window.requestAnimationFrame(tick);
+    };
+    frameId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [activeIndex, isPaused, slideCount]);
+
   if (slideCount === 0) return null;
 
   const activeSlide = slides[activeIndex] ?? slides[0];
+  const progressValue = isPaused ? 0 : progress;
   const goToSlide = (nextIndex: number) => {
     const bounded = (nextIndex + slideCount) % slideCount;
     setActiveIndex(bounded);
@@ -1563,6 +1579,12 @@ function HeroBannerSlider({ slides, rootIndustries }: { slides: HeroSlide[]; roo
         }
       }}
     >
+      <div className="absolute inset-x-0 top-0 z-20 h-1 bg-white/10">
+        <div
+          className="h-full bg-gradient-to-r from-brand-aqua via-brand-teal to-sky-300 transition-[width] duration-200 ease-linear"
+          style={{ width: `${progressValue}%` }}
+        />
+      </div>
       <div className="absolute inset-0">
         {slides.map((slide, index) => (
           <div
@@ -1577,12 +1599,17 @@ function HeroBannerSlider({ slides, rootIndustries }: { slides: HeroSlide[]; roo
               sizes="100vw"
               priority={index === 0}
               quality={92}
-              className="media-premium-image object-cover object-center"
+              className={`media-premium-image object-cover object-center transition-transform duration-[6200ms] ${!prefersReducedMotion && index === activeIndex ? "scale-[1.05]" : "scale-100"}`}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-slate-950/88 via-slate-950/58 to-slate-900/25" />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/82 via-slate-950/20 to-transparent" />
           </div>
         ))}
+      </div>
+      <div className="pointer-events-none absolute inset-0 z-[5]">
+        <div className="absolute -left-16 top-14 h-40 w-40 rounded-full bg-sky-500/20 blur-3xl" />
+        <div className="absolute -right-10 bottom-20 h-48 w-48 rounded-full bg-cyan-400/15 blur-3xl" />
+        <div className="absolute left-0 right-0 top-0 h-[32%] bg-gradient-to-b from-black/20 to-transparent" />
       </div>
 
       <div className="relative z-10 flex min-h-[440px] flex-col justify-between p-7 sm:min-h-[520px] sm:p-10 lg:min-h-[560px] lg:p-12">
@@ -1599,6 +1626,9 @@ function HeroBannerSlider({ slides, rootIndustries }: { slides: HeroSlide[]; roo
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-200 sm:text-lg">
             {activeSlide.description}
           </p>
+          <div className="mt-3 text-xs font-medium uppercase tracking-[0.16em] text-slate-300/90">
+            Slide {activeIndex + 1} of {slideCount} • {activeSlide.highlight}
+          </div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link href="/request-demo" className="btn btn-primary">

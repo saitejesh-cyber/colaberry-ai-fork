@@ -1238,6 +1238,33 @@ export default function Layout({ children }: { children: ReactNode }) {
       )}
 
       <footer className="footer-surface mt-10 border-t border-slate-200/70 dark:border-slate-800/70">
+        <div className="px-4 pt-8 sm:px-6 lg:px-8">
+          <section className="footer-callout-panel grid gap-5 rounded-[1.75rem] border border-slate-200/70 p-6 shadow-[0_24px_56px_rgba(15,23,42,0.14)] dark:border-slate-700/70 lg:grid-cols-[1.5fr_1fr] lg:items-end lg:p-7">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/35 bg-slate-950/30 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100">
+                Enterprise AI delivery
+              </div>
+              <h2 className="mt-3 text-2xl font-semibold leading-tight text-white sm:text-3xl">
+                Build once. Govern centrally. Scale AI across every domain.
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-200 sm:text-base">
+                Colaberry brings agents, MCP servers, skills, podcasts, and use cases into one operating surface designed for teams and LLM workflows.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <Link href="/request-demo" className="btn btn-primary h-10 justify-center text-sm">
+                Request a demo
+              </Link>
+              <Link href="/aixcelerator" className="btn border border-white/35 bg-white/90 text-slate-900 hover:bg-white h-10 justify-center text-sm">
+                Explore platform
+              </Link>
+              <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-slate-100 sm:col-span-2 lg:col-span-1">
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Built for</div>
+                <div className="mt-1">AI consulting • Enterprise delivery • Production rollout</div>
+              </div>
+            </div>
+          </section>
+        </div>
         <div className="grid w-full grid-cols-1 gap-8 px-4 py-10 text-sm text-slate-800 dark:text-slate-200 sm:px-6 lg:grid-cols-[1.35fr_1fr_1fr_auto] lg:px-8">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-deep dark:border-brand-teal/30 dark:bg-slate-900/70">
