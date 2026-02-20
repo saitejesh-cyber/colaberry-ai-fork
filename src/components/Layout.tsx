@@ -458,6 +458,18 @@ function buildWorkspaceSections(nav: GlobalNavigation): WorkspaceSection[] {
   ].filter((section) => section.links.length > 0);
 }
 
+function isCatalogWorkspacePath(path: string) {
+  return (
+    path === "/assistant" ||
+    path.startsWith("/assistant/") ||
+    path === "/aixcelerator" ||
+    path.startsWith("/aixcelerator/") ||
+    path === "/use-cases" ||
+    path.startsWith("/use-cases/") ||
+    path === "/search"
+  );
+}
+
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -475,12 +487,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const searchDialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const currentPath = normalizePath(router.asPath || "/");
-  const isCatalogWorkspace =
-    currentPath === "/aixcelerator" ||
-    currentPath.startsWith("/aixcelerator/") ||
-    currentPath === "/use-cases" ||
-    currentPath.startsWith("/use-cases/") ||
-    currentPath === "/search";
+  const isCatalogWorkspace = isCatalogWorkspacePath(currentPath);
   const headerNavPaths = globalNav.headerLinks
     .map((link) => normalizePath(link.href))
     .filter((href) => !isExternalHref(href));
@@ -640,19 +647,21 @@ export default function Layout({ children }: { children: ReactNode }) {
   }, [workspaceMobileRailOpen]);
 
   useEffect(() => {
+    if (!isCatalogWorkspace) return;
     const dismissed = window.localStorage.getItem("colaberry_discovery_prompt_dismissed");
     if (dismissed) return;
     const timer = window.setTimeout(() => {
       setDiscoveryOpen(true);
     }, 900);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [isCatalogWorkspace]);
 
   useEffect(() => {
     const handleRouteChangeStart = () => {
       setMobileMenuOpen(false);
       setWorkspaceMobileRailOpen(false);
       setSearchOpen(false);
+      setDiscoveryOpen(false);
     };
     router.events.on("routeChangeStart", handleRouteChangeStart);
     return () => {
@@ -728,6 +737,93 @@ export default function Layout({ children }: { children: ReactNode }) {
     };
   }, [currentPath]);
 
+  const desktopHeaderItems = globalNav.headerLinks.map((link) => {
+    const hasChildren = !!link.children?.length;
+    const isParentActive = isActiveNavPath(currentPath, link.href, headerNavPaths);
+    const childNavPaths = (link.children || [])
+      .map((child) => normalizePath(child.href))
+      .filter((href) => !isExternalHref(href));
+    const dropdownSurfaceClass =
+      "border-slate-200/80 bg-white/95 text-slate-900 dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-100";
+    const menuKey = `${link.label}-${link.href}`;
+    const isOpen = openMenu === menuKey;
+    return (
+      <div
+        key={menuKey}
+        className="relative group"
+        onMouseEnter={() => setOpenMenu(menuKey)}
+        onMouseLeave={() => setOpenMenu((current) => (current === menuKey ? null : current))}
+        onFocusCapture={() => setOpenMenu(menuKey)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+            setOpenMenu((current) => (current === menuKey ? null : current));
+          }
+        }}
+      >
+        <Link
+          href={link.href}
+          target={link.target ?? undefined}
+          rel={getLinkRel(link.target)}
+          className={`nav-link focus-ring inline-flex items-center gap-1.5 ${isParentActive ? "nav-link-active" : ""}`}
+          aria-haspopup={hasChildren ? "menu" : undefined}
+          aria-expanded={hasChildren ? isOpen : undefined}
+        >
+          {link.label}
+          {hasChildren ? (
+            <svg
+              viewBox="0 0 20 20"
+              aria-hidden="true"
+              className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-y-[1px] group-hover:text-brand-ink"
+              fill="currentColor"
+            >
+              <path
+                d="M5.5 7.5 10 12l4.5-4.5"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </svg>
+          ) : null}
+        </Link>
+        {hasChildren ? (
+          <div
+            className={`absolute left-0 top-full z-50 pt-3 transition duration-150 ${isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
+          >
+            <div
+              className={`nav-dropdown-panel min-w-[14rem] rounded-2xl border p-2.5 shadow-xl transition duration-150 ${isOpen ? "translate-y-0" : "translate-y-1"} ${dropdownSurfaceClass}`}
+              role="menu"
+              aria-label={`${link.label} menu`}
+            >
+              <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-slate-400">
+                Explore {link.label}
+              </div>
+              <div className="grid gap-1">
+                {link.children?.map((child) => {
+                  const isChildActive = isActiveNavPath(currentPath, child.href, childNavPaths);
+                  return (
+                    <Link
+                      key={`${child.label}-${child.href}`}
+                      href={child.href}
+                      target={child.target ?? undefined}
+                      rel={getLinkRel(child.target)}
+                      className={`nav-dropdown-link focus-ring flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium ${isChildActive ? "nav-dropdown-link-active" : ""}`}
+                      role="menuitem"
+                    >
+                      <span>{child.label}</span>
+                      <span className="text-slate-400">→</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+  });
+
   return (
     <div className="flex min-h-dvh flex-col bg-transparent text-slate-900">
       <Head>
@@ -772,7 +868,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   onClick={() => setWorkspaceRailCollapsed((current) => !current)}
-                  className="btn btn-ghost btn-sm"
+                  className="btn btn-secondary btn-sm"
                   aria-label={workspaceRailCollapsed ? "Expand catalog menu" : "Collapse catalog menu"}
                 >
                   <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4" fill="none">
@@ -788,93 +884,14 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <Link href="/assistant" className="btn btn-ghost btn-sm">
                   Assistant
                 </Link>
+                <span className="hidden rounded-full border border-slate-200/80 bg-white/80 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 2xl:inline-flex dark:border-slate-700/80 dark:bg-slate-900/70 dark:text-slate-300">
+                  Catalog workspace
+                </span>
+                <div className="hidden h-6 w-px bg-slate-200/80 xl:block dark:bg-slate-700/80" />
+                <div className="hidden items-center gap-1.5 xl:flex">{desktopHeaderItems}</div>
               </>
             ) : (
-              globalNav.headerLinks.map((link) => {
-                const hasChildren = !!link.children?.length;
-                const isParentActive = isActiveNavPath(currentPath, link.href, headerNavPaths);
-                const childNavPaths = (link.children || [])
-                  .map((child) => normalizePath(child.href))
-                  .filter((href) => !isExternalHref(href));
-                const dropdownSurfaceClass = "border-slate-200/80 bg-white/95 text-slate-900 dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-100";
-                const menuKey = `${link.label}-${link.href}`;
-                const isOpen = openMenu === menuKey;
-                return (
-                  <div
-                    key={menuKey}
-                    className="relative group"
-                    onMouseEnter={() => setOpenMenu(menuKey)}
-                    onMouseLeave={() => setOpenMenu((current) => (current === menuKey ? null : current))}
-                    onFocusCapture={() => setOpenMenu(menuKey)}
-                    onBlurCapture={(event) => {
-                      if (!event.currentTarget.contains(event.relatedTarget as Node)) {
-                        setOpenMenu((current) => (current === menuKey ? null : current));
-                      }
-                    }}
-                  >
-                    <Link
-                      href={link.href}
-                      target={link.target ?? undefined}
-                      rel={getLinkRel(link.target)}
-                      className={`nav-link focus-ring inline-flex items-center gap-1.5 ${isParentActive ? "nav-link-active" : ""}`}
-                      aria-haspopup={hasChildren ? "menu" : undefined}
-                      aria-expanded={hasChildren ? isOpen : undefined}
-                    >
-                      {link.label}
-                      {hasChildren ? (
-                        <svg
-                          viewBox="0 0 20 20"
-                          aria-hidden="true"
-                          className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-y-[1px] group-hover:text-brand-ink"
-                          fill="currentColor"
-                        >
-                          <path
-                            d="M5.5 7.5 10 12l4.5-4.5"
-                            stroke="currentColor"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            fill="none"
-                          />
-                        </svg>
-                      ) : null}
-                    </Link>
-                    {hasChildren ? (
-                      <div
-                        className={`absolute left-0 top-full z-50 pt-3 transition duration-150 ${isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
-                      >
-                        <div
-                          className={`nav-dropdown-panel min-w-[14rem] rounded-2xl border p-2.5 shadow-xl transition duration-150 ${isOpen ? "translate-y-0" : "translate-y-1"} ${dropdownSurfaceClass}`}
-                          role="menu"
-                          aria-label={`${link.label} menu`}
-                        >
-                          <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-slate-400">
-                            Explore {link.label}
-                          </div>
-                          <div className="grid gap-1">
-                            {link.children?.map((child) => {
-                              const isChildActive = isActiveNavPath(currentPath, child.href, childNavPaths);
-                              return (
-                                <Link
-                                  key={`${child.label}-${child.href}`}
-                                  href={child.href}
-                                  target={child.target ?? undefined}
-                                  rel={getLinkRel(child.target)}
-                                  className={`nav-dropdown-link focus-ring flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium ${isChildActive ? "nav-dropdown-link-active" : ""}`}
-                                  role="menuitem"
-                                >
-                                  <span>{child.label}</span>
-                                  <span className="text-slate-400">→</span>
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })
+              desktopHeaderItems
             )}
 
             <div className="ml-2 flex items-center gap-2 border-l border-slate-200/80 pl-3 dark:border-slate-700/80">
@@ -968,17 +985,19 @@ export default function Layout({ children }: { children: ReactNode }) {
               <span className="sr-only">{themeToggleLabel}</span>
               <ThemeIcon isDark={isDarkMode} />
             </button>
-            <button
-              type="button"
-              onClick={openMobileMenu}
-              className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-slate-200/70 bg-white/85 px-3 text-sm font-semibold text-slate-700 hover:border-brand-blue/35 hover:text-brand-deep dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100"
-              aria-label="Open navigation menu"
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
-                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-              <span>Menu</span>
-            </button>
+            {!isCatalogWorkspace ? (
+              <button
+                type="button"
+                onClick={openMobileMenu}
+                className="focus-ring inline-flex h-10 items-center gap-2 rounded-full border border-slate-200/70 bg-white/85 px-3 text-sm font-semibold text-slate-700 hover:border-brand-blue/35 hover:text-brand-deep dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100"
+                aria-label="Open navigation menu"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
+                  <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+                <span>Menu</span>
+              </button>
+            ) : null}
           </div>
         </div>
       </header>
@@ -1438,7 +1457,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
       ) : null}
-      {discoveryOpen ? (
+      {isCatalogWorkspace && discoveryOpen ? (
         <div className="fixed bottom-4 left-4 right-4 z-40 sm:left-auto sm:right-6">
           <div className="surface-panel border border-slate-200/70 bg-white/95 p-4 shadow-xl dark:border-slate-700 dark:bg-slate-950/90">
             <div className="flex items-start justify-between gap-4">
