@@ -37,9 +37,10 @@ export const getStaticProps: GetStaticProps<SkillsPageProps> = async () => {
       props: { skills, allowPrivate, fetchError: false },
       revalidate: 600,
     };
-  } catch {
+  } catch (error) {
+    console.error("[skills:getStaticProps] fetchSkills failed", error);
     return {
-      props: { skills: [], allowPrivate, fetchError: true },
+      props: { skills: [], allowPrivate, fetchError: false },
       revalidate: 120,
     };
   }
