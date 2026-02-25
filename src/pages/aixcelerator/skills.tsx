@@ -198,7 +198,7 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
           </div>
           <div className="mt-3 surface-panel border border-slate-200/80 bg-white/90 p-4">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">Reference models</div>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
               <a
                 href="https://agentskills.io/what-are-skills"
                 target="_blank"
@@ -214,6 +214,14 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
                 className="focus-ring rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-brand-blue/35 hover:text-brand-blue"
               >
                 Ultimate Agent Skills Collection →
+              </a>
+              <a
+                href="https://clawhub.ai/skills?sort=downloads"
+                target="_blank"
+                rel="noreferrer"
+                className="focus-ring rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-brand-blue/35 hover:text-brand-blue"
+              >
+                ClawHub top downloaded skills →
               </a>
             </div>
           </div>
