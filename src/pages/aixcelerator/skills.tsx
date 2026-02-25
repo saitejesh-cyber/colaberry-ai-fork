@@ -25,7 +25,7 @@ export const getStaticProps: GetStaticProps<SkillsPageProps> = async () => {
   const visibilityFilter = allowPrivate ? undefined : "public";
 
   try {
-    const skills = (await fetchSkills(visibilityFilter, { maxRecords: 600, sortBy: "latest" }))
+    const skills = (await fetchSkills(visibilityFilter, { sortBy: "latest" }))
       .filter((item) => Boolean(item.name && item.slug))
       .map((item) => ({
         ...item,
