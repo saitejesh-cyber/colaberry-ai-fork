@@ -4,9 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import sanitizeHtml from "sanitize-html";
 import Layout from "../../../components/Layout";
-import SectionHeader from "../../../components/SectionHeader";
+import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import StatePanel from "../../../components/StatePanel";
 import { Article, ArticleMedia, fetchArticleBySlug } from "../../../lib/cms";
+import { heroImage } from "../../../lib/media";
 
 type ArticleDetailProps = {
   article: Article;
@@ -71,30 +72,48 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
         </span>
       </nav>
 
-      <div className="hero-surface mt-4 rounded-[32px] p-8 sm:p-10">
-        <SectionHeader
-          as="h1"
-          size="xl"
+      <div className="mt-4">
+        <EnterprisePageHero
           kicker={article.category?.name || "Article"}
           title={article.title}
           description={
-            article.description || "Structured CMS article for discoverability, indexing, and enterprise AI delivery."
+            article.description ||
+            "Structured CMS article for discoverability, indexing, and enterprise AI delivery."
           }
+          image={heroImage("hero-updates-cinematic.webp")}
+          alt="Editorial analysis surface"
+          imageKicker="Editorial"
+          imageTitle="Article narrative"
+          imageDescription="Long-form analysis with structured blocks and LLM-ready context."
+          chips={[
+            article.category?.name || "Article",
+            article.author?.name ? `By ${article.author.name}` : "Colaberry editorial",
+            `${blocks.length} content block${blocks.length === 1 ? "" : "s"}`,
+          ]}
+          primaryAction={{ label: "Back to articles", href: "/resources/articles" }}
+          secondaryAction={{ label: "Explore resources", href: "/resources", variant: "secondary" }}
+          metrics={[
+            {
+              label: "Category",
+              value: article.category?.name || "Article",
+              note: "Primary taxonomy classification.",
+            },
+            {
+              label: "Author",
+              value: article.author?.name || "Colaberry editorial",
+              note: "Article ownership and provenance.",
+            },
+            {
+              label: "Published",
+              value: publishedLabel || "Pending",
+              note: "UTC normalized publication date.",
+            },
+          ]}
         />
-        <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-          {publishedLabel ? (
-            <span className="chip chip-muted rounded-full px-3 py-1 font-semibold">{publishedLabel}</span>
-          ) : null}
-          {article.author?.name ? (
-            <span className="chip chip-muted rounded-full px-3 py-1 font-semibold">
-              By {article.author.name}
-            </span>
-          ) : null}
-        </div>
       </div>
 
       {article.coverImageUrl ? (
-        <div className="surface-panel mt-6 overflow-hidden border border-slate-200/80 p-0">
+        <div className="surface-panel section-shell section-spacing overflow-hidden p-0">
           <div className="relative aspect-[16/7] w-full">
             <Image
               src={article.coverImageUrl}
@@ -109,7 +128,7 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
       ) : null}
 
       {blocks.length === 0 ? (
-        <div className="mt-6">
+        <div className="section-spacing">
           <StatePanel
             variant="empty"
             title="Article body is not available yet"
@@ -117,7 +136,7 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
           />
         </div>
       ) : (
-        <article className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-6 sm:p-8">
+        <article className="surface-panel section-shell section-spacing p-6 sm:p-8">
           <div className="prose max-w-none text-slate-700 dark:text-slate-200">
             {blocks.map((block, index) => {
               const component = block.__component || "";
@@ -157,7 +176,7 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
                 const quoteTitle = typeof block.title === "string" ? block.title : "";
                 if (!quoteBody && !quoteTitle) return null;
                 return (
-                  <blockquote key={`quote-${index}`} className="my-6 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5">
+                  <blockquote key={`quote-${index}`} className="section-card my-6 rounded-2xl p-5">
                     {quoteTitle ? <div className="mb-2 text-sm font-semibold text-slate-900">{quoteTitle}</div> : null}
                     {quoteBody ? <p className="m-0 text-slate-700">{quoteBody}</p> : null}
                   </blockquote>
@@ -209,7 +228,7 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
         </article>
       )}
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+      <div className="section-spacing flex flex-col gap-3 sm:flex-row">
         <Link href="/resources/articles" className="btn btn-secondary">
           Back to Articles
         </Link>
