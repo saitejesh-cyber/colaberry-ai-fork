@@ -4,8 +4,10 @@ import Link from "next/link";
 import sanitizeHtml from "sanitize-html";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
+import EnterprisePageHero from "../../components/EnterprisePageHero";
 import StatePanel from "../../components/StatePanel";
 import { fetchUseCaseBySlug, UseCase } from "../../lib/cms";
+import { heroImage } from "../../lib/media";
 
 type UseCaseDetailProps = {
   useCase: UseCase;
@@ -72,6 +74,9 @@ export default function UseCaseDetailPage({ useCase, allowPrivate }: UseCaseDeta
     limitations.length > 0;
   const hasRelations = useCase.agents.length > 0 || useCase.mcpServers.length > 0;
   const hasLinks = Boolean(useCase.docsUrl || useCase.demoUrl || useCase.sourceUrl);
+  const visibilityModeNote = allowPrivate
+    ? "Private preview mode enabled for this environment."
+    : "Public-only mode in this environment.";
   const safeLongDescription = sanitizeRichText(useCase.longDescription);
 
   const jsonLd = {
@@ -112,50 +117,58 @@ export default function UseCaseDetailPage({ useCase, allowPrivate }: UseCaseDeta
         </span>
       </nav>
 
-      <div className="hero-surface mt-4 rounded-[32px] p-8 sm:p-10">
-        <SectionHeader
-          as="h1"
-          size="xl"
+      <div className="mt-4">
+        <EnterprisePageHero
           kicker="Use case profile"
           title={useCase.title}
           description={metaDescription}
+          image={heroImage("hero-solutions-cinematic.webp")}
+          alt={`${useCase.title} use case preview`}
+          imageKicker="Use case lane"
+          imageTitle="Workflow orchestration context"
+          imageDescription={`${useCase.industry || "General"}${useCase.category ? ` • ${useCase.category}` : ""} • ${
+            status.charAt(0).toUpperCase() + status.slice(1)
+          }`}
+          chips={[
+            useCase.industry || "General",
+            ...(useCase.category ? [useCase.category] : []),
+            status.charAt(0).toUpperCase() + status.slice(1),
+            isPrivate ? "Private" : "Public",
+            sourceDisplay,
+            ...(useCase.verified ? ["Verified"] : []),
+          ]}
+          primaryAction={
+            useCase.docsUrl
+              ? { label: "Open docs", href: useCase.docsUrl, external: true }
+              : useCase.demoUrl
+              ? { label: "Open demo", href: useCase.demoUrl, external: true }
+              : { label: "Back to use cases", href: "/use-cases" }
+          }
+          secondaryAction={{ label: "View solutions", href: "/solutions", variant: "secondary" }}
+          metrics={[
+            {
+              label: "Last updated",
+              value: lastUpdatedLabel || "Pending",
+              note: "Latest metadata refresh.",
+            },
+            {
+              label: "Linked assets",
+              value: `${useCase.agents.length} agents • ${useCase.mcpServers.length} MCP`,
+              note: "Catalog components in this workflow.",
+            },
+            {
+              label: "Visibility",
+              value: isPrivate ? "Private" : "Public",
+              note: isPrivate
+                ? "Restricted access listing."
+                : `Available for catalog discovery. ${visibilityModeNote}`,
+            },
+          ]}
         />
-        <div className="mt-5 flex flex-wrap items-center gap-2">
-          <span className="chip chip-brand rounded-full px-3 py-1 text-xs font-semibold">
-            {useCase.industry || "General"}
-          </span>
-          {useCase.category ? (
-            <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-              {useCase.category}
-            </span>
-          ) : null}
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-            {isPrivate ? "Private" : "Public"}
-          </span>
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-            {sourceDisplay}
-          </span>
-          {useCase.verified ? (
-            <span className="chip rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              Verified
-            </span>
-          ) : null}
-          {!allowPrivate && isPrivate ? (
-            <span className="text-xs text-slate-500">Private listings hidden</span>
-          ) : null}
-        </div>
-        {lastUpdatedLabel ? (
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Last updated {lastUpdatedLabel}
-          </p>
-        ) : null}
       </div>
 
       {!hasOverview && !safeLongDescription ? (
-        <div className="mt-6">
+        <div className="section-spacing">
           <StatePanel
             variant="empty"
             title="Use case content is being populated"
@@ -163,9 +176,9 @@ export default function UseCaseDetailPage({ useCase, allowPrivate }: UseCaseDeta
           />
         </div>
       ) : (
-        <div className="mt-6 grid gap-6">
+        <div className="section-spacing grid gap-6">
           {safeLongDescription ? (
-            <section className="surface-panel border border-slate-200/80 bg-white/90 p-6">
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
@@ -181,7 +194,7 @@ export default function UseCaseDetailPage({ useCase, allowPrivate }: UseCaseDeta
           ) : null}
 
           {hasOverview ? (
-            <section className="surface-panel border border-slate-200/80 bg-white/90 p-6">
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
@@ -200,7 +213,7 @@ export default function UseCaseDetailPage({ useCase, allowPrivate }: UseCaseDeta
           ) : null}
 
           {hasExecutionDetails ? (
-            <section className="surface-panel border border-slate-200/80 bg-white/90 p-6">
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
@@ -224,7 +237,7 @@ export default function UseCaseDetailPage({ useCase, allowPrivate }: UseCaseDeta
       )}
 
       {hasRelations ? (
-        <section className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-6">
+        <section className="surface-panel section-shell section-spacing p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -254,7 +267,7 @@ export default function UseCaseDetailPage({ useCase, allowPrivate }: UseCaseDeta
       ) : null}
 
       {hasLinks ? (
-        <section className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-6">
+        <section className="surface-panel section-shell section-spacing p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -282,7 +295,7 @@ export default function UseCaseDetailPage({ useCase, allowPrivate }: UseCaseDeta
         </section>
       ) : null}
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+      <div className="section-spacing flex flex-col gap-3 sm:flex-row">
         <Link href="/use-cases" className="btn btn-secondary">
           Back to Use Cases
         </Link>
@@ -345,7 +358,7 @@ function sanitizeRichText(value?: string | null) {
 
 function InfoBlock({ title, body }: { title: string; body?: string | null }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm">
+    <div className="section-card rounded-2xl p-4">
       <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
       <p className="mt-1 text-sm text-slate-600">{body || "Not documented yet."}</p>
     </div>
@@ -354,7 +367,7 @@ function InfoBlock({ title, body }: { title: string; body?: string | null }) {
 
 function ListBlock({ title, items, empty }: { title: string; items: string[]; empty: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm">
+    <div className="section-card rounded-2xl p-4">
       <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
       {items.length === 0 ? (
         <p className="mt-1 text-sm text-slate-600">{empty}</p>
@@ -379,7 +392,7 @@ function RelationList({
   empty: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm">
+    <div className="section-card rounded-2xl p-4">
       <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
       {links.length === 0 ? (
         <p className="mt-1 text-sm text-slate-600">{empty}</p>

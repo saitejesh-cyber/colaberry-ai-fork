@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Strapi responses are polymorphic across populate modes and normalized by mapper functions in this module. */
-const CMS_URL = (process.env.NEXT_PUBLIC_CMS_URL || process.env.CMS_URL || "").trim().replace(/\/$/, "");
+const CMS_URL = (process.env.CMS_URL || process.env.NEXT_PUBLIC_CMS_URL || "").trim().replace(/\/$/, "");
 const CMS_API_TOKEN = (process.env.CMS_API_TOKEN || process.env.NEXT_PUBLIC_CMS_API_TOKEN || "").trim();
 const CMS_CACHE_TTL_MS = Number(process.env.NEXT_PUBLIC_CMS_CACHE_TTL_MS || 300000);
 
@@ -68,9 +68,29 @@ async function fetchCMSJson<T>(
   })
     .then(async (res) => {
       if (!res.ok) {
-        throw new Error(`CMS request failed: ${res.status}`);
+        const err = new Error(`CMS request failed: ${res.status}`);
+        throw err;
       }
-      const json = (await res.json()) as T;
+      return (await res.json()) as T;
+    })
+    .catch(async (error) => {
+      const status = parseCMSStatusCode(error);
+      const canRetryWithoutAuth =
+        authMode === "default" &&
+        useAuthHeader &&
+        (status === 401 || status === 403);
+
+      if (!canRetryWithoutAuth) {
+        throw error;
+      }
+
+      const fallbackRes = await fetch(url, { cache: "no-store" });
+      if (!fallbackRes.ok) {
+        throw new Error(`CMS request failed: ${fallbackRes.status}`);
+      }
+      return (await fallbackRes.json()) as T;
+    })
+    .then((json) => {
       if (cacheMs > 0) {
         cmsCache.set(cacheKey, { data: json, expiresAt: now + cacheMs });
       }

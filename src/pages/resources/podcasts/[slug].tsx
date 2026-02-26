@@ -2,10 +2,10 @@
 import Layout from "../../../components/Layout";
 import Link from "next/link";
 import Head from "next/head";
-import Image from "next/image";
 import type { GetServerSideProps } from "next";
 import RichText from "../../../components/RichText";
 import SectionHeader from "../../../components/SectionHeader";
+import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import PodcastPlayer from "../../../components/PodcastPlayer";
 import TranscriptTimeline from "../../../components/TranscriptTimeline";
 import {
@@ -26,6 +26,8 @@ type PodcastDetailProps = {
 type RouteParams = {
   slug?: string;
 };
+
+const PODCAST_BRAND_IMAGE = "/media/podcast/colaberry-ai-podcast-qr.png";
 
 export const getServerSideProps: GetServerSideProps<PodcastDetailProps, RouteParams> = async ({
   params,
@@ -242,39 +244,46 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
         {episode.coverImageUrl ? <meta property="og:image" content={episode.coverImageUrl} /> : null}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
-      <div className="flex flex-col gap-3">
-        <SectionHeader
-          as="h1"
-          size="xl"
-          kicker="Podcast"
-          title={episode.title}
-          description="Listen to the episode or read the full narrative and transcript."
-        >
-          <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-            {publishedLabel ? <span>{publishedLabel}</span> : null}
-            {episode.duration ? <span>{episode.duration}</span> : null}
-            {episode.episodeNumber ? <span>Episode {episode.episodeNumber}</span> : null}
-          </div>
-        </SectionHeader>
-      </div>
+      <EnterprisePageHero
+        kicker="Podcast"
+        title={episode.title}
+        description="Listen to the episode or read the full narrative and transcript."
+        image={PODCAST_BRAND_IMAGE}
+        alt="Colaberry AI podcast artwork"
+        imageKicker="Audio signal"
+        imageTitle="Episode brief"
+        imageDescription={`${publishedLabel || "Date pending"}${episode.duration ? ` • ${episode.duration}` : ""}${
+          episode.episodeNumber ? ` • Episode ${episode.episodeNumber}` : ""
+        }`}
+        chips={[
+          ...(episode.tags || []).slice(0, 3).map((tag) => `#${tag.name}`),
+          hasTranscriptContent ? "Transcript available" : "Transcript pending",
+          subscribeLinks.length > 0 ? `${subscribeLinks.length} platform links` : "Platform links pending",
+        ]}
+        primaryAction={{ label: "Play episode", href: "#player" }}
+        secondaryAction={{ label: "All podcasts", href: "/resources/podcasts", variant: "secondary" }}
+        metrics={[
+          {
+            label: "Plays",
+            value: formatMetricCount(episode.playCount),
+            note: "Playback interactions.",
+          },
+          {
+            label: "Views",
+            value: formatMetricCount(episode.viewCount),
+            note: "Episode detail opens.",
+          },
+          {
+            label: "Shares",
+            value: formatMetricCount(episode.shareCount),
+            note: "Cross-channel distribution.",
+          },
+        ]}
+      />
 
-      {episode.coverImageUrl && (
-        <div className="surface-panel mt-6 overflow-hidden border border-slate-200/80">
-          <Image
-            src={episode.coverImageUrl}
-            alt={episode.coverImageAlt || episode.title}
-            width={1600}
-            height={800}
-            className="h-64 w-full object-cover sm:h-80"
-            unoptimized
-            loading="lazy"
-          />
-        </div>
-      )}
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="section-spacing grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6">
-          <div ref={playerRef} className="surface-panel border border-slate-200/80 bg-white/90 p-6">
+          <div id="player" ref={playerRef} className="surface-panel section-shell p-6">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
               Listen to the podcast
             </div>
@@ -378,7 +387,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                 <Link
                   key={tag.slug}
                   href={`/resources/podcasts/tag/${tag.slug}`}
-                  className="chip rounded-full border border-slate-200/80 bg-white/80 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-brand-deep"
+                  className="chip chip-muted rounded-full px-2.5 py-1 text-xs font-semibold"
                 >
                   #{tag.name}
                 </Link>
@@ -387,7 +396,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                 <Link
                   key={company.slug}
                   href={`/resources/podcasts/company?slug=${encodeURIComponent(company.slug)}`}
-                  className="chip chip-brand rounded-full border border-brand-blue/20 bg-white/80 px-2.5 py-1 text-xs font-semibold text-brand-deep hover:text-brand-blue"
+                  className="chip chip-brand rounded-full px-2.5 py-1 text-xs font-semibold"
                 >
                   {company.name}
                 </Link>
@@ -395,7 +404,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
             </div>
           </div>
 
-          <div className="surface-panel border border-slate-200/80 bg-white/90 p-6">
+          <div className="surface-panel section-shell p-6">
             <div className="prose max-w-none">
               {episode.description ? (
                 <RichText blocks={episode.description} />
@@ -409,7 +418,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
             <div
               ref={transcriptRef}
               id="transcript"
-              className="surface-panel border border-slate-200/80 bg-white/90 p-6"
+              className="surface-panel section-shell p-6"
             >
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -440,7 +449,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
             <div
               ref={transcriptRef}
               id="transcript"
-              className="surface-panel border border-slate-200/80 bg-white/90 p-6"
+              className="surface-panel section-shell p-6"
             >
               <details
                 open={transcriptOpen}
@@ -462,7 +471,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
         </div>
 
         <aside className="flex flex-col gap-4">
-          <div className="surface-panel border border-slate-200/80 bg-white/90 p-5">
+          <div className="surface-panel section-shell p-5">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
               Listen on
             </div>
@@ -484,7 +493,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                           title: episode.title,
                         })
                       }
-                      className="focus-ring inline-flex items-center justify-between rounded-full border border-slate-200/80 bg-white/80 px-4 py-2 text-xs font-semibold text-slate-600 hover:border-brand-blue/40 hover:text-brand-blue"
+                      className="focus-ring chip chip-muted inline-flex items-center justify-between rounded-full px-4 py-2 text-xs font-semibold"
                     >
                       <span>{label}</span>
                       <span aria-hidden="true">→</span>
@@ -498,7 +507,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
           </div>
 
           {episode.companies?.length > 0 && (
-            <div className="surface-panel border border-slate-200/80 bg-white/90 p-5">
+            <div className="surface-panel section-shell p-5">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Company tags
               </div>
@@ -507,7 +516,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                   <Link
                     key={company.slug}
                     href={`/resources/podcasts/company?slug=${encodeURIComponent(company.slug)}`}
-                    className="chip chip-brand rounded-full border border-brand-blue/20 bg-white/80 px-3 py-1 text-xs font-semibold text-brand-deep hover:text-brand-blue"
+                    className="chip chip-brand rounded-full px-3 py-1 text-xs font-semibold"
                   >
                     {company.name}
                   </Link>
@@ -519,7 +528,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
       </div>
 
       {relatedEpisodes.length > 0 ? (
-        <section className="mt-6 surface-panel border border-slate-200/80 bg-white/90 p-6">
+        <section className="surface-panel section-shell section-spacing p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <SectionHeader
               as="h2"
@@ -537,7 +546,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
               <li key={item.slug}>
                 <Link
                   href={`/resources/podcasts/${item.slug}`}
-                  className="focus-ring flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white/90 p-4 transition hover:border-brand-blue/40"
+                  className="focus-ring section-card flex h-full flex-col rounded-2xl p-4 transition"
                 >
                   <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                     {formatDate(item.publishedDate) || "Date pending"}
@@ -557,7 +566,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
 
       {showMiniPlayer && (
         <div className="pointer-events-none fixed bottom-4 left-1/2 z-50 w-[min(100%-2rem,64rem)] -translate-x-1/2">
-          <div className="pointer-events-auto surface-panel border border-slate-200/80 bg-white/95 p-3 shadow-lg backdrop-blur">
+          <div className="pointer-events-auto surface-panel section-shell p-3 shadow-lg backdrop-blur">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <button
@@ -622,4 +631,12 @@ function formatDate(value?: string | null) {
     day: "numeric",
     timeZone: "UTC",
   });
+}
+
+function formatMetricCount(value?: number | null) {
+  const safe = typeof value === "number" && Number.isFinite(value) ? value : 0;
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(safe);
 }

@@ -1,12 +1,13 @@
 import type { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import Head from "next/head";
-import Image from "next/image";
 import sanitizeHtml from "sanitize-html";
 import Layout from "../../../components/Layout";
 import SectionHeader from "../../../components/SectionHeader";
+import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import MCPCard from "../../../components/MCPCard";
 import { fetchMCPServerBySlug, fetchRelatedMCPServers, MCPServer } from "../../../lib/cms";
+import { heroImage } from "../../../lib/media";
 import type { ReactNode } from "react";
 
 type MCPDetailProps = {
@@ -79,7 +80,6 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
   const canonicalUrl = `${siteUrl}/aixcelerator/mcp/${mcp.slug || mcp.id}`;
   const tagNames = (mcp.tags || []).map((tag) => tag.name || tag.slug).filter(Boolean);
   const companyNames = (mcp.companies || []).map((company) => company.name || company.slug).filter(Boolean);
-  const hasCoverImage = Boolean(mcp.coverImageUrl);
   const lastUpdatedValue = mcp.lastUpdated ? new Date(mcp.lastUpdated) : null;
   const lastUpdatedLabel = lastUpdatedValue
     ? lastUpdatedValue.toLocaleDateString("en-US", {
@@ -112,6 +112,9 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
     typeof mcp.rating === "number" ||
     typeof mcp.openSource === "boolean" ||
     Boolean(mcp.verified);
+  const visibilityModeNote = allowPrivate
+    ? "Private preview mode enabled for this environment."
+    : "Public-only mode in this environment.";
   const keywords = [mcp.industry, mcp.category, ...tagNames, ...companyNames].filter(Boolean).join(", ");
   const jsonLd = {
     "@context": "https://schema.org",
@@ -165,121 +168,60 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
         </span>
       </nav>
 
-      <div className="hero-surface mt-4 rounded-[32px] p-8 sm:p-10">
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-          <div>
-            <SectionHeader
-              as="h1"
-              size="xl"
-              kicker="MCP profile"
-              title={mcp.name}
-              description={mcp.description || "Structured MCP server profile for enterprise catalog discovery."}
-            />
-            <div className="mt-6 flex flex-wrap items-center gap-2">
-              <span className="chip chip-brand rounded-full px-3 py-1 text-xs font-semibold">
-                {mcp.industry || "General"}
-              </span>
-              {mcp.category ? (
-                <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-                  {mcp.category}
-                </span>
-              ) : null}
-              {mcp.serverType ? (
-                <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-                  {mcp.serverType}
-                </span>
-              ) : null}
-              {mcp.language ? (
-                <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-                  {mcp.language}
-                </span>
-              ) : null}
-              {typeof mcp.openSource === "boolean" ? (
-                <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-                  {mcp.openSource ? "Open source" : "Commercial"}
-                </span>
-              ) : null}
-              <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </span>
-              <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-                {sourceDisplay}
-              </span>
-              {mcp.verified ? (
-                <span className="chip rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  Verified
-                </span>
-              ) : null}
-              <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-                {isPrivate ? "Private" : "Public"}
-              </span>
-              {!allowPrivate && isPrivate ? (
-                <span className="text-xs text-slate-500">Private listings hidden</span>
-              ) : null}
-            </div>
-            {lastUpdatedLabel ? (
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Last updated {lastUpdatedLabel}
-              </p>
-            ) : null}
-            <div className="mt-6 flex flex-wrap gap-3">
-              {mcp.docsUrl ? (
-                <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
-                  View documentation
-                </a>
-              ) : (
-                <Link href="/request-demo" className="btn btn-primary">
-                  Request a demo
-                </Link>
-              )}
-              {mcp.sourceUrl ? (
-                <a href={mcp.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
-                  View source
-                </a>
-              ) : (
-                <Link href="/aixcelerator/mcp" className="btn btn-secondary">
-                  View all MCP servers
-                </Link>
-              )}
-            </div>
-          </div>
-
-          <div className="surface-panel overflow-hidden border border-slate-200/80 p-0">
-            <div className="relative aspect-[4/3] w-full">
-              {hasCoverImage ? (
-                <Image
-                  src={mcp.coverImageUrl || ""}
-                  alt={mcp.coverImageAlt || mcp.name}
-                  fill
-                  className="h-full w-full object-cover"
-                  unoptimized
-                  loading="lazy"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
-                  <div className="flex flex-col items-center gap-3 text-slate-400">
-                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                      <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden="true">
-                        <path
-                          d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7Zm5 2a2 2 0 0 0-2 2v4h2v-2h2v2h2v-4a2 2 0 0 0-2-2H9Zm6 0a2 2 0 0 0-2 2v4h2v-2h2v2h2v-4a2 2 0 0 0-2-2h-2Z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold uppercase tracking-[0.2em]">
-                      MCP surface
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      <div className="mt-4">
+        <EnterprisePageHero
+          kicker="MCP profile"
+          title={mcp.name}
+          description={mcp.description || "Structured MCP server profile for enterprise catalog discovery."}
+          image={heroImage("hero-mcp-cinematic.webp")}
+          alt={mcp.coverImageAlt || `${mcp.name} MCP profile preview`}
+          imageKicker="MCP surface"
+          imageTitle="Integration profile"
+          imageDescription={`${mcp.industry || "General"}${mcp.category ? ` • ${mcp.category}` : ""} • ${status}`}
+          chips={[
+            mcp.industry || "General",
+            ...(mcp.category ? [mcp.category] : []),
+            ...(mcp.serverType ? [mcp.serverType] : []),
+            ...(mcp.language ? [mcp.language] : []),
+            ...(typeof mcp.openSource === "boolean" ? [mcp.openSource ? "Open source" : "Commercial"] : []),
+            sourceDisplay,
+            isPrivate ? "Private" : "Public",
+          ]}
+          primaryAction={
+            mcp.docsUrl
+              ? { label: "View documentation", href: mcp.docsUrl, external: true }
+              : { label: "Request a demo", href: "/request-demo" }
+          }
+          secondaryAction={
+            mcp.sourceUrl
+              ? { label: "View source", href: mcp.sourceUrl, external: true, variant: "secondary" }
+              : { label: "View all MCP servers", href: "/aixcelerator/mcp", variant: "secondary" }
+          }
+          metrics={[
+            {
+              label: "Last updated",
+              value: lastUpdatedLabel || "Pending",
+              note: "Latest metadata refresh.",
+            },
+            {
+              label: "Signals",
+              value: `${tagNames.length} tags`,
+              note: `${companyNames.length} linked companies.`,
+            },
+            {
+              label: "Visibility",
+              value: isPrivate ? "Private" : "Public",
+              note: isPrivate
+                ? "Restricted access listing."
+                : `Available for catalog discovery. ${visibilityModeNote}`,
+            },
+          ]}
+        />
       </div>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+      <section className="section-spacing grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
         <div className="grid gap-6">
-          <div className="surface-panel p-6">
+          <div className="surface-panel section-shell p-6">
             <SectionHeader
               as="h2"
               size="md"
@@ -369,7 +311,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
           </div>
 
           {hasAboutSection ? (
-            <section className="surface-panel p-6">
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
@@ -385,7 +327,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
                 }`}
               >
                 {mcp.primaryFunction || mcp.description || mcp.longDescription ? (
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+                  <div className="section-card rounded-2xl p-5">
                     <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Summary
                     </div>
@@ -410,7 +352,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
           ) : null}
 
           {hasValueSection ? (
-            <section className="surface-panel p-6">
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
@@ -442,7 +384,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
           ) : null}
 
           {hasExecutionSection ? (
-            <section className="surface-panel p-6">
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
@@ -461,7 +403,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
                   <ListSection title="Use cases" items={useCases} empty="Use cases not documented yet." />
                 ) : null}
                 {mcp.exampleWorkflow || requirements.length > 0 ? (
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+                  <div className="section-card rounded-2xl p-5">
                     {mcp.exampleWorkflow ? (
                       <>
                         <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -494,7 +436,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
           ) : null}
 
           {hasToolsSection ? (
-            <section className="surface-panel p-6">
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
@@ -522,7 +464,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
           ) : null}
 
           {hasSecuritySection ? (
-            <section className="surface-panel p-6">
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
@@ -554,7 +496,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
           ) : null}
 
           {hasCompatibilitySection ? (
-            <section className="surface-panel p-6">
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
@@ -586,7 +528,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
           ) : null}
 
           {hasResourcesSection ? (
-            <section className="surface-panel p-6">
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
@@ -615,7 +557,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
           ) : null}
 
           {hasAdoptionSection ? (
-            <section className="surface-panel p-6">
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
@@ -657,7 +599,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
           ) : null}
 
           {relatedServers.length > 0 && (
-            <section className="surface-panel p-6">
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
@@ -715,7 +657,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
 
 function MetadataRow({ label, value, href }: { label: string; value: string; href?: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+    <div className="section-card rounded-2xl p-4">
       <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</dt>
       <dd className="mt-2 text-sm font-semibold text-slate-900">
         {href ? (
@@ -747,7 +689,7 @@ function DetailCard({
   description: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+    <div className="section-card rounded-2xl p-4">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
       <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
       <div className="mt-1 text-xs text-slate-600">{description}</div>
@@ -765,14 +707,14 @@ function ListBlock({
   emptyLabel: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+    <div className="section-card rounded-2xl p-4">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
       {items.length ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {items.map((item) => (
             <span
               key={`${label}-${item}`}
-              className="chip chip-muted rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"
+              className="chip chip-muted rounded-full px-2.5 py-1 text-xs font-semibold"
             >
               {item}
             </span>
@@ -787,7 +729,7 @@ function ListBlock({
 
 function ListSection({ title, items, empty }: { title: string; items: string[]; empty: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+    <div className="section-card rounded-2xl p-5">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</div>
       {items.length ? (
         <ul className="mt-3 space-y-2 text-sm text-slate-700">
@@ -807,7 +749,7 @@ function ListSection({ title, items, empty }: { title: string; items: string[]; 
 
 function SignalStat({ label, value, note }: { label: string; value: string; note: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+    <div className="section-card rounded-2xl p-4">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
       <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
       <div className="mt-1 text-xs text-slate-600">{note}</div>
@@ -867,7 +809,7 @@ function GuidanceBlock({
   actions?: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+    <div className="section-card rounded-2xl p-5">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</div>
       <ul className="mt-3 space-y-2 text-sm text-slate-700">
         {items.map((item, index) => (

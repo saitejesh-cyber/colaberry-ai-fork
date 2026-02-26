@@ -5,8 +5,8 @@ import Image from "next/image";
 import type { GetServerSideProps } from "next";
 import { useMemo, useState } from "react";
 import SectionHeader from "../../../components/SectionHeader";
+import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import PodcastPlayer from "../../../components/PodcastPlayer";
-import MediaPanel from "../../../components/MediaPanel";
 import StatePanel from "../../../components/StatePanel";
 import {
   fetchPodcastEpisodes,
@@ -127,7 +127,7 @@ export default function Podcasts({
       </Head>
 
       {fetchError ? (
-        <div className="mb-6">
+        <div className="section-spacing">
           <StatePanel
             variant="error"
             title="Podcast data is temporarily unavailable"
@@ -136,36 +136,43 @@ export default function Podcasts({
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-        <div className="flex flex-col gap-3">
-          <SectionHeader
-            as="h1"
-            size="xl"
-            kicker="Resources"
-            title="Podcast library"
-            description="Structured podcast destination with latest episodes, trending signals, inline listening, and transcript-ready detail pages."
-          />
-        </div>
-        <MediaPanel
-          kicker="Audio signal"
-          title="Enterprise AI conversations"
-          description="Listen directly on this page or open full episode narratives and transcripts."
-          image={PODCAST_BRAND_IMAGE}
-          alt="Colaberry AI podcast artwork with QR code"
-          aspect="wide"
-          fit="cover"
-        />
-      </div>
+      <EnterprisePageHero
+        kicker="Resources"
+        title="Podcast library"
+        description="Structured podcast destination with latest episodes, trending signals, inline listening, and transcript-ready detail pages."
+        image={PODCAST_BRAND_IMAGE}
+        alt="Colaberry AI podcast artwork with QR code"
+        imageKicker="Audio signal"
+        imageTitle="Enterprise AI conversations"
+        imageDescription="Listen directly on this page or open full episode narratives and transcripts."
+        chips={[
+          "Inline player",
+          "Transcript-ready detail pages",
+          activeSort === "trending" ? "Trending order" : "Latest order",
+          activeType === "all" ? "All sources" : activeType === "internal" ? "Colaberry only" : "External only",
+        ]}
+        primaryAction={{ label: "Browse companies", href: "#company-search" }}
+        secondaryAction={{ label: "Back to resources", href: "/resources", variant: "secondary" }}
+        metrics={[
+          {
+            label: "Total episodes",
+            value: String(internalCount + externalCount),
+            note: "Full chronological archive.",
+          },
+          {
+            label: "Colaberry episodes",
+            value: String(internalCount),
+            note: "Internal production catalog.",
+          },
+          {
+            label: "External episodes",
+            value: String(externalCount),
+            note: "Curated third-party sources.",
+          },
+        ]}
+      />
 
-      <section className="surface-panel mt-6 p-6">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <MetricCard label="Total episodes" value={String(internalCount + externalCount)} note="Full chronological archive" />
-          <MetricCard label="Colaberry episodes" value={String(internalCount)} note="Internal production" />
-          <MetricCard label="External episodes" value={String(externalCount)} note="Curated third-party sources" />
-        </div>
-      </section>
-
-      <section className="surface-panel mt-6 p-6">
+      <section className="surface-panel section-shell section-spacing p-6">
         <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
           <div>
             <SectionHeader
@@ -180,7 +187,7 @@ export default function Podcasts({
               </Link>
             </div>
           </div>
-          <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/70">
+          <div className="section-card rounded-2xl p-3">
             <PodcastArtwork
               src={PODCAST_BRAND_IMAGE}
               alt="Colaberry AI podcast artwork with QR code"
@@ -190,7 +197,7 @@ export default function Podcasts({
         </div>
       </section>
 
-      <section className="surface-panel mt-6 p-6">
+      <section className="surface-panel section-shell section-spacing p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeader
             kicker="Distribution"
@@ -208,7 +215,7 @@ export default function Podcasts({
         </div>
       </section>
 
-      <section className="surface-panel mt-6 p-6">
+      <section className="surface-panel section-shell section-spacing p-6">
         <SectionHeader
           kicker="Catalog controls"
           title="Search, filter, and sort"
@@ -262,7 +269,7 @@ export default function Podcasts({
         </form>
       </section>
 
-      <section className="surface-panel mt-6 p-6">
+      <section className="surface-panel section-shell section-spacing p-6">
         <SectionHeader
           kicker="Company tags"
           title="Browse episodes by company"
@@ -311,7 +318,7 @@ export default function Podcasts({
         </div>
       </section>
 
-      <section className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-6">
+      <section className="surface-panel section-shell section-spacing p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">All podcast episodes</h2>
@@ -346,9 +353,9 @@ export default function Podcasts({
               const inlineEmbedCode = episode.useNativePlayer && episode.audioUrl ? null : episode.buzzsproutEmbedCode;
 
               return (
-                <li key={episode.id} className="surface-panel border border-slate-200/80 bg-white/90 p-4">
+                <li key={episode.id} className="surface-panel section-shell p-4">
                   <div className="flex flex-col gap-4 md:grid md:grid-cols-[220px_minmax(0,1fr)] md:items-start">
-                    <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 dark:border-slate-700/80 dark:bg-slate-900/70">
+                    <div className="section-card overflow-hidden rounded-2xl">
                       <PodcastArtwork
                         src={cardArtwork}
                         alt={episode.coverImageAlt || episode.title}
@@ -366,21 +373,15 @@ export default function Podcasts({
                             {episode.episodeNumber ? ` • Episode ${episode.episodeNumber}` : ""}
                           </p>
                         </div>
-                        <span
-                          className={`chip rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                            isExternal
-                              ? "border-violet-200/80 bg-violet-50 text-violet-700"
-                              : "border-emerald-200/80 bg-emerald-50 text-emerald-700"
-                          }`}
-                        >
+                        <span className={`chip rounded-full px-2.5 py-1 text-xs font-semibold ${isExternal ? "chip-muted" : "chip-brand"}`}>
                           {isExternal ? "External" : "Colaberry"}
                         </span>
                       </div>
 
                       <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-300">
-                        <span className="rounded-full border border-slate-200/80 bg-white/90 px-2 py-0.5">Plays {formatCompactNumber(episode.playCount)}</span>
-                        <span className="rounded-full border border-slate-200/80 bg-white/90 px-2 py-0.5">Views {formatCompactNumber(episode.viewCount)}</span>
-                        <span className="rounded-full border border-slate-200/80 bg-white/90 px-2 py-0.5">Shares {formatCompactNumber(episode.shareCount)}</span>
+                        <span className="chip chip-muted rounded-full px-2 py-0.5">Plays {formatCompactNumber(episode.playCount)}</span>
+                        <span className="chip chip-muted rounded-full px-2 py-0.5">Views {formatCompactNumber(episode.viewCount)}</span>
+                        <span className="chip chip-muted rounded-full px-2 py-0.5">Shares {formatCompactNumber(episode.shareCount)}</span>
                       </div>
 
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -388,7 +389,7 @@ export default function Podcasts({
                           <Link
                             key={tag.slug}
                             href={`/resources/podcasts/tag/${tag.slug}`}
-                            className="chip rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-brand-deep"
+                            className="chip chip-muted rounded-full px-2.5 py-1 text-xs font-semibold"
                           >
                             #{tag.name}
                           </Link>
@@ -397,7 +398,7 @@ export default function Podcasts({
                           <Link
                             key={company.slug}
                             href={`/resources/podcasts/company?slug=${encodeURIComponent(company.slug)}`}
-                            className="chip chip-brand rounded-full border border-brand-blue/20 bg-white/90 px-2.5 py-1 text-xs font-semibold text-brand-deep hover:text-brand-blue"
+                            className="chip chip-brand rounded-full px-2.5 py-1 text-xs font-semibold"
                           >
                             {company.name}
                           </Link>
@@ -432,7 +433,7 @@ export default function Podcasts({
                       </div>
 
                       {isActive ? (
-                        <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-3">
+                        <div className="section-card mt-4 rounded-2xl p-3">
                           <PodcastPlayer
                             embedCode={inlineEmbedCode}
                             audioUrl={episode.audioUrl}
@@ -491,7 +492,7 @@ function SignalRail({
   episodes: PodcastEpisode[];
 }) {
   return (
-    <article className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/70">
+    <article className="section-card rounded-2xl p-4">
       <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-300">{title}</div>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{description}</p>
       {episodes.length > 0 ? (
@@ -500,7 +501,7 @@ function SignalRail({
             <li key={episode.slug}>
               <Link
                 href={`/resources/podcasts/${episode.slug}`}
-                className="focus-ring flex items-center justify-between rounded-xl border border-slate-200/80 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-800 transition hover:border-brand-blue/35 hover:text-brand-deep dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-100"
+                className="focus-ring section-card flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 transition hover:text-brand-deep dark:text-slate-100"
               >
                 <span className="line-clamp-1 pr-3">{episode.title}</span>
                 <span className="text-xs text-slate-400">→</span>
@@ -540,16 +541,6 @@ function PodcastArtwork({
         }
       }}
     />
-  );
-}
-
-function MetricCard({ label, value, note }: { label: string; value: string; note: string }) {
-  return (
-    <article className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/70">
-      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-300">{label}</div>
-      <div className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{value}</div>
-      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{note}</p>
-    </article>
   );
 }
 
@@ -638,7 +629,7 @@ function PageLink({
   if (disabled) {
     return (
       <span
-        className="inline-flex min-w-10 items-center justify-center rounded-full border border-slate-200/80 px-3 py-1.5 text-sm font-semibold text-slate-400"
+        className="chip chip-muted inline-flex min-w-10 items-center justify-center rounded-full px-3 py-1.5 text-sm font-semibold text-slate-400"
         aria-disabled="true"
       >
         {text}
@@ -653,7 +644,7 @@ function PageLink({
       className={`inline-flex min-w-10 items-center justify-center rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
         active
           ? "border-brand-blue/40 bg-brand-blue/10 text-brand-deep"
-          : "border-slate-200/80 bg-white/90 text-slate-700 hover:border-brand-blue/30 hover:text-brand-deep"
+          : "chip chip-muted text-slate-700 hover:text-brand-deep"
       }`}
     >
       {text}

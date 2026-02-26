@@ -1,7 +1,6 @@
 import Layout from "../../components/Layout";
 import Link from "next/link";
-import SectionHeader from "../../components/SectionHeader";
-import MediaPanel from "../../components/MediaPanel";
+import EnterprisePageHero from "../../components/EnterprisePageHero";
 import { heroImage } from "../../lib/media";
 
 export default function CaseStudiesHub() {
@@ -18,33 +17,43 @@ export default function CaseStudiesHub() {
 
   return (
     <Layout>
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-        <div className="flex flex-col gap-3">
-          <SectionHeader
-            as="h1"
-            size="xl"
-            kicker="Resources"
-            title="Case studies"
-            description="Browse delivery outcomes by industry. Each industry page contains detailed case studies."
-          />
-        </div>
-        <MediaPanel
-          kicker="Impact library"
-          title="Outcome snapshots"
-          description="Cross-industry delivery proof points."
-          image={heroImage("hero-case-studies-premium-v2.svg")}
-          alt="Enterprise case study outcomes and performance insights"
-          aspect="wide"
-          fit="cover"
-        />
-      </div>
+      <EnterprisePageHero
+        kicker="Resources"
+        title="Case studies"
+        description="Browse delivery outcomes by industry. Each industry page contains detailed case studies and impact context."
+        image={heroImage("hero-case-studies-cinematic.webp")}
+        alt="Enterprise case study outcomes and performance insights"
+        imageKicker="Impact library"
+        imageTitle="Outcome snapshots"
+        imageDescription="Cross-industry delivery proof points and implementation context."
+        chips={["Outcomes", "Industry distribution", "Delivery proof", "Impact context"]}
+        primaryAction={{ label: "View industries", href: "/industries" }}
+        secondaryAction={{ label: "Back to resources", href: "/resources", variant: "secondary" }}
+        metrics={[
+          {
+            label: "Industry tracks",
+            value: String(industries.length),
+            note: "Current case-study groupings.",
+          },
+          {
+            label: "Coverage model",
+            value: "Cross-domain",
+            note: "Mapped to enterprise verticals.",
+          },
+          {
+            label: "Focus",
+            value: "Outcomes",
+            note: "Measured impact over feature lists.",
+          },
+        ]}
+      />
 
-      <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="section-spacing grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {industries.map((item) => (
           <Link
             key={item.slug}
             href={`/industries/${item.slug}`}
-            className="surface-panel surface-hover surface-interactive group border border-slate-200/80 bg-white/90 p-5"
+            className="surface-panel section-card surface-hover surface-interactive group p-5"
             aria-label={`View ${item.name} case studies`}
           >
             <div className="flex items-start justify-between gap-4">
@@ -60,7 +69,7 @@ export default function CaseStudiesHub() {
         ))}
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+      <div className="section-spacing flex flex-col gap-3 sm:flex-row">
         <Link
           href="/resources"
           className="btn btn-secondary"

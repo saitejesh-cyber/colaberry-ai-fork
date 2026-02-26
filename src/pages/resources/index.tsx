@@ -1,8 +1,8 @@
 import Layout from "../../components/Layout";
 import Head from "next/head";
-import SectionHeader from "../../components/SectionHeader";
-import MediaPanel from "../../components/MediaPanel";
 import PremiumMediaCard from "../../components/PremiumMediaCard";
+import EnterpriseCtaBand from "../../components/EnterpriseCtaBand";
+import EnterprisePageHero from "../../components/EnterprisePageHero";
 import { heroImage } from "../../lib/media";
 
 export default function Resources() {
@@ -12,14 +12,14 @@ export default function Resources() {
       title: "Podcasts + transcripts",
       description: "Searchable conversations tied to agents and MCP servers.",
       meta: "Audio",
-      image: heroImage("hero-podcasts-premium-v2.svg"),
+      image: heroImage("hero-podcasts-cinematic.webp"),
     },
     {
       href: "/resources/white-papers",
       title: "White papers + POVs",
       description: "Technical guidance, frameworks, and executive summaries.",
       meta: "Research",
-      image: heroImage("hero-whitepapers-premium-v2.svg"),
+      image: heroImage("hero-whitepapers-cinematic.webp"),
     },
     {
       href: "/resources/articles",
@@ -33,14 +33,14 @@ export default function Resources() {
       title: "Case studies",
       description: "Outcome stories with measurable impact and context.",
       meta: "Outcomes",
-      image: heroImage("hero-case-studies-premium-v2.svg"),
+      image: heroImage("hero-case-studies-cinematic.webp"),
     },
     {
       href: "/resources/books",
       title: "Books + artifacts",
       description: "Reference material, templates, and delivery assets.",
       meta: "Artifacts",
-      image: heroImage("hero-books-premium-v2.svg"),
+      image: heroImage("hero-books-cinematic.webp"),
     },
   ];
 
@@ -49,44 +49,52 @@ export default function Resources() {
       <Head>
         <title>Resources | Colaberry AI</title>
       </Head>
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-        <div className="flex flex-col gap-3">
-          <div className="chip chip-brand inline-flex w-fit items-center gap-2 rounded-full border border-brand-blue/25 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-brand-deep shadow-sm">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
-            Modular layer
-          </div>
-          <SectionHeader
-            as="h1"
-            size="xl"
-            title="Resources"
-            description="A home for research, artifacts, and updates-built to support both internal publishing and curated external sources as we evolve."
-          />
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {resourceHighlights.map((item) => (
-              <PremiumMediaCard
-                key={item.title}
-                href={item.href}
-                title={item.title}
-                description={item.description}
-                image={item.image}
-                meta={item.meta}
-                size="sm"
-              />
-            ))}
-          </div>
-        </div>
-        <MediaPanel
-          kicker="Knowledge hub"
-          title="Research and artifacts"
-          description="Podcasts, books, white papers, and curated signals."
-          image={heroImage("hero-resources-cinematic.webp")}
-          alt="Research workspace overview"
-          aspect="wide"
-          fit="cover"
-        />
-      </div>
+      <EnterprisePageHero
+        kicker="Modular layer"
+        title="Resources"
+        description="A structured knowledge layer for podcasts, books, white papers, case studies, and editorial signals-ready for teams, SEO, and LLM indexing."
+        image={heroImage("hero-resources-cinematic.webp")}
+        alt="Research workspace overview"
+        imageKicker="Knowledge hub"
+        imageTitle="Research and artifacts"
+        imageDescription="Podcasts, books, white papers, and curated signals in one governed publishing surface."
+        chips={["Podcasts", "White papers", "Books", "Case studies", "Articles"]}
+        primaryAction={{ label: "Browse podcasts", href: "/resources/podcasts" }}
+        secondaryAction={{ label: "Open updates feed", href: "/updates", variant: "secondary" }}
+        metrics={[
+          {
+            label: "Resource lanes",
+            value: `${resourceHighlights.length}`,
+            note: "Core resource surfaces in active navigation.",
+          },
+          {
+            label: "Publishing model",
+            value: "Internal + curated",
+            note: "Owned content with selective external aggregation.",
+          },
+          {
+            label: "Discovery",
+            value: "Search-ready",
+            note: "Metadata-first structure for users and assistants.",
+          },
+        ]}
+      />
 
-      <div className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-4 sm:mt-8">
+      <section className="section-spacing grid gap-3 sm:grid-cols-2">
+        {resourceHighlights.map((item) => (
+          <PremiumMediaCard
+            key={item.title}
+            href={item.href}
+            title={item.title}
+            description={item.description}
+            image={item.image}
+            meta={item.meta}
+            size="sm"
+          />
+        ))}
+      </section>
+
+      <div className="surface-panel section-shell section-spacing p-4">
         <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
           Search resources
         </div>
@@ -113,7 +121,7 @@ export default function Resources() {
           {["Podcasts", "White papers", "Case studies", "Updates", "Artifacts"].map((label) => (
             <span
               key={label}
-              className="chip rounded-full border border-slate-200/80 bg-white px-3 py-1 font-semibold"
+              className="chip chip-muted rounded-full border border-slate-200/80 bg-white px-3 py-1 font-semibold"
             >
               {label}
             </span>
@@ -121,34 +129,34 @@ export default function Resources() {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="section-spacing grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <ResourceCard
           href="/resources/podcasts"
           title="Podcasts"
           description="Colaberry AI podcast + curated ai podcast."
           meta="Internal + External"
-          image={heroImage("hero-podcasts-premium-v2.svg")}
+          image={heroImage("hero-podcasts-cinematic.webp")}
         />
         <ResourceCard
           href="/resources/books"
           title="Books & artifacts"
           description="Books, companion assets, templates, and working artifacts."
           meta="Artifacts"
-          image={heroImage("hero-books-premium-v2.svg")}
+          image={heroImage("hero-books-cinematic.webp")}
         />
         <ResourceCard
           href="/resources/case-studies"
           title="Case studies"
           description="Outcomes and delivery stories, organized by industry."
           meta="By industry"
-          image={heroImage("hero-case-studies-premium-v2.svg")}
+          image={heroImage("hero-case-studies-cinematic.webp")}
         />
         <ResourceCard
           href="/resources/white-papers"
           title="White papers"
           description="Technical deep-dives, POVs, and best-practice guidance."
           meta="Research"
-          image={heroImage("hero-whitepapers-premium-v2.svg")}
+          image={heroImage("hero-whitepapers-cinematic.webp")}
         />
         <ResourceCard
           href="/resources/articles"
@@ -173,18 +181,18 @@ export default function Resources() {
         />
       </div>
 
-      <div className="surface-panel mt-10 p-6 sm:mt-12">
+      <div className="surface-panel section-shell section-spacing p-6">
         <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
           How this evolves
         </div>
         <div className="mt-3 grid gap-3 text-sm text-slate-700 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm">
+          <div className="section-card rounded-2xl p-4">
             <div className="font-semibold text-slate-900">Internal publishing</div>
             <div className="mt-1 text-slate-600">
               Structured posting for podcasts, books, white papers, and curated collections.
             </div>
           </div>
-          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm">
+          <div className="section-card rounded-2xl p-4">
             <div className="font-semibold text-slate-900">External aggregation</div>
             <div className="mt-1 text-slate-600">
               Pull in relevant sources (feeds, links, announcements) with light editorial control.
@@ -192,6 +200,16 @@ export default function Resources() {
           </div>
         </div>
       </div>
+
+      <EnterpriseCtaBand
+        kicker="Knowledge engine"
+        title="Publish faster. Curate better. Keep every resource indexable."
+        description="Use one structured workflow for podcasts, articles, white papers, books, and case studies so teams and LLMs can discover trusted content quickly."
+        primaryHref="/resources/podcasts"
+        primaryLabel="Browse podcasts"
+        secondaryHref="/updates"
+        secondaryLabel="Open updates feed"
+      />
     </Layout>
   );
 }
