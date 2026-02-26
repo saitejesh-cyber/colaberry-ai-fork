@@ -34,7 +34,7 @@ const cmsInflight = new Map<string, Promise<any>>();
 
 async function fetchCMSJson<T>(
   url: string,
-  options: { cacheMs?: number; allowStaleOnError?: boolean } = {}
+  options: { cacheMs?: number; allowStaleOnError?: boolean; authMode?: "default" | "none" } = {}
 ): Promise<T> {
   if (!CMS_URL || !/^https?:\/\//i.test(CMS_URL)) {
     throw new Error("CMS URL is not configured. Set NEXT_PUBLIC_CMS_URL (or CMS_URL) to an absolute URL.");
@@ -42,22 +42,25 @@ async function fetchCMSJson<T>(
   if (!/^https?:\/\//i.test(url)) {
     throw new Error(`Invalid CMS request URL: ${url}`);
   }
+  const authMode = options.authMode ?? "default";
+  const cacheKey = `${authMode}:${url}`;
   const cacheMs = Number.isFinite(options.cacheMs) ? Number(options.cacheMs) : CMS_CACHE_TTL_MS;
   const now = Date.now();
-  const cached = cmsCache.get(url);
+  const cached = cmsCache.get(cacheKey);
 
   if (cached && cached.expiresAt > now) {
     return cached.data as T;
   }
 
-  const inflight = cmsInflight.get(url);
+  const inflight = cmsInflight.get(cacheKey);
   if (inflight) {
     return inflight as Promise<T>;
   }
 
+  const useAuthHeader = authMode !== "none";
   const request = fetch(url, {
     cache: "no-store",
-    headers: CMS_API_TOKEN
+    headers: useAuthHeader && CMS_API_TOKEN
       ? {
           Authorization: `Bearer ${CMS_API_TOKEN}`,
         }
@@ -69,7 +72,7 @@ async function fetchCMSJson<T>(
       }
       const json = (await res.json()) as T;
       if (cacheMs > 0) {
-        cmsCache.set(url, { data: json, expiresAt: now + cacheMs });
+        cmsCache.set(cacheKey, { data: json, expiresAt: now + cacheMs });
       }
       return json;
     })
@@ -80,11 +83,19 @@ async function fetchCMSJson<T>(
       throw error;
     })
     .finally(() => {
-      cmsInflight.delete(url);
+      cmsInflight.delete(cacheKey);
     });
 
-  cmsInflight.set(url, request);
+  cmsInflight.set(cacheKey, request);
   return request;
+}
+
+function parseCMSStatusCode(error: unknown): number | null {
+  const message = error instanceof Error ? error.message : "";
+  const match = message.match(/CMS request failed:\s*(\d{3})/);
+  if (!match) return null;
+  const status = Number(match[1]);
+  return Number.isFinite(status) ? status : null;
 }
 
 export type Tag = {
@@ -1115,41 +1126,83 @@ export async function fetchSkills(
       : Number.POSITIVE_INFINITY;
   let page = 1;
   const results: Skill[] = [];
+  const baseQuery =
+    `${CMS_URL}/api/skills` +
+    `?` +
+    `${sortQuery.replace(/^&/, "")}` +
+    `${visibilityFilter}` +
+    `&publicationState=live` +
+    `${listFields}` +
+    `&pagination[pageSize]=${pageSize}`;
+  const fullPopulateQuery =
+    `&populate[tags][fields][0]=name` +
+    `&populate[tags][fields][1]=slug` +
+    `&populate[companies][fields][0]=name` +
+    `&populate[companies][fields][1]=slug` +
+    `&populate[agents][fields][0]=name` +
+    `&populate[agents][fields][1]=slug` +
+    `&populate[mcpServers][fields][0]=name` +
+    `&populate[mcpServers][fields][1]=slug` +
+    `&populate[useCases][fields][0]=title` +
+    `&populate[useCases][fields][1]=slug` +
+    `&populate[relatedUseCases][fields][0]=title` +
+    `&populate[relatedUseCases][fields][1]=slug` +
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText`;
+  const minimalPopulateQuery =
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText`;
 
   while (true) {
     let json: CMSCollectionResponse | null = null;
     try {
       json = await fetchCMSJson<CMSCollectionResponse>(
-        `${CMS_URL}/api/skills` +
-          `?` +
-          `${sortQuery.replace(/^&/, "")}` +
-          `${visibilityFilter}` +
-          `&publicationState=live` +
-          `${listFields}` +
-          `&pagination[page]=${page}` +
-          `&pagination[pageSize]=${pageSize}` +
-          `&populate[tags][fields][0]=name` +
-          `&populate[tags][fields][1]=slug` +
-          `&populate[companies][fields][0]=name` +
-          `&populate[companies][fields][1]=slug` +
-          `&populate[agents][fields][0]=name` +
-          `&populate[agents][fields][1]=slug` +
-          `&populate[mcpServers][fields][0]=name` +
-          `&populate[mcpServers][fields][1]=slug` +
-          `&populate[useCases][fields][0]=title` +
-          `&populate[useCases][fields][1]=slug` +
-          `&populate[relatedUseCases][fields][0]=title` +
-          `&populate[relatedUseCases][fields][1]=slug` +
-          `&populate[coverImage][fields][0]=url` +
-          `&populate[coverImage][fields][1]=alternativeText`,
+        `${baseQuery}&pagination[page]=${page}${fullPopulateQuery}`,
         { cacheMs: CMS_CACHE_TTL_MS }
       );
     } catch (error) {
-      const message = error instanceof Error ? error.message : "";
-      if (message.includes("CMS request failed: 404") && page === 1 && results.length === 0) {
+      const status = parseCMSStatusCode(error);
+      const shouldTryFallback = page === 1 && results.length === 0;
+
+      if (!shouldTryFallback) {
+        throw error;
+      }
+
+      if (status === 404) {
         return [];
       }
-      throw error;
+
+      if (status === 400) {
+        // Fallback when older Strapi schema rejects one of the populate keys.
+        json = await fetchCMSJson<CMSCollectionResponse>(
+          `${baseQuery}&pagination[page]=${page}${minimalPopulateQuery}`,
+          { cacheMs: CMS_CACHE_TTL_MS }
+        ).catch(() => null);
+        if (json) {
+          // recovered with minimal query
+        } else {
+          return [];
+        }
+      } else if (status === 401 || status === 403) {
+        // Fallback for tokens that don't yet include skills scope.
+        json = await fetchCMSJson<CMSCollectionResponse>(
+          `${baseQuery}&pagination[page]=${page}${fullPopulateQuery}`,
+          { cacheMs: CMS_CACHE_TTL_MS, authMode: "none" }
+        ).catch(() => null);
+
+        if (!json) {
+          json = await fetchCMSJson<CMSCollectionResponse>(
+            `${baseQuery}&pagination[page]=${page}${minimalPopulateQuery}`,
+            { cacheMs: CMS_CACHE_TTL_MS, authMode: "none" }
+          ).catch(() => null);
+        }
+
+        if (!json) {
+          return [];
+        }
+      } else {
+        throw error;
+      }
     }
 
     if (!json) break;

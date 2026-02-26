@@ -1,12 +1,13 @@
 import type { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import Head from "next/head";
-import Image from "next/image";
 import sanitizeHtml from "sanitize-html";
 import Layout from "../../../components/Layout";
 import SectionHeader from "../../../components/SectionHeader";
+import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import AgentCard from "../../../components/AgentCard";
 import { Agent, fetchAgentBySlug, fetchRelatedAgents } from "../../../lib/cms";
+import { heroImage } from "../../../lib/media";
 import type { ReactNode } from "react";
 
 type AgentDetailProps = {
@@ -76,7 +77,6 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
   const canonicalUrl = `${siteUrl}/aixcelerator/agents/${agent.slug || agent.id}`;
   const tagNames = (agent.tags || []).map((tag) => tag.name || tag.slug).filter(Boolean);
   const companyNames = (agent.companies || []).map((company) => company.name || company.slug).filter(Boolean);
-  const hasCoverImage = Boolean(agent.coverImageUrl);
   const lastUpdatedValue = agent.lastUpdated ? new Date(agent.lastUpdated) : null;
   const lastUpdatedLabel = lastUpdatedValue
     ? lastUpdatedValue.toLocaleDateString("en-US", {
@@ -107,6 +107,9 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
   const hasToolsSection = tools.length > 0 || companyNames.length > 0;
   const hasResourcesSection = Boolean(agent.docsUrl || agent.demoUrl || agent.changelogUrl);
   const hasAdoptionSection = Boolean(agent.usageCount || agent.rating || agent.verified);
+  const visibilityModeNote = allowPrivate
+    ? "Private preview mode enabled for this environment."
+    : "Public-only mode in this environment.";
   const keywords = [agent.industry, ...tagNames, ...companyNames].filter(Boolean).join(", ");
   const jsonLd = {
     "@context": "https://schema.org",
@@ -159,102 +162,54 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
         </span>
       </nav>
 
-      <div className="hero-surface mt-4 rounded-[32px] p-8 sm:p-10">
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-          <div>
-            <SectionHeader
-              as="h1"
-              size="xl"
-              kicker="Agent profile"
-              title={agent.name}
-              description={
-                agent.description || "Structured agent profile for enterprise catalog discovery."
-              }
-            />
-            <div className="mt-6 flex flex-wrap items-center gap-2">
-              <span className="chip chip-brand rounded-full px-3 py-1 text-xs font-semibold">
-                {agent.industry || "General"}
-              </span>
-              <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </span>
-              <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-                {sourceDisplay}
-              </span>
-              {agent.verified ? (
-                <span className="chip rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  Verified
-                </span>
-              ) : null}
-              <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-                {isPrivate ? "Private" : "Public"}
-              </span>
-              {!allowPrivate && isPrivate ? (
-                <span className="text-xs text-slate-500">Private listings hidden</span>
-              ) : null}
-            </div>
-            {lastUpdatedLabel ? (
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Last updated {lastUpdatedLabel}
-              </p>
-            ) : null}
-            <div className="mt-6 flex flex-wrap gap-3">
-              {agent.sourceUrl ? (
-                <a
-                  href={agent.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-primary"
-                >
-                  View source
-                </a>
-              ) : (
-                <Link href="/request-demo" className="btn btn-primary">
-                  Request a demo
-                </Link>
-              )}
-              <Link href="/aixcelerator/agents" className="btn btn-secondary">
-                View all agents
-              </Link>
-            </div>
-          </div>
-
-          <div className="surface-panel overflow-hidden border border-slate-200/80 p-0">
-            <div className="relative aspect-[4/3] w-full">
-              {hasCoverImage ? (
-                <Image
-                  src={agent.coverImageUrl || ""}
-                  alt={agent.coverImageAlt || agent.name}
-                  fill
-                  className="h-full w-full object-cover"
-                  unoptimized
-                  loading="lazy"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
-                  <div className="flex flex-col items-center gap-3 text-slate-400">
-                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                      <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden="true">
-                        <path
-                          d="M12 3a6 6 0 0 1 6 6v2h1a2 2 0 0 1 2 2v5a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-5a2 2 0 0 1 2-2h1V9a6 6 0 0 1 6-6Zm0 2a4 4 0 0 0-4 4v2h8V9a4 4 0 0 0-4-4Zm-4 9v4a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-4H8Z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold uppercase tracking-[0.2em]">
-                      Agent surface
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      <div className="mt-4">
+        <EnterprisePageHero
+          kicker="Agent profile"
+          title={agent.name}
+          description={agent.description || "Structured agent profile for enterprise catalog discovery."}
+          image={heroImage("hero-agents-cinematic.webp")}
+          alt={agent.coverImageAlt || `${agent.name} profile preview`}
+          imageKicker="Agent surface"
+          imageTitle="Operational profile"
+          imageDescription={`${agent.industry || "General"} • ${status} • ${sourceDisplay}`}
+          chips={[
+            agent.industry || "General",
+            status.charAt(0).toUpperCase() + status.slice(1),
+            sourceDisplay,
+            isPrivate ? "Private" : "Public",
+            ...(agent.verified ? ["Verified"] : []),
+          ]}
+          primaryAction={
+            agent.sourceUrl
+              ? { label: "View source", href: agent.sourceUrl, external: true }
+              : { label: "Request a demo", href: "/request-demo" }
+          }
+          secondaryAction={{ label: "View all agents", href: "/aixcelerator/agents", variant: "secondary" }}
+          metrics={[
+            {
+              label: "Last updated",
+              value: lastUpdatedLabel || "Pending",
+              note: "Latest metadata refresh.",
+            },
+            {
+              label: "Signals",
+              value: `${tagNames.length} tags`,
+              note: `${companyNames.length} linked companies.`,
+            },
+            {
+              label: "Visibility",
+              value: isPrivate ? "Private" : "Public",
+              note: isPrivate
+                ? "Restricted access listing."
+                : `Available for catalog discovery. ${visibilityModeNote}`,
+            },
+          ]}
+        />
       </div>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+      <section className="section-spacing grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
         <div className="grid gap-6">
-        <div className="surface-panel p-6">
+        <div className="surface-panel section-shell p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -337,7 +292,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
         </div>
 
       {hasOverviewSection ? (
-        <section className="surface-panel p-6">
+        <section className="surface-panel section-shell p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -347,7 +302,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
           />
           <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             {agent.whatItDoes || agent.longDescription ? (
-              <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+              <div className="section-card rounded-2xl p-5">
                 <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Overview
                 </div>
@@ -369,7 +324,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
       ) : null}
 
       {hasValueSection ? (
-        <section className="surface-panel p-6">
+        <section className="surface-panel section-shell p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -397,7 +352,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
       ) : null}
 
       {hasExecutionSection ? (
-        <section className="surface-panel p-6">
+        <section className="surface-panel section-shell p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -416,7 +371,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
               <ListSection title="Use cases" items={useCases} empty="Use cases not documented yet." />
             ) : null}
             {agent.exampleWorkflow || requirements.length > 0 ? (
-              <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+              <div className="section-card rounded-2xl p-5">
                 {agent.exampleWorkflow ? (
                   <>
                     <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -449,7 +404,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
       ) : null}
 
       {hasCoreSection ? (
-        <section className="surface-panel p-6">
+        <section className="surface-panel section-shell p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -473,7 +428,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
       ) : null}
 
       {hasInputOutputSection ? (
-        <section className="surface-panel p-6">
+        <section className="surface-panel section-shell p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -493,7 +448,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
       ) : null}
 
       {hasOrchestrationSection ? (
-        <section className="surface-panel p-6">
+        <section className="surface-panel section-shell p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -527,7 +482,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
       ) : null}
 
       {hasToolsSection ? (
-        <section className="surface-panel p-6">
+        <section className="surface-panel section-shell p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -551,7 +506,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
       ) : null}
 
       {hasResourcesSection ? (
-        <section className="surface-panel p-6">
+        <section className="surface-panel section-shell p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -580,7 +535,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
       ) : null}
 
       {hasAdoptionSection ? (
-        <section className="surface-panel p-6">
+        <section className="surface-panel section-shell p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -609,7 +564,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
       ) : null}
 
       {relatedAgents.length > 0 && (
-        <section className="surface-panel p-6">
+        <section className="surface-panel section-shell p-6">
           <SectionHeader
             as="h2"
             size="md"
@@ -659,7 +614,7 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
 
 function MetadataRow({ label, value, href }: { label: string; value: string; href?: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+    <div className="section-card rounded-2xl p-4">
       <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</dt>
       <dd className="mt-2 text-sm font-semibold text-slate-900">
         {href ? (
@@ -691,7 +646,7 @@ function DetailCard({
   description: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+    <div className="section-card rounded-2xl p-4">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
       <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
       <div className="mt-1 text-xs text-slate-600">{description}</div>
@@ -709,14 +664,14 @@ function ListBlock({
   emptyLabel: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+    <div className="section-card rounded-2xl p-4">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
       {items.length ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {items.map((item) => (
             <span
               key={`${label}-${item}`}
-              className="chip chip-muted rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"
+              className="chip chip-muted rounded-full px-2.5 py-1 text-xs font-semibold"
             >
               {item}
             </span>
@@ -739,7 +694,7 @@ function GuidanceBlock({
   actions?: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+    <div className="section-card rounded-2xl p-5">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</div>
       <ul className="mt-3 space-y-2 text-sm text-slate-700">
         {items.map((item, index) => (
@@ -756,7 +711,7 @@ function GuidanceBlock({
 
 function ListSection({ title, items, empty }: { title: string; items: string[]; empty: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+    <div className="section-card rounded-2xl p-5">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</div>
       {items.length ? (
         <ul className="mt-3 space-y-2 text-sm text-slate-700">
@@ -776,7 +731,7 @@ function ListSection({ title, items, empty }: { title: string; items: string[]; 
 
 function SignalStat({ label, value, note }: { label: string; value: string; note: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+    <div className="section-card rounded-2xl p-4">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
       <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
       <div className="mt-1 text-xs text-slate-600">{note}</div>
