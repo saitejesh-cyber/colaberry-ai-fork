@@ -358,6 +358,26 @@ export default function Home({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
       <section className="hero-surface rise-in p-6 sm:p-8 lg:p-10">
+        <div className="mb-6 rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/72">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
+                Enterprise discovery surface
+              </div>
+              <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
+                Unified catalog for agents, MCP servers, skills, use cases, podcasts, and updates with governance-ready metadata.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/aixcelerator" className="btn btn-secondary btn-sm">
+                Open platform
+              </Link>
+              <Link href="/resources" className="btn btn-secondary btn-sm">
+                Explore resources
+              </Link>
+            </div>
+          </div>
+        </div>
         <HeroBannerSlider slides={heroSlides} rootIndustries={rootIndustries} />
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
