@@ -14,22 +14,22 @@ const VARIANT_STYLES: Record<
   { border: string; badge: string; label: string; iconTone: string }
 > = {
   loading: {
-    border: "border-brand-blue/25",
-    badge: "bg-brand-blue/10 text-brand-deep dark:bg-brand-blue/20 dark:text-slate-100",
+    border: "border-[var(--pivot-stroke)]",
+    badge: "bg-[var(--pivot-surface)] text-[var(--pivot-text)] dark:bg-[var(--pivot-surface)] dark:text-[var(--pivot-text)]",
     label: "Loading",
-    iconTone: "text-brand-deep dark:text-sky-200",
+    iconTone: "text-[var(--pivot-fill)] dark:text-[var(--pivot-fill)]",
   },
   empty: {
-    border: "border-slate-200/80",
-    badge: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200",
+    border: "border-[var(--neutral-stroke)]",
+    badge: "bg-[var(--neutral-fill)] text-[var(--neutral-text)] dark:bg-[var(--neutral-fill)] dark:text-[var(--neutral-text)]",
     label: "Empty",
-    iconTone: "text-slate-500 dark:text-slate-300",
+    iconTone: "text-[var(--neutral-text)] dark:text-[var(--neutral-text)]",
   },
   error: {
-    border: "border-rose-200",
-    badge: "bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-200",
+    border: "border-[var(--failure-stroke)]",
+    badge: "bg-[var(--failure-fill)] text-[var(--failure-text)] dark:bg-[var(--failure-fill)] dark:text-[var(--failure-text)]",
     label: "Error",
-    iconTone: "text-rose-600 dark:text-rose-300",
+    iconTone: "text-[var(--failure-text)] dark:text-[var(--failure-text)]",
   },
 };
 
@@ -72,20 +72,20 @@ export default function StatePanel({ variant, title, description, action }: Stat
     <div
       role={role}
       aria-live={liveMode}
-      className={`surface-panel border-l-4 ${variantStyle.border} bg-white/95 p-5`}
+      className={`surface-panel border-l-4 ${variantStyle.border} bg-white/95 dark:bg-[var(--surface-strong)]/95 p-5`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <StateIcon variant={variant} iconTone={variantStyle.iconTone} />
-          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${variantStyle.badge}`}>
+          <span className={`rounded-md px-2 py-0.5 text-xs font-semibold uppercase ${variantStyle.badge}`}>
             {variantStyle.label}
           </span>
-          <span className="text-sm font-semibold text-slate-900 dark:text-white">{title}</span>
+          <span className="text-sm font-semibold text-zinc-900 dark:text-white">{title}</span>
         </div>
         {action ? <div className="flex items-center">{action}</div> : null}
       </div>
       {description ? (
-        <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{description}</p>
+        <p className="mt-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{description}</p>
       ) : null}
     </div>
   );

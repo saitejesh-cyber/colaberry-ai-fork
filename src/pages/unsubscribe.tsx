@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import SectionHeader from "../components/SectionHeader";
 import StatePanel from "../components/StatePanel";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../lib/seo";
 
 type UnsubscribeState = "idle" | "submitting" | "success" | "error";
 
@@ -56,10 +57,20 @@ export default function UnsubscribePage() {
     };
   }, [router.isReady, token, email, hasUnsubscribeInput]);
 
+  const seoMeta: SeoMeta = {
+    title: "Unsubscribe | Colaberry AI",
+    description: "Manage your Colaberry AI newsletter subscription preferences.",
+    canonical: buildCanonical("/unsubscribe"),
+    noindex: true,
+  };
+
   return (
     <Layout>
       <Head>
-        <title>Unsubscribe | Colaberry AI</title>
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
       </Head>
       <div className="flex flex-col gap-3">
         <SectionHeader

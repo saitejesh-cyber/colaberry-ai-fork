@@ -2,12 +2,12 @@ import type { GetStaticProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import CatalogSearchBox from "../../components/CatalogSearchBox";
 import Layout from "../../components/Layout";
-import MediaPanel from "../../components/MediaPanel";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
 import { fetchSkills, Skill } from "../../lib/cms";
-import { heroImage } from "../../lib/media";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
 
 type SkillsPageProps = {
   skills: Skill[];
@@ -40,7 +40,7 @@ export const getStaticProps: GetStaticProps<SkillsPageProps> = async () => {
   } catch (error) {
     console.error("[skills:getStaticProps] fetchSkills failed", error);
     return {
-      props: { skills: [], allowPrivate, fetchError: false },
+      props: { skills: [], allowPrivate, fetchError: true },
       revalidate: 120,
     };
   }
@@ -151,16 +151,31 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai";
   const canonicalUrl = `${siteUrl}/aixcelerator/skills`;
+  const seoMeta: SeoMeta = {
+    title: "AI Skills Catalog | Colaberry AI",
+    description: "Discover reusable AI skills across official toolkits, developer workflows, domain operations, and agent orchestration patterns.",
+    canonical: buildCanonical("/aixcelerator/skills"),
+  };
 
   return (
     <Layout>
       <Head>
-        <title>AI Skills Catalog | Colaberry AI</title>
-        <meta
-          name="description"
-          content="Discover reusable AI skills across official toolkits, developer workflows, domain operations, and agent orchestration patterns."
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              "name": "Colaberry AI Skills Catalog",
+              "description": "Discover reusable AI skills across official toolkits, developer workflows, domain operations, and agent orchestration patterns.",
+              "url": canonicalUrl,
+            }),
+          }}
         />
-        <link rel="canonical" href={canonicalUrl} />
       </Head>
 
       {fetchError ? (
@@ -182,60 +197,7 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
             title="AI Skills Catalog"
             description="Reusable capability units for agents and workflows: official pre-built skills, developer workflow skills, domain skills, and orchestration skills."
           />
-          <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
-            {[
-              "Official pre-built skills",
-              "Developer workflow skills",
-              "Specialized domain skills",
-              "Agent orchestration skills",
-            ].map((label) => (
-              <span
-                key={label}
-                className="chip rounded-full border border-slate-200/80 bg-white px-3 py-1 font-semibold"
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-          <div className="mt-3 surface-panel border border-slate-200/80 bg-white/90 p-4">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">Reference models</div>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              <a
-                href="https://agentskills.io/what-are-skills"
-                target="_blank"
-                rel="noreferrer"
-                className="focus-ring rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-brand-blue/35 hover:text-brand-blue"
-              >
-                agentskills.io taxonomy →
-              </a>
-              <a
-                href="https://github.com/ZhanlinCui/Ultimate-Agent-Skills-Collection"
-                target="_blank"
-                rel="noreferrer"
-                className="focus-ring rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-brand-blue/35 hover:text-brand-blue"
-              >
-                Ultimate Agent Skills Collection →
-              </a>
-              <a
-                href="https://clawhub.ai/skills?sort=downloads"
-                target="_blank"
-                rel="noreferrer"
-                className="focus-ring rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-brand-blue/35 hover:text-brand-blue"
-              >
-                ClawHub top downloaded skills →
-              </a>
-            </div>
-          </div>
         </div>
-        <MediaPanel
-          kicker="Catalog preview"
-          title="Composable capability units"
-          description="Skills become building blocks that can be linked to agents, MCP servers, and use case workflows."
-          image={heroImage("hero-platform-cinematic.webp")}
-          alt="AI skills represented as reusable capability units"
-          aspect="wide"
-          fit="cover"
-        />
       </div>
 
       <section className="surface-panel mt-6 p-5 sm:mt-8">
@@ -256,32 +218,7 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
         </div>
       </section>
 
-      <section className="surface-panel mt-6 p-6">
-        <SectionHeader
-          kicker="Discovery signals"
-          title="Latest and trending skills"
-          description="Track new capabilities and high-interest reusable units."
-          size="md"
-        />
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <SkillSignalRail
-            title="Latest skills"
-            description="Most recently updated skill profiles."
-            items={latestSkills}
-            emptyText="No recent skill updates available."
-            detailType="latest"
-          />
-          <SkillSignalRail
-            title="Trending skills"
-            description="Skills with stronger quality, usage, and freshness signals."
-            items={trendingSkills}
-            emptyText="Trending signals will appear as skill activity grows."
-            detailType="trending"
-          />
-        </div>
-      </section>
-
-      <section className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-5">
+      <section className="surface-panel mt-6 p-5">
         <div className="grid gap-3 md:grid-cols-[1.45fr_1fr_1fr_auto]">
           <input
             type="search"
@@ -291,7 +228,7 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
               setVisibleCount(PAGE_SIZE);
             }}
             placeholder="Search skills, models, tools, or linked assets..."
-            className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
+            className="w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200 dark:placeholder:text-zinc-500"
             aria-label="Search skills"
           />
           <select
@@ -300,7 +237,7 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
               setCategoryFilter(event.target.value);
               setVisibleCount(PAGE_SIZE);
             }}
-            className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
+            className="w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2.5 text-sm text-zinc-700 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
             aria-label="Filter by category"
           >
             <option value="all">All categories</option>
@@ -316,7 +253,7 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
               setProviderFilter(event.target.value);
               setVisibleCount(PAGE_SIZE);
             }}
-            className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
+            className="w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2.5 text-sm text-zinc-700 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
             aria-label="Filter by provider"
           >
             <option value="all">All providers</option>
@@ -332,7 +269,7 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
               setSortMode(event.target.value as SkillSortMode);
               setVisibleCount(PAGE_SIZE);
             }}
-            className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
+            className="w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2.5 text-sm text-zinc-700 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
             aria-label="Sort skills"
           >
             <option value="trending">Trending</option>
@@ -354,10 +291,10 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
                   setVisibility(item.key as VisibilityFilter);
                   setVisibleCount(PAGE_SIZE);
                 }}
-                className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                className={`chip focus-ring rounded-md px-3 py-1 text-xs font-semibold ${
                   visibility === item.key
-                    ? "border-brand-blue/45 bg-brand-blue/10 text-brand-deep"
-                    : "border-slate-200/80 bg-white text-slate-600 hover:border-brand-blue/35 hover:text-brand-blue"
+                    ? "chip-brand"
+                    : "chip-muted"
                 }`}
               >
                 {item.label} · {item.count}
@@ -384,10 +321,12 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
       <div ref={sentinelRef} className="h-8" />
 
       {hasMore ? (
-        <div className="mt-2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+        <div className="mt-2 text-center text-xs font-semibold uppercase tracking-wide text-zinc-400">
           Loading more skills...
         </div>
       ) : null}
+
+      <CatalogSearchBox placeholder="Search skills or ask a question..." />
     </Layout>
   );
 }
@@ -401,35 +340,35 @@ function SkillCard({ skill }: { skill: Skill }) {
   const relationCount = (skill.agents?.length || 0) + (skill.mcpServers?.length || 0) + (skill.useCases?.length || 0);
 
   return (
-    <article className="surface-panel surface-hover border border-slate-200/80 bg-white/90 p-5">
+    <article className="card-feature p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Skill</div>
-          <h2 className="mt-2 text-lg font-semibold text-slate-900">
-            <Link href={`/aixcelerator/skills/${skill.slug || skill.id}`} className="hover:text-brand-blue">
+          <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Skill</div>
+          <h2 className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            <Link href={`/aixcelerator/skills/${skill.slug || skill.id}`} className="hover:text-[#4F2AA3]">
               {skill.name}
             </Link>
           </h2>
         </div>
-        <span className="chip chip-muted rounded-full px-2.5 py-1 text-[11px] font-semibold">
+        <span className="chip chip-muted rounded-md px-2.5 py-1 text-[11px] font-semibold">
           {status.toUpperCase()}
         </span>
       </div>
-      <p className="mt-2 text-sm text-slate-600">
+      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
         {skill.summary || "Skill profile summary will appear after content update."}
       </p>
-      <div className="mt-3 text-xs text-slate-500">{metadata || "Category and provider pending"}</div>
+      <div className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{metadata || "Category and provider pending"}</div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <span className="chip chip-brand rounded-full px-2.5 py-1 text-[11px] font-semibold">{category}</span>
-        <span className="chip chip-muted rounded-full px-2.5 py-1 text-[11px] font-semibold">
+        <span className="chip chip-brand rounded-md px-2.5 py-1 text-[11px] font-semibold">{category}</span>
+        <span className="chip chip-muted rounded-md px-2.5 py-1 text-[11px] font-semibold">
           {sourceLabel.charAt(0).toUpperCase() + sourceLabel.slice(1)}
         </span>
-        <span className="chip chip-muted rounded-full px-2.5 py-1 text-[11px] font-semibold">
+        <span className="chip chip-muted rounded-md px-2.5 py-1 text-[11px] font-semibold">
           {relationCount} linked assets
         </span>
       </div>
       <div className="mt-4 flex items-center justify-between">
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-zinc-500 dark:text-zinc-400">
           {skill.lastUpdated ? `Updated ${formatDate(skill.lastUpdated)}` : "Update date pending"}
         </div>
         <Link href={`/aixcelerator/skills/${skill.slug || skill.id}`} className="btn btn-secondary btn-sm">
@@ -454,22 +393,22 @@ function SkillSignalRail({
   detailType: "latest" | "trending";
 }) {
   return (
-    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-      <p className="mt-1 text-xs text-slate-600">{description}</p>
+    <article className="card-elevated p-5">
+      <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{title}</div>
+      <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{description}</p>
       {items.length === 0 ? (
-        <p className="mt-3 text-xs text-slate-500">{emptyText}</p>
+        <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{emptyText}</p>
       ) : (
         <ul className="mt-3 grid gap-2">
           {items.map((skill) => (
             <li key={skill.slug || skill.id}>
               <Link
                 href={`/aixcelerator/skills/${skill.slug || skill.id}`}
-                className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2"
+                className="card-elevated group flex items-center justify-between px-3 py-2"
               >
                 <div className="min-w-0">
-                  <div className="line-clamp-1 text-sm font-semibold text-slate-900">{skill.name}</div>
-                  <div className="mt-1 text-xs text-slate-500">
+                  <div className="line-clamp-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{skill.name}</div>
+                  <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                     {detailType === "latest"
                       ? formatDate(skill.lastUpdated) || "Updated"
                       : skill.rating
@@ -479,7 +418,7 @@ function SkillSignalRail({
                       : toSkillFamily(skill)}
                   </div>
                 </div>
-                <span className="ml-3 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
+                <span className="ml-3 text-zinc-400 transition-transform group-hover:tranzinc-x-0.5 group-hover:text-brand-deep">
                   →
                 </span>
               </Link>
@@ -604,10 +543,10 @@ function Stat({
   note: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm">
-      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">{title}</div>
-      <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
-      <div className="mt-1 text-xs text-slate-600">{note}</div>
+    <div className="card-elevated p-4">
+      <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{title}</div>
+      <div className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{value}</div>
+      <div className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{note}</div>
     </div>
   );
 }

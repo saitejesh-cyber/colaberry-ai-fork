@@ -3,9 +3,12 @@ import Head from "next/head";
 import Link from "next/link";
 import sanitizeHtml from "sanitize-html";
 import Layout from "../../../components/Layout";
+import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import SectionHeader from "../../../components/SectionHeader";
 import StatePanel from "../../../components/StatePanel";
 import { fetchSkillBySlug, Skill } from "../../../lib/cms";
+import { heroImage } from "../../../lib/media";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 
 type SkillDetailProps = {
   skill: Skill;
@@ -43,7 +46,7 @@ export const getStaticProps: GetStaticProps<SkillDetailProps> = async ({ params 
   }
 };
 
-export default function SkillDetailPage({ skill, allowPrivate }: SkillDetailProps) {
+export default function SkillDetailPage({ skill }: SkillDetailProps) {
   const isPrivate = (skill.visibility || "public").toLowerCase() === "private";
   const status = (skill.status || "live").toLowerCase();
   const source = (skill.source || "internal").toLowerCase();
@@ -56,6 +59,14 @@ export default function SkillDetailPage({ skill, allowPrivate }: SkillDetailProp
   const metaDescription =
     skill.summary ||
     "Reusable AI skill profile with inputs, outputs, prerequisites, and linked catalog assets.";
+  const seoMeta: SeoMeta = {
+    title: metaTitle,
+    description: metaDescription,
+    canonical: buildCanonical(`/aixcelerator/skills/${skill.slug}`),
+    ogType: "article",
+    ogImage: skill.coverImageUrl || null,
+    ogImageAlt: skill.coverImageAlt || skill.name,
+  };
   const keyBenefits = parseList(skill.keyBenefits);
   const requirements = parseList(skill.requirements);
   const limitations = parseList(skill.limitations);
@@ -103,210 +114,263 @@ export default function SkillDetailPage({ skill, allowPrivate }: SkillDetailProp
     ].filter(Boolean),
   };
 
+  const softwareAppLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: skill.name,
+    description: metaDescription,
+    applicationCategory: "AI Skill",
+    url: canonicalUrl,
+  };
+
   return (
     <Layout>
       <Head>
-        <title>{metaTitle}</title>
-        <meta name="description" content={metaDescription} />
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={canonicalUrl} />
-        <link rel="canonical" href={canonicalUrl} />
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppLd) }} />
       </Head>
 
-      <nav className="flex flex-wrap items-center gap-2 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/aixcelerator" className="hover:text-slate-700">
-          Platform
+      <nav className="flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400" aria-label="Breadcrumb">
+        <Link href="/aixcelerator" className="hover:text-zinc-700 dark:hover:text-zinc-200">
+          AIXcelerator
         </Link>
         <span>/</span>
-        <Link href="/aixcelerator/skills" className="hover:text-slate-700">
+        <Link href="/aixcelerator/skills" className="hover:text-zinc-700 dark:hover:text-zinc-200">
           Skills
         </Link>
         <span>/</span>
-        <span className="text-slate-700" aria-current="page">
+        <span className="text-zinc-700 dark:text-zinc-200" aria-current="page">
           {skill.name}
         </span>
       </nav>
 
-      <div className="hero-surface mt-4 rounded-[32px] p-8 sm:p-10">
-        <SectionHeader
-          as="h1"
-          size="xl"
+      <div className="mt-4">
+        <EnterprisePageHero
           kicker="Skill profile"
           title={skill.name}
           description={metaDescription}
+          image={heroImage("hero-agents-cinematic.webp")}
+          alt={`${skill.name} skill profile preview`}
+          imageKicker="Skill surface"
+          imageTitle="Capability profile"
+          imageDescription={`${categoryLabel} · ${providerLabel} · ${status.charAt(0).toUpperCase() + status.slice(1)}`}
+          chips={[
+            categoryLabel,
+            providerLabel,
+            skill.industry || "General",
+            status.charAt(0).toUpperCase() + status.slice(1),
+            isPrivate ? "Private" : "Public",
+            sourceDisplay,
+            ...(skill.verified ? ["Verified"] : []),
+          ]}
+          primaryAction={
+            skill.docsUrl
+              ? { label: "View docs", href: skill.docsUrl, external: true }
+              : { label: "Back to skills", href: "/aixcelerator/skills" }
+          }
+          secondaryAction={{ label: "View all skills", href: "/aixcelerator/skills", variant: "secondary" }}
+          metrics={[
+            {
+              label: "Last updated",
+              value: lastUpdatedLabel || "Pending",
+              note: "Latest metadata refresh.",
+            },
+            {
+              label: "Linked assets",
+              value: `${skill.agents.length} agents · ${skill.mcpServers.length} MCP`,
+              note: "Catalog components using this skill.",
+            },
+            {
+              label: "Visibility",
+              value: isPrivate ? "Private" : "Public",
+              note: isPrivate ? "Restricted access." : "Available for catalog discovery.",
+            },
+          ]}
         />
-        <div className="mt-5 flex flex-wrap items-center gap-2">
-          <span className="chip chip-brand rounded-full px-3 py-1 text-xs font-semibold">{categoryLabel}</span>
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">{providerLabel}</span>
-          {skill.industry ? (
-            <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-              {skill.industry}
-            </span>
-          ) : null}
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-            {isPrivate ? "Private" : "Public"}
-          </span>
-          <span className="chip chip-muted rounded-full px-3 py-1 text-xs font-semibold">
-            {sourceDisplay}
-          </span>
-          {skill.verified ? (
-            <span className="chip rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              Verified
-            </span>
-          ) : null}
-          {!allowPrivate && isPrivate ? (
-            <span className="text-xs text-slate-500">Private listings hidden</span>
-          ) : null}
-        </div>
-        {lastUpdatedLabel ? (
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Last updated {lastUpdatedLabel}
-          </p>
-        ) : null}
       </div>
 
-      {!hasNarrative && !hasSpec && !hasGuidance ? (
-        <div className="mt-6">
-          <StatePanel
-            variant="empty"
-            title="Skill content is being populated"
-            description="Add long-form and implementation fields in CMS to publish the full profile."
-          />
-        </div>
-      ) : (
-        <div className="mt-6 grid gap-6">
-          {hasNarrative ? (
-            <section className="surface-panel border border-slate-200/80 bg-white/90 p-6">
-              <SectionHeader
-                as="h2"
-                size="md"
-                kicker="Narrative"
-                title="Long description"
-                description="Deep context and intended usage pattern."
-              />
-              <div
-                className="prose mt-4 max-w-none text-slate-700 dark:text-slate-200"
-                dangerouslySetInnerHTML={{ __html: safeLongDescription }}
-              />
-            </section>
-          ) : null}
+      <section className="reveal section-spacing grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+        <div className="grid gap-6">
+          {!hasNarrative && !hasSpec && !hasGuidance ? (
+            <StatePanel
+              variant="empty"
+              title="Skill content is being populated"
+              description="Add long-form and implementation fields in CMS to publish the full profile."
+            />
+          ) : (
+            <>
+              {hasNarrative ? (
+                <section className="surface-panel section-shell p-6">
+                  <SectionHeader
+                    as="h2"
+                    size="md"
+                    kicker="Narrative"
+                    title="Long description"
+                    description="Deep context and intended usage pattern."
+                  />
+                  <div
+                    className="prose mt-6 max-w-none text-zinc-700 dark:text-zinc-200"
+                    dangerouslySetInnerHTML={{ __html: safeLongDescription }}
+                  />
+                </section>
+              ) : null}
 
-          {hasSpec ? (
-            <section className="surface-panel border border-slate-200/80 bg-white/90 p-6">
+              {hasSpec ? (
+                <section className="surface-panel section-shell p-6">
+                  <SectionHeader
+                    as="h2"
+                    size="md"
+                    kicker="Technical spec"
+                    title="Inputs, outputs, and dependencies"
+                    description="Core metadata required for agent and workflow integration."
+                  />
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <ListBlock title="Inputs" items={inputs} empty="Inputs not documented yet." />
+                    <ListBlock title="Outputs" items={outputs} empty="Outputs not documented yet." />
+                    <ListBlock
+                      title="Prerequisites"
+                      items={prerequisites}
+                      empty="Prerequisites not documented yet."
+                    />
+                    <ListBlock title="Tools required" items={tools} empty="Tools not documented yet." />
+                    <ListBlock title="Models supported" items={models} empty="Models not documented yet." />
+                    <ListBlock title="Security notes" items={securityNotes} empty="Security notes not documented yet." />
+                  </div>
+                </section>
+              ) : null}
+
+              {hasGuidance ? (
+                <section className="surface-panel section-shell p-6">
+                  <SectionHeader
+                    as="h2"
+                    size="md"
+                    kicker="Implementation guidance"
+                    title="Benefits, requirements, and constraints"
+                    description="Operational readiness guidance before adoption."
+                  />
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <ListBlock title="Key benefits" items={keyBenefits} empty="Benefits not documented yet." />
+                    <ListBlock title="Requirements" items={requirements} empty="Requirements not documented yet." />
+                    <ListBlock title="Limitations" items={limitations} empty="Limitations not documented yet." />
+                    <ListBlock title="Example workflow" items={workflowSteps} empty="Workflow example not documented yet." />
+                  </div>
+                </section>
+              ) : null}
+            </>
+          )}
+
+          {hasRelations ? (
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
-                kicker="Technical spec"
-                title="Inputs, outputs, and dependencies"
-                description="Core metadata required for agent and workflow integration."
+                kicker="Linked assets"
+                title="Related agents, MCP servers, and use cases"
+                description="Where this skill is used in the broader platform graph."
               />
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <ListBlock title="Inputs" items={inputs} empty="Inputs not documented yet." />
-                <ListBlock title="Outputs" items={outputs} empty="Outputs not documented yet." />
-                <ListBlock
-                  title="Prerequisites"
-                  items={prerequisites}
-                  empty="Prerequisites not documented yet."
+              <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                <RelationList
+                  title="Agents"
+                  empty="No linked agents yet."
+                  links={skill.agents.filter((agent) => Boolean(agent.slug)).map((agent) => ({
+                    href: `/aixcelerator/agents/${agent.slug}`,
+                    label: agent.name || agent.slug,
+                  }))}
                 />
-                <ListBlock title="Tools required" items={tools} empty="Tools not documented yet." />
-                <ListBlock title="Models supported" items={models} empty="Models not documented yet." />
-                <ListBlock title="Security notes" items={securityNotes} empty="Security notes not documented yet." />
+                <RelationList
+                  title="MCP servers"
+                  empty="No linked MCP servers yet."
+                  links={skill.mcpServers.filter((server) => Boolean(server.slug)).map((server) => ({
+                    href: `/aixcelerator/mcp/${server.slug}`,
+                    label: server.name || server.slug,
+                  }))}
+                />
+                <RelationList
+                  title="Use cases"
+                  empty="No linked use cases yet."
+                  links={skill.useCases.filter((useCase) => Boolean(useCase.slug)).map((useCase) => ({
+                    href: `/use-cases/${useCase.slug}`,
+                    label: useCase.name || useCase.slug,
+                  }))}
+                />
               </div>
             </section>
           ) : null}
 
-          {hasGuidance ? (
-            <section className="surface-panel border border-slate-200/80 bg-white/90 p-6">
+          {hasLinks ? (
+            <section className="surface-panel section-shell p-6">
               <SectionHeader
                 as="h2"
                 size="md"
-                kicker="Implementation guidance"
-                title="Benefits, requirements, and constraints"
-                description="Operational readiness guidance before adoption."
+                kicker="References"
+                title="Docs and source links"
+                description="External references for validation, source tracing, and demos."
               />
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <ListBlock title="Key benefits" items={keyBenefits} empty="Benefits not documented yet." />
-                <ListBlock title="Requirements" items={requirements} empty="Requirements not documented yet." />
-                <ListBlock title="Limitations" items={limitations} empty="Limitations not documented yet." />
-                <ListBlock title="Example workflow" items={workflowSteps} empty="Workflow example not documented yet." />
+              <div className="mt-6 flex flex-wrap gap-3">
+                {skill.docsUrl ? (
+                  <a href={skill.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
+                    View docs
+                  </a>
+                ) : null}
+                {skill.demoUrl ? (
+                  <a href={skill.demoUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
+                    Open demo
+                  </a>
+                ) : null}
+                {skill.sourceUrl ? (
+                  <a href={skill.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-ghost">
+                    Source link
+                  </a>
+                ) : null}
               </div>
             </section>
           ) : null}
         </div>
-      )}
 
-      {hasRelations ? (
-        <section className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-6">
+        <aside className="surface-panel p-6 lg:sticky lg:top-6">
           <SectionHeader
             as="h2"
             size="md"
-            kicker="Linked assets"
-            title="Related agents, MCP servers, and use cases"
-            description="Where this skill is used in the broader platform graph."
+            kicker="LLM metadata"
+            title="Structured profile"
+            description="Fields optimized for catalog indexing and retrieval."
           />
-          <div className="mt-4 grid gap-5 lg:grid-cols-3">
-            <RelationList
-              title="Agents"
-              empty="No linked agents yet."
-              links={skill.agents.filter((agent) => Boolean(agent.slug)).map((agent) => ({
-                href: `/aixcelerator/agents/${agent.slug}`,
-                label: agent.name || agent.slug,
-              }))}
-            />
-            <RelationList
-              title="MCP servers"
-              empty="No linked MCP servers yet."
-              links={skill.mcpServers.filter((server) => Boolean(server.slug)).map((server) => ({
-                href: `/aixcelerator/mcp/${server.slug}`,
-                label: server.name || server.slug,
-              }))}
-            />
-            <RelationList
-              title="Use cases"
-              empty="No linked use cases yet."
-              links={skill.useCases.filter((useCase) => Boolean(useCase.slug)).map((useCase) => ({
-                href: `/use-cases/${useCase.slug}`,
-                label: useCase.name || useCase.slug,
-              }))}
-            />
-          </div>
-        </section>
-      ) : null}
+          <dl className="mt-6 grid gap-4">
+            <MetadataRow label="Name" value={skill.name} />
+            <MetadataRow label="Slug" value={skill.slug} />
+            <MetadataRow label="Category" value={categoryLabel} />
+            <MetadataRow label="Provider" value={providerLabel} />
+            <MetadataRow label="Industry" value={skill.industry || "General"} />
+            <MetadataRow label="Skill type" value={skill.skillType || "Not provided"} />
+            <MetadataRow label="Status" value={status.charAt(0).toUpperCase() + status.slice(1)} />
+            <MetadataRow label="Visibility" value={isPrivate ? "Private" : "Public"} />
+            <MetadataRow label="Source" value={sourceDisplay} />
+            <MetadataRow label="Verified" value={skill.verified ? "Yes" : "No"} />
+            <MetadataRow label="Last updated" value={lastUpdatedLabel || "Not provided"} />
+          </dl>
 
-      {hasLinks ? (
-        <section className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-6">
-          <SectionHeader
-            as="h2"
-            size="md"
-            kicker="References"
-            title="Docs and source links"
-            description="External references for validation, source tracing, and demos."
-          />
-          <div className="mt-4 flex flex-wrap gap-2">
-            {skill.docsUrl ? (
-              <a href={skill.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm">
-                View docs
-              </a>
-            ) : null}
-            {skill.demoUrl ? (
-              <a href={skill.demoUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm">
-                Open demo
-              </a>
-            ) : null}
-            {skill.sourceUrl ? (
-              <a href={skill.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
-                Source link
-              </a>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
+          {(skill.tags || []).length > 0 && (
+            <>
+              <div className="mt-6 border-t border-zinc-200/60 pt-6 dark:border-zinc-700/60">
+                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+                  Tags
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(skill.tags || []).map((tag) => (
+                    <span key={tag.slug} className="chip chip-muted rounded-md px-2.5 py-1 text-xs font-semibold">
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </aside>
+      </section>
     </Layout>
   );
 }
@@ -373,6 +437,15 @@ function toSkillFamily(skill: Skill) {
   return "Specialized domain skills";
 }
 
+function MetadataRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="detail-section">
+      <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{label}</dt>
+      <dd className="mt-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{value}</dd>
+    </div>
+  );
+}
+
 function ListBlock({
   title,
   items,
@@ -383,19 +456,19 @@ function ListBlock({
   empty: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/95 p-4">
-      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{title}</div>
+    <div className="detail-section">
+      <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{title}</div>
       {items.length ? (
-        <ul className="mt-2 space-y-1.5 text-sm text-slate-700">
+        <ul className="mt-3 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
           {items.map((item) => (
-            <li key={item} className="flex items-start gap-2">
-              <span aria-hidden="true" className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-blue" />
+            <li key={item} className="flex gap-2">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#008EA8]" />
               <span>{item}</span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-2 text-sm text-slate-500">{empty}</p>
+        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">{empty}</p>
       )}
     </div>
   );
@@ -411,15 +484,15 @@ function RelationList({
   links: { href: string; label: string }[];
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/95 p-4">
-      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{title}</div>
+    <div className="card-elevated p-5">
+      <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{title}</div>
       {links.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">{empty}</p>
+        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">{empty}</p>
       ) : (
-        <ul className="mt-2 space-y-2">
+        <ul className="mt-3 space-y-2">
           {links.map((item) => (
             <li key={`${item.href}-${item.label}`}>
-              <Link href={item.href} className="text-sm font-semibold text-brand-blue hover:text-brand-deep">
+              <Link href={item.href} className="text-sm font-semibold text-brand-deep hover:underline dark:text-brand-purple-300 dark:hover:text-brand-purple-200">
                 {item.label}
               </Link>
             </li>

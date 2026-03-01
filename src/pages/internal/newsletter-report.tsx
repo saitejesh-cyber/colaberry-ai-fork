@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
 
 type ReportStatusFilter = "all" | "subscribed" | "unsubscribed" | "bounced";
 
@@ -13,6 +14,7 @@ type ReportSummary = {
   bounced: number;
   unknown: number;
   bySourcePage: Record<string, number>;
+  byUtmCampaign?: Record<string, number>;
 };
 
 type ReportRow = {
@@ -21,6 +23,12 @@ type ReportRow = {
   status: string;
   sourcePage: string;
   sourcePath: string;
+  utmSource: string;
+  utmMedium: string;
+  utmCampaign: string;
+  utmTerm: string;
+  utmContent: string;
+  referrer: string;
   subscribedAt: string;
   unsubscribedAt: string;
   createdAt: string;
@@ -100,6 +108,13 @@ export default function InternalNewsletterReportPage() {
 
   const rows = useMemo(() => report?.rows || [], [report]);
   const summary = report?.summary;
+  const topCampaigns = useMemo(
+    () =>
+      Object.entries(summary?.byUtmCampaign || {})
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5),
+    [summary?.byUtmCampaign]
+  );
 
   function getAdminHeaders(): Record<string, string> {
     const key = apiKey.trim();
@@ -245,11 +260,20 @@ export default function InternalNewsletterReportPage() {
     }
   }
 
+  const seoMeta: SeoMeta = {
+    title: "Internal Newsletter Ops | Colaberry AI",
+    description: "Internal dashboard for subscriber reporting, CSV exports, and newsletter template operations.",
+    canonical: buildCanonical("/internal/newsletter-report"),
+    noindex: true,
+  };
+
   return (
     <Layout>
       <Head>
-        <title>Internal Newsletter Ops | Colaberry AI</title>
-        <meta name="robots" content="noindex,nofollow" />
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
       </Head>
 
       <div className="flex flex-col gap-3">
@@ -262,7 +286,7 @@ export default function InternalNewsletterReportPage() {
         />
       </div>
 
-      <section className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-6">
+      <section className="surface-panel mt-6 border border-zinc-200/80 bg-white/90 p-6">
         <SectionHeader
           as="h2"
           size="md"
@@ -273,7 +297,7 @@ export default function InternalNewsletterReportPage() {
 
         <form onSubmit={loadReport} className="mt-4 grid gap-3 md:grid-cols-[1fr_220px_auto_auto] md:items-end">
           <div>
-            <label htmlFor="report-admin-key" className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <label htmlFor="report-admin-key" className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
               Admin key
             </label>
             <input
@@ -282,21 +306,21 @@ export default function InternalNewsletterReportPage() {
               value={apiKey}
               onChange={(event) => setApiKey(event.target.value)}
               placeholder="Enter report API key"
-              className="mt-1 w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
+              className="mt-1 w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             />
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
               Required in production. Optional on localhost development.
             </p>
           </div>
           <div>
-            <label htmlFor="report-status" className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <label htmlFor="report-status" className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
               Status
             </label>
             <select
               id="report-status"
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as ReportStatusFilter)}
-              className="mt-1 w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2.5 text-sm text-zinc-900 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
             >
               <option value="all">All</option>
               <option value="subscribed">Subscribed</option>
@@ -328,26 +352,41 @@ export default function InternalNewsletterReportPage() {
           </div>
         ) : null}
 
+        {topCampaigns.length > 0 ? (
+          <div className="mt-4 rounded-lg border border-zinc-200/80 bg-zinc-50/80 p-4 text-sm dark:border-zinc-700/70 dark:bg-zinc-900/70">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Top UTM campaigns</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {topCampaigns.map(([campaign, count]) => (
+                <span key={campaign} className="chip chip-muted rounded-md px-3 py-1 text-xs font-semibold">
+                  {campaign} · {count}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         {rows.length > 0 ? (
-          <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200/80">
+          <div className="table-shell mt-5">
             <table className="w-full min-w-[880px] text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-[0.16em] text-slate-500">
+              <thead className="bg-zinc-50 text-xs uppercase tracking-[0.16em] text-zinc-500">
                 <tr>
                   <th className="px-4 py-3">Email</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Source page</th>
+                  <th className="px-4 py-3">UTM campaign</th>
                   <th className="px-4 py-3">Subscribed</th>
                   <th className="px-4 py-3">Unsubscribed</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.slice(0, 250).map((row) => (
-                  <tr key={`${row.id}-${row.email}`} className="border-t border-slate-200/70 bg-white">
-                    <td className="px-4 py-3 font-medium text-slate-900">{row.email || "—"}</td>
-                    <td className="px-4 py-3 text-slate-700">{row.status || "unknown"}</td>
-                    <td className="px-4 py-3 text-slate-600">{row.sourcePage || "unknown"}</td>
-                    <td className="px-4 py-3 text-slate-600">{formatDate(row.subscribedAt)}</td>
-                    <td className="px-4 py-3 text-slate-600">{formatDate(row.unsubscribedAt)}</td>
+                  <tr key={`${row.id}-${row.email}`} className="border-t border-zinc-200/70 bg-white">
+                    <td className="px-4 py-3 font-medium text-zinc-900">{row.email || "—"}</td>
+                    <td className="px-4 py-3 text-zinc-700">{row.status || "unknown"}</td>
+                    <td className="px-4 py-3 text-zinc-600">{row.sourcePage || "unknown"}</td>
+                    <td className="px-4 py-3 text-zinc-600">{row.utmCampaign || "none"}</td>
+                    <td className="px-4 py-3 text-zinc-600">{formatDate(row.subscribedAt)}</td>
+                    <td className="px-4 py-3 text-zinc-600">{formatDate(row.unsubscribedAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -356,7 +395,7 @@ export default function InternalNewsletterReportPage() {
         ) : null}
       </section>
 
-      <section className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-6">
+      <section className="surface-panel mt-6 border border-zinc-200/80 bg-white/90 p-6">
         <SectionHeader
           as="h2"
           size="md"
@@ -367,7 +406,7 @@ export default function InternalNewsletterReportPage() {
 
         <form onSubmit={loadTemplatePreview} className="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
           <div>
-            <label htmlFor="template-email" className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <label htmlFor="template-email" className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
               Recipient email
             </label>
             <input
@@ -376,7 +415,7 @@ export default function InternalNewsletterReportPage() {
               value={previewEmail}
               onChange={(event) => setPreviewEmail(event.target.value)}
               placeholder="recipient@company.com"
-              className="mt-1 w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
+              className="mt-1 w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             />
           </div>
           <button type="submit" className="btn btn-primary" disabled={previewLoading}>
@@ -391,14 +430,14 @@ export default function InternalNewsletterReportPage() {
         ) : null}
 
         {preview?.unsubscribeUrl ? (
-          <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/85 p-4 text-xs text-slate-600">
-            <span className="font-semibold text-slate-900">Unsubscribe URL:</span>{" "}
+          <div className="mt-4 rounded-lg border border-zinc-200/80 bg-white/85 p-4 text-xs text-zinc-600">
+            <span className="font-semibold text-zinc-900">Unsubscribe URL:</span>{" "}
             <span className="break-all">{preview.unsubscribeUrl}</span>
           </div>
         ) : null}
 
         {preview?.html ? (
-          <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200/80 bg-white">
+          <div className="mt-4 overflow-hidden rounded-lg border border-zinc-200/80 bg-white">
             <iframe
               title="Newsletter HTML preview"
               srcDoc={preview.html}
@@ -408,7 +447,7 @@ export default function InternalNewsletterReportPage() {
         ) : null}
       </section>
 
-      <section className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-6">
+      <section className="surface-panel mt-6 border border-zinc-200/80 bg-white/90 p-6">
         <SectionHeader
           as="h2"
           size="md"
@@ -419,14 +458,14 @@ export default function InternalNewsletterReportPage() {
 
         <form onSubmit={sendNewsletter} className="mt-4 grid gap-3 md:grid-cols-2">
           <div>
-            <label htmlFor="send-mode" className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <label htmlFor="send-mode" className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
               Mode
             </label>
             <select
               id="send-mode"
               value={sendMode}
               onChange={(event) => setSendMode(event.target.value as SendMode)}
-              className="mt-1 w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2.5 text-sm text-zinc-900 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
             >
               <option value="test">Test</option>
               <option value="campaign">Campaign</option>
@@ -434,10 +473,10 @@ export default function InternalNewsletterReportPage() {
           </div>
 
           <div>
-            <label htmlFor="send-dry-run" className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <label htmlFor="send-dry-run" className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
               Dry run
             </label>
-            <div className="mt-1 flex h-[44px] items-center rounded-full border border-slate-200/80 bg-white px-4">
+            <div className="mt-1 flex h-[44px] items-center rounded-lg border border-zinc-200/80 bg-white px-4">
               <input
                 id="send-dry-run"
                 type="checkbox"
@@ -445,7 +484,7 @@ export default function InternalNewsletterReportPage() {
                 onChange={(event) => setSendDryRun(event.target.checked)}
                 className="h-4 w-4"
               />
-              <label htmlFor="send-dry-run" className="ml-2 text-sm text-slate-700">
+              <label htmlFor="send-dry-run" className="ml-2 text-sm text-zinc-700">
                 Simulate without sending provider email
               </label>
             </div>
@@ -453,7 +492,7 @@ export default function InternalNewsletterReportPage() {
 
           {sendMode === "test" ? (
             <div className="md:col-span-2">
-              <label htmlFor="send-recipient" className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <label htmlFor="send-recipient" className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
                 Test recipient email
               </label>
               <input
@@ -462,13 +501,13 @@ export default function InternalNewsletterReportPage() {
                 value={sendRecipient}
                 onChange={(event) => setSendRecipient(event.target.value)}
                 placeholder="recipient@company.com"
-                className="mt-1 w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
+                className="mt-1 w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
             </div>
           ) : (
             <>
               <div>
-                <label htmlFor="send-limit" className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <label htmlFor="send-limit" className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
                   Batch limit
                 </label>
                 <input
@@ -478,11 +517,11 @@ export default function InternalNewsletterReportPage() {
                   max={300}
                   value={sendLimit}
                   onChange={(event) => setSendLimit(Number(event.target.value || 1))}
-                  className="mt-1 w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100"
+                  className="mt-1 w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2.5 text-sm text-zinc-900 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
                 />
               </div>
               <div>
-                <label htmlFor="send-confirm" className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <label htmlFor="send-confirm" className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
                   Confirmation
                 </label>
                 <input
@@ -491,8 +530,9 @@ export default function InternalNewsletterReportPage() {
                   value={sendConfirm}
                   onChange={(event) => setSendConfirm(event.target.value)}
                   placeholder='Type "SEND"'
-                  className="mt-1 w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
-                />
+                  className="mt-1 w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+
+/>
               </div>
             </>
           )}
@@ -511,7 +551,7 @@ export default function InternalNewsletterReportPage() {
         ) : null}
 
         {sendResult?.ok ? (
-          <div className="mt-4 rounded-2xl border border-emerald-200/80 bg-emerald-50/70 p-4 text-sm text-emerald-800">
+          <div className="mt-4 rounded-lg border border-emerald-200/80 bg-emerald-50/70 p-4 text-sm text-emerald-800">
             <div className="font-semibold">
               Dispatch complete ({sendResult.mode || "unknown"}) via {sendResult.provider || "provider"}
               {sendResult.dryRun ? " [dry-run]" : ""}
@@ -536,9 +576,9 @@ export default function InternalNewsletterReportPage() {
 
 function MetricCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white px-4 py-3">
-      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-300">{label}</div>
-      <div className="mt-1 text-xl font-semibold text-slate-900">{value}</div>
+    <div className="rounded-lg border border-zinc-200/80 bg-white px-4 py-3">
+      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-600 dark:text-zinc-300">{label}</div>
+      <div className="mt-1 text-xl font-semibold text-zinc-900">{value}</div>
     </div>
   );
 }

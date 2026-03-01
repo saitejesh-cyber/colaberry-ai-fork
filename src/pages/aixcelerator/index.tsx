@@ -1,12 +1,12 @@
 import Layout from "../../components/Layout";
 import Link from "next/link";
+import Head from "next/head";
 import type { GetStaticProps } from "next";
 import SectionHeader from "../../components/SectionHeader";
-import MediaPanel from "../../components/MediaPanel";
 import StatePanel from "../../components/StatePanel";
 import { coreCapabilities, modularLayers } from "../../data/platformCapabilities";
 import { fetchUseCases, type UseCase } from "../../lib/cms";
-import { heroImage } from "../../lib/media";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
 
 type AIXceleratorProps = {
   latestUseCases: UseCase[];
@@ -32,8 +32,29 @@ export const getStaticProps: GetStaticProps<AIXceleratorProps> = async () => {
 };
 
 export default function AIXcelerator({ latestUseCases, fetchError }: AIXceleratorProps) {
+  const seoMeta: SeoMeta = {
+    title: "AIXcelerator Platform | Colaberry AI - Enterprise Agent Delivery",
+    description: "AIXcelerator is the core platform for governed AI agent delivery. Discover agents, MCP servers, skills, and use cases in one enterprise operating surface.",
+    canonical: buildCanonical("/aixcelerator"),
+  };
+
   return (
     <Layout>
+      <Head>
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "AIXcelerator",
+          "applicationCategory": "Enterprise AI Platform",
+          "description": "Core platform for governed AI agent delivery, observability, and evaluation.",
+          "url": buildCanonical("/aixcelerator"),
+          "provider": { "@type": "Organization", "name": "Colaberry AI" },
+        }) }} />
+      </Head>
       {fetchError ? (
         <div className="mb-6">
           <StatePanel
@@ -46,8 +67,8 @@ export default function AIXcelerator({ latestUseCases, fetchError }: AIXcelerato
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
         <div className="flex flex-col gap-3">
-          <div className="chip chip-brand inline-flex w-fit items-center gap-2 rounded-full border border-brand-blue/20 bg-white py-1 pl-2 pr-3 text-xs text-brand-deep">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
+          <div className="inline-flex w-fit items-center gap-2 rounded-md border border-[#4F2AA3]/15 bg-[#F3EEFF] py-1 pl-2 pr-3 text-xs text-[#2B0F63] dark:border-[#7B5CE0]/20 dark:bg-[#18233A] dark:text-[#C4B3FF]">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#008EA8]" />
             Core platform + modular layers
           </div>
           <SectionHeader
@@ -57,15 +78,6 @@ export default function AIXcelerator({ latestUseCases, fetchError }: AIXcelerato
             description="AIXcelerator is the core platform for governed agent delivery. It helps teams move from opportunity and workflow definition to production execution-then close the loop with observability and evaluation. Modular capability layers can be introduced incrementally without disrupting the core surface."
           />
         </div>
-        <MediaPanel
-          kicker="Platform preview"
-          title="Governed delivery surface"
-          description="A clean, visual surface for readiness, workflow alignment, and modular layers."
-          image={heroImage("hero-platform-cinematic.webp")}
-          alt="Governed delivery platform preview"
-          aspect="wide"
-          fit="cover"
-        />
       </div>
 
       <section className="mt-8">
@@ -76,7 +88,7 @@ export default function AIXcelerator({ latestUseCases, fetchError }: AIXcelerato
             description="The trusted foundation for agent delivery, governance, and observability."
             size="md"
           />
-          <div className="hidden rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 sm:inline-flex">
+          <div className="hidden rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 sm:inline-flex">
             Stable foundation
           </div>
         </div>
@@ -105,7 +117,7 @@ export default function AIXcelerator({ latestUseCases, fetchError }: AIXcelerato
           />
           <Link
             href="/resources"
-            className="btn btn-primary mt-3 sm:mt-0"
+            className="btn btn-cta mt-3 sm:mt-0"
           >
             Explore resource layers
           </Link>
@@ -132,7 +144,7 @@ export default function AIXcelerator({ latestUseCases, fetchError }: AIXcelerato
             description="Fresh deployment patterns teams can review before moving into full execution design."
             size="md"
           />
-          <Link href="/use-cases" className="btn btn-primary mt-3 sm:mt-0">
+          <Link href="/use-cases" className="btn btn-cta mt-3 sm:mt-0">
             Open use case catalog
           </Link>
         </div>
@@ -151,23 +163,23 @@ export default function AIXcelerator({ latestUseCases, fetchError }: AIXcelerato
               <Link
                 key={item.slug || item.id}
                 href={`/use-cases/${item.slug}`}
-                className="surface-panel surface-hover surface-interactive border border-slate-200/80 bg-white/90 p-4"
+                className="surface-panel surface-hover surface-interactive border border-zinc-200/80 bg-white/90 p-4"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="line-clamp-2 text-sm font-semibold text-slate-900">{item.title}</div>
-                  <span className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
+                  <div className="line-clamp-2 text-sm font-semibold text-zinc-900">{item.title}</div>
+                  <span className="text-zinc-400 transition-transform group-hover:tranzinc-x-0.5 group-hover:text-brand-deep">
                     →
                   </span>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <span className="chip chip-brand rounded-full px-2.5 py-1 text-[11px] font-semibold">
+                  <span className="chip chip-brand rounded-md px-2.5 py-1 text-[11px] font-semibold">
                     {item.industry || "General"}
                   </span>
-                  <span className="chip chip-muted rounded-full px-2.5 py-1 text-[11px] font-semibold">
+                  <span className="chip chip-muted rounded-md px-2.5 py-1 text-[11px] font-semibold">
                     {(item.status || "live").toUpperCase()}
                   </span>
                 </div>
-                <div className="mt-3 text-xs text-slate-500">
+                <div className="mt-3 text-xs text-zinc-500">
                   {item.lastUpdated ? `Updated ${formatDate(item.lastUpdated)}` : "Update date pending"}
                 </div>
               </Link>
@@ -225,24 +237,24 @@ function NavCard({
   return (
     <Link
       href={href}
-      className="surface-panel surface-hover surface-interactive group border border-slate-200/80 bg-white/90 p-5"
+      className="card-feature group p-5"
       aria-label={`Open ${title}`}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <div className="text-sm font-semibold text-slate-900">{title}</div>
+            <div className="text-[0.9375rem] font-semibold text-zinc-900 dark:text-zinc-100">{title}</div>
             {badge ? (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+              <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-[0.6875rem] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
                 {badge}
               </span>
             ) : null}
           </div>
-          <div className="mt-1 text-sm text-slate-600">{description}</div>
+          <div className="mt-1.5 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{description}</div>
         </div>
-        <div className="mt-0.5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
-          <span aria-hidden="true">→</span>
-        </div>
+        <svg aria-hidden="true" viewBox="0 0 16 16" className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400 transition-transform group-hover:tranzinc-x-0.5 group-hover:text-brand-deep">
+          <path d="M6.5 3.5 11 8l-4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </svg>
       </div>
     </Link>
   );
@@ -257,15 +269,17 @@ function RoadmapItem({
   status: string;
   description: string;
 }) {
+  const isLive = status.toLowerCase().includes("live");
   return (
-    <div className="surface-panel border border-slate-200/70 p-5">
+    <div className="card-elevated p-5">
       <div className="flex items-start justify-between gap-3">
-        <div className="text-base font-semibold text-slate-900">{title}</div>
-        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+        <div className="text-[0.9375rem] font-semibold text-zinc-900 dark:text-zinc-100">{title}</div>
+        <span className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] ${isLive ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"}`}>
+          {isLive ? <span className="trending-dot" style={{ background: "#10b981" }} /> : null}
           {status}
         </span>
       </div>
-      <div className="mt-2 text-sm text-slate-600">{description}</div>
+      <div className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{description}</div>
     </div>
   );
 }

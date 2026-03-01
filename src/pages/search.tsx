@@ -1,8 +1,10 @@
+import Head from "next/head";
 import Link from "next/link";
 import type { GetServerSideProps } from "next";
 import Layout from "../components/Layout";
 import SectionHeader from "../components/SectionHeader";
 import StatePanel from "../components/StatePanel";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../lib/seo";
 import caseStudies from "../data/caseStudies.json";
 import {
   Agent,
@@ -425,8 +427,21 @@ export default function SearchPage({ query, results, fetchError }: SearchPagePro
   const grouped = groupResults(results);
   const hasResults = grouped.length > 0;
 
+  const seoMeta: SeoMeta = {
+    title: query ? `${query} - Search | Colaberry AI` : "Search | Colaberry AI",
+    description: "Search across agents, MCP servers, skills, use cases, podcasts, case studies, and core pages.",
+    canonical: buildCanonical("/search"),
+    noindex: true,
+  };
+
   return (
     <Layout>
+      <Head>
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
+      </Head>
       {fetchError ? (
         <div className="mb-6">
           <StatePanel
@@ -446,8 +461,8 @@ export default function SearchPage({ query, results, fetchError }: SearchPagePro
             description="Search across agents, MCP servers, skills, use cases, podcasts, case studies, and core pages."
           />
         </div>
-        <div className="surface-panel p-5">
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+        <div className="detail-section">
+          <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500">
             Refine search
           </div>
           <form action="/search" method="get" role="search" className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -460,13 +475,14 @@ export default function SearchPage({ query, results, fetchError }: SearchPagePro
               type="search"
               defaultValue={query}
               placeholder="Search agents, MCP servers, skills, use cases, podcasts..."
-              className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
+              aria-label="Search the catalog"
+              className="input-premium"
             />
             <button type="submit" className="btn btn-primary btn-sm">
               Search
             </button>
           </form>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-zinc-500">
             Try keywords like industry names, skill categories, agent types, MCP servers, or podcast topics.
           </p>
         </div>
@@ -495,30 +511,30 @@ export default function SearchPage({ query, results, fetchError }: SearchPagePro
       {hasResults ? (
         <div className="mt-8 grid gap-6">
           {grouped.map((group) => (
-            <section key={group.type} className="surface-panel p-6">
+            <section key={group.type} className="detail-section">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-slate-900">{group.type}</div>
-                <span className="text-xs text-slate-500">{group.items.length} results</span>
+                <div className="text-sm font-semibold text-zinc-900">{group.type}</div>
+                <span className="text-xs text-zinc-500">{group.items.length} results</span>
               </div>
               <div className="mt-4 grid gap-3">
                 {group.items.map((item) => (
                   <Link
                     key={item.id}
                     href={item.href}
-                    className="surface-panel surface-hover surface-interactive border border-slate-200/80 p-4"
+                    className="card-elevated p-4"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <div className="text-sm font-semibold text-slate-900">{item.title}</div>
+                        <div className="text-sm font-semibold text-zinc-900">{item.title}</div>
                         {item.description ? (
-                          <div className="mt-1 text-sm text-slate-600">{item.description}</div>
+                          <div className="mt-1 text-sm text-zinc-600">{item.description}</div>
                         ) : null}
                       </div>
-                      <span className="rounded-full border border-brand-blue/20 bg-white px-2.5 py-1 text-xs font-semibold text-brand-deep">
+                      <span className="rounded-md border border-[#4F2AA3]/15 bg-[#F3EEFF] px-2.5 py-1 text-xs font-semibold text-[#2B0F63] dark:border-[#7B5CE0]/20 dark:bg-[#18233A] dark:text-[#C4B3FF]">
                         {item.type}
                       </span>
                     </div>
-                    {item.meta ? <div className="mt-2 text-xs text-slate-500">{item.meta}</div> : null}
+                    {item.meta ? <div className="mt-2 text-xs text-zinc-500">{item.meta}</div> : null}
                   </Link>
                 ))}
               </div>

@@ -1,11 +1,12 @@
 // src/pages/resources/podcasts/[slug].tsx
 import Layout from "../../../components/Layout";
+import Breadcrumb from "../../../components/Breadcrumb";
 import Link from "next/link";
+import Image from "next/image";
 import Head from "next/head";
 import type { GetServerSideProps } from "next";
 import RichText from "../../../components/RichText";
 import SectionHeader from "../../../components/SectionHeader";
-import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import PodcastPlayer from "../../../components/PodcastPlayer";
 import TranscriptTimeline from "../../../components/TranscriptTimeline";
 import {
@@ -15,8 +16,11 @@ import {
   type PlatformLink,
 } from "../../../lib/cms";
 import sanitizeHtml from "sanitize-html";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const PODCAST_BRAND_IMAGE = "/media/podcast/colaberry-ai-podcast-brand.svg";
 import { logPodcastEvent } from "../../../lib/podcastTelemetry";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 
 type PodcastDetailProps = {
   episode: PodcastEpisode;
@@ -26,8 +30,6 @@ type PodcastDetailProps = {
 type RouteParams = {
   slug?: string;
 };
-
-const PODCAST_BRAND_IMAGE = "/media/podcast/colaberry-ai-podcast-qr.png";
 
 export const getServerSideProps: GetServerSideProps<PodcastDetailProps, RouteParams> = async ({
   params,
@@ -88,8 +90,14 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
   const metaDescription =
     (typeof episode.description === "string" && episode.description.trim()) ||
     "Podcast episode with player, transcript, and structured metadata for enterprise AI discovery.";
-  const [transcriptOpen, setTranscriptOpen] = useState(false);
-  const transcriptRef = useRef<HTMLDivElement | null>(null);
+  const seoMeta: SeoMeta = {
+    title: `${episode.title} | Podcast | Colaberry AI`,
+    description: metaDescription,
+    canonical: buildCanonical(`/resources/podcasts/${episode.slug}`),
+    ogType: "article",
+    ogImage: episode.coverImageUrl || null,
+    ogImageAlt: episode.coverImageAlt || episode.title,
+  };
   const playerRef = useRef<HTMLDivElement | null>(null);
   const hasLoggedView = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -138,48 +146,42 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
     };
   }, [audioUrl]);
 
-  const resolvedShareUrl = useMemo(() => {
-    return canonicalUrl;
-  }, [canonicalUrl]);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "PodcastEpisode",
+    name: episode.title,
+    description: metaDescription,
+    datePublished: episode.publishedDate || undefined,
+    url: canonicalUrl,
+    ...(episode.duration ? { duration: episode.duration } : {}),
+    associatedMedia: episode.audioUrl
+      ? {
+          "@type": "MediaObject",
+          contentUrl: episode.audioUrl,
+          encodingFormat: "audio/mpeg",
+        }
+      : undefined,
+    partOfSeries: {
+      "@type": "PodcastSeries",
+      name: "Colaberry AI Podcast",
+      url: `${siteUrl}/resources/podcasts`,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Colaberry AI",
+      url: siteUrl,
+    },
+  };
 
-  const jsonLd = useMemo(
-    () => ({
-      "@context": "https://schema.org",
-      "@type": "PodcastEpisode",
-      name: episode.title,
-      description: metaDescription,
-      datePublished: episode.publishedDate || undefined,
-      url: canonicalUrl,
-      associatedMedia: episode.audioUrl
-        ? {
-            "@type": "MediaObject",
-            contentUrl: episode.audioUrl,
-            encodingFormat: "audio/mpeg",
-          }
-        : undefined,
-      isPartOf: {
-        "@type": "PodcastSeries",
-        name: "Colaberry AI Podcast",
-        url: `${siteUrl}/resources/podcasts`,
-      },
-      publisher: {
-        "@type": "Organization",
-        name: "Colaberry AI",
-        url: siteUrl,
-      },
-    }),
-    [canonicalUrl, episode.audioUrl, episode.publishedDate, episode.title, metaDescription, siteUrl]
-  );
-
-  const shareLinks = useMemo(() => {
-    const url = encodeURIComponent(resolvedShareUrl);
+  const shareLinks = (() => {
+    const url = encodeURIComponent(canonicalUrl);
     const title = encodeURIComponent(episode.title || "Colaberry AI Podcast");
     return {
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
       x: `https://x.com/intent/tweet?url=${url}&text=${title}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
     };
-  }, [episode.title, resolvedShareUrl]);
+  })();
 
   const transcriptIsHtml = typeof episode.transcript === "string";
   const transcriptSegments = Array.isArray(episode.transcriptSegments)
@@ -188,6 +190,10 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
   const hasTimedTranscript = transcriptSegments.length > 0;
   const hasTranscriptText = Boolean(episode.transcript && String(episode.transcript).trim());
   const hasTranscriptContent = hasTimedTranscript || hasTranscriptText;
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [contentTab, setContentTab] = useState<"description" | "transcript">(
+    hasTimedTranscript ? "transcript" : "description"
+  );
   const shouldForceNative = hasTimedTranscript && audioUrl;
   const usesNativePlayer = Boolean(audioUrl && (shouldForceNative || preferNative));
   const showMiniPlayer = usesNativePlayer && (isPlaying || currentTime > 0);
@@ -234,57 +240,49 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
   return (
     <Layout>
       <Head>
-        <title>{`${episode.title} | Podcast | Colaberry AI`}</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content={`${episode.title} | Podcast | Colaberry AI`} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={canonicalUrl} />
-        {episode.coverImageUrl ? <meta property="og:image" content={episode.coverImageUrl} /> : null}
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
-      <EnterprisePageHero
-        kicker="Podcast"
-        title={episode.title}
-        description="Listen to the episode or read the full narrative and transcript."
-        image={PODCAST_BRAND_IMAGE}
-        alt="Colaberry AI podcast artwork"
-        imageKicker="Audio signal"
-        imageTitle="Episode brief"
-        imageDescription={`${publishedLabel || "Date pending"}${episode.duration ? ` • ${episode.duration}` : ""}${
-          episode.episodeNumber ? ` • Episode ${episode.episodeNumber}` : ""
-        }`}
-        chips={[
-          ...(episode.tags || []).slice(0, 3).map((tag) => `#${tag.name}`),
-          hasTranscriptContent ? "Transcript available" : "Transcript pending",
-          subscribeLinks.length > 0 ? `${subscribeLinks.length} platform links` : "Platform links pending",
-        ]}
-        primaryAction={{ label: "Play episode", href: "#player" }}
-        secondaryAction={{ label: "All podcasts", href: "/resources/podcasts", variant: "secondary" }}
-        metrics={[
-          {
-            label: "Plays",
-            value: formatMetricCount(episode.playCount),
-            note: "Playback interactions.",
-          },
-          {
-            label: "Views",
-            value: formatMetricCount(episode.viewCount),
-            note: "Episode detail opens.",
-          },
-          {
-            label: "Shares",
-            value: formatMetricCount(episode.shareCount),
-            note: "Cross-channel distribution.",
-          },
-        ]}
-      />
 
-      <div className="section-spacing grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <ScrollProgress />
+
+      <Breadcrumb items={[
+        { label: "Home", href: "/" },
+        { label: "Podcasts", href: "/resources/podcasts" },
+        { label: episode.title },
+      ]} />
+
+      {/* ── Compact episode header ── */}
+      <header className="section-shell px-4 pt-4 pb-2 sm:px-6">
+        <h1 className="font-display text-display-lg font-bold text-zinc-900 dark:text-zinc-100 sm:text-display-xl lg:text-display-2xl">
+          {episode.title}
+        </h1>
+        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
+          {publishedLabel ? <span>{publishedLabel}</span> : null}
+          {episode.duration ? <><span aria-hidden="true">&middot;</span><span>{episode.duration}</span></> : null}
+          {episode.episodeNumber ? <><span aria-hidden="true">&middot;</span><span>Episode {episode.episodeNumber}</span></> : null}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(episode.tags || []).slice(0, 5).map((tag) => (
+            <Link key={tag.slug} href={`/resources/podcasts/tag/${tag.slug}`} className="chip chip-muted rounded-md px-2.5 py-1 text-xs font-semibold">
+              #{tag.name}
+            </Link>
+          ))}
+          {hasTranscriptContent ? (
+            <span className="inline-flex items-center gap-1 rounded-md bg-[var(--trusted-surface)] px-2.5 py-1 text-xs font-semibold text-[var(--trusted-text)] ring-1 ring-inset ring-[var(--trusted-stroke)]">
+              Transcript
+            </span>
+          ) : null}
+        </div>
+      </header>
+
+      <div className="section-shell px-4 pt-4 pb-8 sm:px-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6">
-          <div id="player" ref={playerRef} className="surface-panel section-shell p-6">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
+          <div id="player" ref={playerRef} className="detail-section">
+            <div className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-600 dark:text-zinc-300">
               Listen to the podcast
             </div>
             <div className="mt-3">
@@ -295,14 +293,14 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                 onPlay={() => logPodcastEvent("play", undefined, { slug: episode.slug, title: episode.title })}
               />
               {hasTimedTranscript ? (
-                <p className="mt-2 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-zinc-500">
                   Transcript is synchronized with the audio player.
                 </p>
               ) : null}
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              <span className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
                 Share
               </span>
               <div className="flex flex-wrap items-center gap-2">
@@ -356,24 +354,30 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                 <button
                   type="button"
                   onClick={() => {
-                    if (resolvedShareUrl) {
-                      navigator.clipboard.writeText(resolvedShareUrl);
+                    if (canonicalUrl) {
+                      navigator.clipboard.writeText(canonicalUrl);
+                      setCopiedLink(true);
+                      setTimeout(() => setCopiedLink(false), 2000);
                       logPodcastEvent("share", "copy", { slug: episode.slug, title: episode.title });
                     }
                   }}
-                  className="btn btn-ghost btn-compact"
+                  className={`btn btn-compact ${copiedLink ? "text-emerald-600 dark:text-emerald-400" : "btn-ghost"}`}
                 >
-                  Copy link
+                  {copiedLink ? (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mr-1 inline-block">
+                        <path d="M20 6L9 17l-5-5" />
+                      </svg>
+                      Copied!
+                    </>
+                  ) : (
+                    "Copy link"
+                  )}
                 </button>
                 {hasTranscriptContent && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setTranscriptOpen(true);
-                      setTimeout(() => {
-                        transcriptRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }, 50);
-                    }}
+                    onClick={() => setContentTab("transcript")}
                     className="btn btn-ghost btn-compact"
                   >
                     Transcript
@@ -387,7 +391,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                 <Link
                   key={tag.slug}
                   href={`/resources/podcasts/tag/${tag.slug}`}
-                  className="chip chip-muted rounded-full px-2.5 py-1 text-xs font-semibold"
+                  className="chip chip-muted rounded-md px-2.5 py-1 text-xs font-semibold"
                 >
                   #{tag.name}
                 </Link>
@@ -396,7 +400,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                 <Link
                   key={company.slug}
                   href={`/resources/podcasts/company?slug=${encodeURIComponent(company.slug)}`}
-                  className="chip chip-brand rounded-full px-2.5 py-1 text-xs font-semibold"
+                  className="chip chip-neutral rounded-md px-2.5 py-1 text-xs font-semibold"
                 >
                   {company.name}
                 </Link>
@@ -404,31 +408,49 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
             </div>
           </div>
 
-          <div className="surface-panel section-shell p-6">
-            <div className="prose max-w-none">
-              {episode.description ? (
-                <RichText blocks={episode.description} />
-              ) : (
-                <p>Podcast summary and notes will appear here once published.</p>
-              )}
+          {/* ── Description / Transcript tabs ── */}
+          <div id="transcript" className="detail-section">
+            <div role="tablist" className="flex items-center gap-1 rounded-lg border border-zinc-200/80 p-1 w-fit dark:border-zinc-700">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={contentTab === "description"}
+                onClick={() => setContentTab("description")}
+                className={`flex min-h-[36px] items-center rounded-md px-4 py-1.5 text-xs font-semibold transition ${
+                  contentTab === "description"
+                    ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
+                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                }`}
+              >
+                Description
+              </button>
+              {hasTranscriptContent ? (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={contentTab === "transcript"}
+                  onClick={() => setContentTab("transcript")}
+                  className={`flex min-h-[36px] items-center rounded-md px-4 py-1.5 text-xs font-semibold transition ${
+                    contentTab === "transcript"
+                      ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
+                      : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  }`}
+                >
+                  Transcript
+                </button>
+              ) : null}
             </div>
-          </div>
 
-          {hasTimedTranscript && (
-            <div
-              ref={transcriptRef}
-              id="transcript"
-              className="surface-panel section-shell p-6"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                    Transcript
-                  </div>
-                  <h3 className="mt-2 text-lg font-semibold text-slate-900">Time‑coded transcript</h3>
-                </div>
+            {contentTab === "description" ? (
+              <div className="prose mt-4 max-w-none">
+                {episode.description ? (
+                  <RichText blocks={episode.description} />
+                ) : null}
+              </div>
+            ) : hasTimedTranscript ? (
+              <div className="mt-4 max-h-[60vh] overflow-y-auto rounded-lg border border-zinc-200/60 p-4 dark:border-zinc-700/50">
                 {episode.transcriptGeneratedAt ? (
-                  <span className="text-xs text-slate-500">
+                  <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
                     Updated{" "}
                     {new Date(episode.transcriptGeneratedAt).toLocaleDateString("en-US", {
                       year: "numeric",
@@ -436,46 +458,28 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                       day: "numeric",
                       timeZone: "UTC",
                     })}
-                  </span>
+                  </p>
                 ) : null}
-              </div>
-              <div className="mt-4">
                 <TranscriptTimeline segments={transcriptSegments} audioRef={audioRef} />
               </div>
-            </div>
-          )}
-
-          {!hasTimedTranscript && episode.transcript && String(episode.transcript).trim() && (
-            <div
-              ref={transcriptRef}
-              id="transcript"
-              className="surface-panel section-shell p-6"
-            >
-              <details
-                open={transcriptOpen}
-                onToggle={(event) => setTranscriptOpen(event.currentTarget.open)}
-              >
-                <summary className="focus-ring cursor-pointer text-sm font-semibold text-slate-900">
-                  Transcript
-                </summary>
-                <div className="prose mt-4 max-w-none text-sm">
-                  {transcriptIsHtml ? (
-                    <div dangerouslySetInnerHTML={{ __html: episode.transcript }} />
-                  ) : (
-                    <RichText blocks={episode.transcript} />
-                  )}
-                </div>
-              </details>
-            </div>
-          )}
+            ) : hasTranscriptText ? (
+              <div className="prose mt-4 max-h-[60vh] max-w-none overflow-y-auto rounded-lg border border-zinc-200/60 p-4 text-sm dark:border-zinc-700/50">
+                {transcriptIsHtml ? (
+                  <div dangerouslySetInnerHTML={{ __html: episode.transcript as string }} />
+                ) : (
+                  <RichText blocks={episode.transcript} />
+                )}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <aside className="flex flex-col gap-4">
-          <div className="surface-panel section-shell p-5">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-              Listen on
-            </div>
-            {subscribeLinks.length > 0 ? (
+          {subscribeLinks.length > 0 ? (
+            <div className="detail-section">
+              <div className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+                Listen on
+              </div>
               <div className="mt-4 grid gap-2">
                 {subscribeLinks.map((link, index) => {
                   const platform = String(link.platform || "platform");
@@ -493,22 +497,20 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                           title: episode.title,
                         })
                       }
-                      className="focus-ring chip chip-muted inline-flex items-center justify-between rounded-full px-4 py-2 text-xs font-semibold"
+                      className="focus-ring chip chip-muted inline-flex items-center justify-between rounded-md px-4 py-2 text-xs font-semibold"
                     >
                       <span>{label}</span>
-                      <span aria-hidden="true">→</span>
+                      <span aria-hidden="true">&rarr;</span>
                     </a>
                   );
                 })}
               </div>
-            ) : (
-              <p className="mt-3 text-sm text-slate-500">Subscribe links will appear here.</p>
-            )}
-          </div>
+            </div>
+          ) : null}
 
           {episode.companies?.length > 0 && (
-            <div className="surface-panel section-shell p-5">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <div className="detail-section">
+              <div className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
                 Company tags
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -516,7 +518,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                   <Link
                     key={company.slug}
                     href={`/resources/podcasts/company?slug=${encodeURIComponent(company.slug)}`}
-                    className="chip chip-brand rounded-full px-3 py-1 text-xs font-semibold"
+                    className="chip chip-neutral rounded-md px-3 py-1 text-xs font-semibold"
                   >
                     {company.name}
                   </Link>
@@ -528,7 +530,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
       </div>
 
       {relatedEpisodes.length > 0 ? (
-        <section className="surface-panel section-shell section-spacing p-6">
+        <section className="detail-section section-spacing">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <SectionHeader
               as="h2"
@@ -542,31 +544,54 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
             </Link>
           </div>
           <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-            {relatedEpisodes.map((item) => (
-              <li key={item.slug}>
-                <Link
-                  href={`/resources/podcasts/${item.slug}`}
-                  className="focus-ring section-card flex h-full flex-col rounded-2xl p-4 transition"
-                >
-                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    {formatDate(item.publishedDate) || "Date pending"}
-                  </span>
-                  <span className="mt-2 line-clamp-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    {item.title}
-                  </span>
-                  <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-deep">
-                    Open episode <span aria-hidden="true">→</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
+            {relatedEpisodes.map((item) => {
+              const itemType = (item.podcastType || "internal").toLowerCase();
+              const itemArtwork = itemType === "external" && item.coverImageUrl
+                ? item.coverImageUrl
+                : PODCAST_BRAND_IMAGE;
+              return (
+                <li key={item.slug}>
+                  <Link
+                    href={`/resources/podcasts/${item.slug}`}
+                    className="focus-ring flex h-full gap-4 rounded-xl bg-[#F5F3EE] p-4 transition-colors hover:bg-[#EDEAE3] dark:bg-[#1E1D1A] dark:hover:bg-[#252420]"
+                  >
+                    <Image
+                      src={itemArtwork}
+                      alt={item.coverImageAlt || item.title}
+                      width={48}
+                      height={48}
+                      className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                      unoptimized
+                    />
+                    <div className="min-w-0 flex-1">
+                      {formatDate(item.publishedDate) ? (
+                        <span className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                          {formatDate(item.publishedDate)}
+                        </span>
+                      ) : null}
+                      <span className="mt-1 line-clamp-2 block text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                        {item.title}
+                      </span>
+                      {typeof item.description === "string" && item.description.trim() && (
+                        <span className="mt-1 line-clamp-1 block text-xs text-zinc-500 dark:text-zinc-400">
+                          {item.description.replace(/<[^>]*>/g, "").slice(0, 120)}
+                        </span>
+                      )}
+                      <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-200">
+                        Open episode <span aria-hidden="true">&rarr;</span>
+                      </span>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null}
 
       {showMiniPlayer && (
         <div className="pointer-events-none fixed bottom-4 left-1/2 z-50 w-[min(100%-2rem,64rem)] -translate-x-1/2">
-          <div className="pointer-events-auto surface-panel section-shell p-3 shadow-lg backdrop-blur">
+          <div className="pointer-events-auto card-elevated p-3 shadow-lg backdrop-blur">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <button
@@ -598,11 +623,11 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                   </svg>
                 </button>
               </div>
-              <span className="text-xs font-semibold tabular-nums text-slate-500">
+              <span className="text-xs font-semibold tabular-nums text-zinc-500 dark:text-zinc-400">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
               <div className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-slate-900">
+                <span className="block truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                   {episode.title}
                 </span>
               </div>
@@ -617,7 +642,59 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
           </div>
         </div>
       )}
+
+      <ShareActions title={episode.title} />
     </Layout>
+  );
+}
+
+function ScrollProgress() {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const onScroll = () => {
+      const scrollTop = document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      setProgress(scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return (
+    <div
+      className="scroll-progress"
+      role="progressbar"
+      aria-valuenow={Math.round(progress)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label="Reading progress"
+      style={{ transform: `scaleX(${progress / 100})` }}
+    />
+  );
+}
+
+function ShareActions({ title: _title }: { title: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <div className="fixed bottom-6 right-6 z-30 flex gap-2">
+      <button
+        type="button"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--stroke)] bg-[var(--surface-strong)] shadow-lg transition-colors hover:bg-[var(--surface-soft)]"
+        aria-label="Copy link"
+        onClick={copy}
+      >
+        {copied ? (
+          <svg viewBox="0 0 20 20" className="h-4 w-4 text-[var(--trust-green)]" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+        ) : (
+          <svg viewBox="0 0 24 24" className="h-4 w-4 text-[var(--text-secondary)]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+        )}
+      </button>
+    </div>
   );
 }
 
@@ -631,12 +708,4 @@ function formatDate(value?: string | null) {
     day: "numeric",
     timeZone: "UTC",
   });
-}
-
-function formatMetricCount(value?: number | null) {
-  const safe = typeof value === "number" && Number.isFinite(value) ? value : 0;
-  return new Intl.NumberFormat("en-US", {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(safe);
 }

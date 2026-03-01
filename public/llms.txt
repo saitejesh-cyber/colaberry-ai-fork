@@ -1,26 +1,63 @@
 # Colaberry AI
 
-Colaberry AI is a destination for people, LLMs, and agents to discover, evaluate, and deploy agents, MCP servers, podcasts, and AI playbooks across industries.
+> Colaberry AI is a premium enterprise platform for discovering, evaluating, and deploying AI agents, MCP servers, skills, use cases, podcasts, and industry playbooks.
 
-## Primary sections
-- / : Overview of the platform, discovery pillars, and industry focus.
-- /aixcelerator/agents : Agents catalog.
-- /aixcelerator/mcp : MCP server and integration library.
-- /aixcelerator/skills : Skills catalog.
-- /aixcelerator/skills/[slug] : Skill profile pages with reusable capability metadata and linked assets.
-- /solutions : Use cases and playbooks.
-- /use-cases : Structured use case catalog.
-- /use-cases/[slug] : Use case profile pages with outcomes and linked assets.
-- /industries : Industry-specific pages for Agriculture, Utilities, Oil & Gas, Biotech, Manufacturing, Supply Chain, and more.
-- /resources : Resources hub.
-- /resources/podcasts : Podcast index.
-- /resources/podcasts/[slug] : Podcast detail pages with transcripts when available.
-- /resources/podcasts/tag/[tag] : Podcast tag/category pages.
-- /resources/white-papers : Research and POVs.
-- /resources/articles : Editorial insights and implementation guidance.
-- /resources/books : Books and artifacts.
-- /resources/case-studies : Case studies.
-- /updates : News and product updates.
+## Platform overview
+
+Colaberry AI serves enterprise teams who need to evaluate and adopt AI capabilities with governance, audit trails, and production-ready delivery patterns. The platform catalogs agents, Model Context Protocol (MCP) servers, reusable skills, use cases with measurable outcomes, and multimedia resources.
+
+## Content types
+
+### Agents (/aixcelerator/agents)
+AI agents with metadata including status (live/beta/concept), visibility (public/private), source (internal/external/partner), industry alignment, core tasks, inputs/outputs, orchestration details, tools, and security compliance. Each agent has a rich detail page at /aixcelerator/agents/[slug].
+
+### MCP Servers (/aixcelerator/mcp)
+Model Context Protocol server integrations with capabilities, authentication methods, hosting options, compatibility, pricing, and try-it-now links. Detail pages at /aixcelerator/mcp/[slug].
+
+### Skills (/aixcelerator/skills)
+Reusable AI capabilities with category, provider, prerequisites, models supported, and linked agents/MCP servers/use cases. Detail pages at /aixcelerator/skills/[slug].
+
+### Use Cases (/use-cases)
+Structured business scenarios with problem statements, approaches, outcomes, metrics, implementation steps, and linked agents/skills. Detail pages at /use-cases/[slug].
+
+### Podcasts (/resources/podcasts)
+Audio content with full transcripts, timestamps, company tags, engagement metrics, and platform links (Apple, Spotify, YouTube). Detail pages at /resources/podcasts/[slug]. Company-filtered archives at /resources/podcasts/company?slug=[company]. Tag-filtered pages at /resources/podcasts/tag/[tag].
+
+### Articles (/resources/articles)
+CMS-backed editorial content with rich text blocks, author attribution, and category classification. Detail pages at /resources/articles/[slug].
+
+### Books (/resources/books)
+Enterprise reference material and delivery artifacts.
+
+### Case Studies (/resources/case-studies)
+Outcome stories with client context, challenge, solution, measurable outcomes, and implementation timeline.
+
+### White Papers (/resources/white-papers)
+Technical guidance, reference architectures, and governance frameworks.
+
+## Discovery surfaces
+
+- /: Platform homepage with latest signals across all content types
+- /aixcelerator: Platform hub with capabilities overview
+- /search?q=[query]: Full-text search across all content types
+- /assistant: Discovery assistant with guided prompts
+- /industries: Industry-specific workspaces (Agriculture, Energy, Utilities, Healthcare, Climate Tech, Manufacturing, Fintech, Supply Chain)
+- /solutions: Packaged offerings and reusable delivery patterns
+- /updates: Product releases, ecosystem signals, and AI news briefings
+- /resources: Resource hub linking all content types
+
+## Machine-readable data
+
+- /sitemap.xml: Dynamic sitemap with all published content URLs
+- /robots.txt: Crawling directives
+- /llms-full.txt: Complete content index with summaries (when available)
+- All detail pages include Schema.org JSON-LD structured data
+- All pages include Open Graph and Twitter Card meta tags
+
+## API and structured data
+
+Content is managed via Strapi CMS with REST API. All catalog pages support filtering by industry, status, source, visibility, and tags. Sorting options include trending (engagement-weighted), latest, and alphabetical.
 
 ## Contact
 - info@colaberry.com
+- Demo requests: /request-demo

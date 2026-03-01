@@ -23,6 +23,8 @@ const STATIC_ROUTES: Array<{ path: string; changefreq: SitemapUrl["changefreq"];
   { path: "/aixcelerator/mcp", changefreq: "daily", priority: "0.9" },
   { path: "/aixcelerator/skills", changefreq: "daily", priority: "0.9" },
   { path: "/use-cases", changefreq: "daily", priority: "0.8" },
+  { path: "/assistant", changefreq: "weekly", priority: "0.7" },
+  { path: "/search", changefreq: "weekly", priority: "0.7" },
   { path: "/industries", changefreq: "weekly", priority: "0.8" },
   { path: "/solutions", changefreq: "weekly", priority: "0.8" },
   { path: "/resources", changefreq: "daily", priority: "0.8" },
@@ -33,6 +35,8 @@ const STATIC_ROUTES: Array<{ path: string; changefreq: SitemapUrl["changefreq"];
   { path: "/resources/articles", changefreq: "daily", priority: "0.8" },
   { path: "/updates", changefreq: "daily", priority: "0.8" },
   { path: "/request-demo", changefreq: "monthly", priority: "0.6" },
+  { path: "/privacy-policy", changefreq: "monthly", priority: "0.4" },
+  { path: "/cookie-policy", changefreq: "monthly", priority: "0.4" },
 ];
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {

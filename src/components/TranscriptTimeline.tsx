@@ -73,16 +73,16 @@ export default function TranscriptTimeline({ segments, audioRef }: TranscriptTim
             onClick={() => handleSeek(segment.start)}
             aria-label={`Jump to ${formatTime(segment.start)}`}
             aria-current={isActive ? "true" : undefined}
-            className={`focus-ring group flex w-full items-start gap-3 rounded-2xl border px-4 py-3 text-left transition ${
+            className={`focus-ring group flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-left transition ${
               isActive
-                ? "border-brand-blue/50 bg-brand-blue/5"
-                : "border-slate-200/80 bg-white/80 hover:border-brand-blue/30"
+                ? "border-brand-purple-600/50 bg-brand-purple-600/5"
+                : "border-zinc-200/80 bg-white/80 hover:border-brand-purple-600/30"
             }`}
           >
-            <span className="mt-0.5 shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            <span className="mt-0.5 shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
               {formatTime(segment.start)}
             </span>
-            <span className="text-sm text-slate-700">{segment.text}</span>
+            <span className="text-sm text-zinc-700">{segment.text}</span>
           </button>
         );
       })}

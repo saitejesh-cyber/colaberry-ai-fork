@@ -1,15 +1,15 @@
+import CatalogSearchBox from "../../components/CatalogSearchBox";
 import MCPCard from "../../components/MCPCard";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
-import MediaPanel from "../../components/MediaPanel";
 import StatePanel from "../../components/StatePanel";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GetStaticProps } from "next";
 import { fetchMCPServers, MCPServer } from "../../lib/cms";
-import { heroImage } from "../../lib/media";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
 
 type MCPPageProps = {
   mcps: MCPServer[];
@@ -45,25 +45,6 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
     allowPrivate ? "all" : "public"
   );
   const [sortMode, setSortMode] = useState<MCPSortMode>("trending");
-  const mcpHighlights = [
-    {
-      title: "Connector patterns",
-      description: "Standardize endpoints, auth types, and scopes across tools.",
-    },
-    {
-      title: "Deployment status",
-      description: "Track ready, beta, or experimental servers in one view.",
-    },
-    {
-      title: "Source traceability",
-      description: "Internal, partner, or external provenance with ownership context.",
-    },
-    {
-      title: "Observability hooks",
-      description: "Reliability and usage signals from every endpoint.",
-    },
-  ];
-  const mcpSignals = ["TLS-ready", "Auth-ready", "Rate-limited", "Docs linked"];
   const [search, setSearch] = useState<string | null>(null);
   const [industryFilter, setIndustryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -110,10 +91,15 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
     return acc;
   }, {});
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai";
-  const canonicalUrl = `${siteUrl}/aixcelerator/mcp`;
   const metaTitle = "MCP Servers Catalog | Colaberry AI";
   const metaDescription =
     "Browse MCP servers with connector patterns, auth readiness, and industry alignment-structured for SEO and LLM discovery.";
+  const seoMeta: SeoMeta = {
+    title: metaTitle,
+    description: metaDescription,
+    canonical: buildCanonical("/aixcelerator/mcp"),
+  };
+  const canonicalUrl = seoMeta.canonical!;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -181,13 +167,10 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
   return (
     <Layout>
       <Head>
-        <title>{metaTitle}</title>
-        <meta name="description" content={metaDescription} />
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={canonicalUrl} />
-        <link rel="canonical" href={canonicalUrl} />
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
 
@@ -219,63 +202,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
             title="MCP Servers"
             description="A curated MCP server library for connecting agents to business apps, data, and developer tools-with public and private options for secure deployment."
           />
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {mcpHighlights.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm"
-              >
-                <div className="text-sm font-semibold text-slate-900">{item.title}</div>
-                <div className="mt-1 text-xs text-slate-600">{item.description}</div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
-            {mcpSignals.map((signal) => (
-              <span
-                key={signal}
-                className="chip rounded-full border border-slate-200/80 bg-white px-3 py-1 font-semibold"
-              >
-                {signal}
-              </span>
-            ))}
-          </div>
-          <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
-              Marketplace intent
-            </div>
-            <div className="mt-2 text-sm font-semibold text-slate-900">
-              Connector-ready, searchable, and LLM-friendly
-            </div>
-            <p className="mt-1 text-xs text-slate-600">
-              MCP servers are indexed with auth patterns, visibility, and industry coverage so
-              teams and LLMs can discover integrations faster.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Link
-                href="/aixcelerator/agents"
-                className="btn btn-secondary btn-compact"
-              >
-                Explore agents
-              </Link>
-              <Link
-                href="/resources/white-papers"
-                className="btn btn-ghost btn-compact"
-              >
-                Read integration guides
-              </Link>
-            </div>
-          </div>
         </div>
-        <MediaPanel
-          kicker="Integration preview"
-          title="Connector-ready surface"
-          description="Standardize tool access with MCP server patterns and endpoints."
-          image={heroImage("hero-mcp-cinematic.webp")}
-          alt="MCP integration network overview"
-          aspect="wide"
-          fit="cover"
-        />
       </div>
 
       <section className="surface-panel mt-6 p-5">
@@ -302,31 +229,6 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
 
       <section className="surface-panel mt-6 p-6">
         <SectionHeader
-          kicker="Discovery signals"
-          title="Latest and trending MCP servers"
-          description="Monitor newest entries and high-interest connectors before diving into the full catalog."
-          size="md"
-        />
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <SignalRail
-            title="Latest additions"
-            description="Most recently updated server profiles."
-            items={latestMCPs}
-            emptyText="No recently updated MCP entries available."
-            detailType="latest"
-          />
-          <SignalRail
-            title="Trending now"
-            description="Servers with stronger usage, quality, and freshness signals."
-            items={trendingMCPs}
-            emptyText="Trending signals will appear after more MCP activity is recorded."
-            detailType="trending"
-          />
-        </div>
-      </section>
-
-      <section className="surface-panel mt-8 p-6">
-        <SectionHeader
           kicker="Filters"
           title="Search and filter"
           description="Find MCP servers by industry, status, tags, and visibility."
@@ -348,12 +250,12 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                   setSearch(event.target.value);
                   setVisibleCount(pageSize);
                 }}
-                className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2 pr-11 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:placeholder:text-slate-500"
+                className="w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2 pr-11 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200 dark:placeholder:text-zinc-500"
               />
               <svg
                 aria-hidden="true"
                 viewBox="0 0 24 24"
-                className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-brand-teal opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100"
+                className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -tranzinc-y-1/2 text-brand-teal opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100"
                 fill="none"
               >
                 <path
@@ -381,7 +283,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                 setIndustryFilter(event.target.value);
                 setVisibleCount(pageSize);
               }}
-              className="w-full rounded-full border border-slate-200/80 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+              className="w-full rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
             >
               <option value="all">All industries</option>
               {industries.map((industry) => (
@@ -402,7 +304,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                 setStatusFilter(event.target.value);
                 setVisibleCount(pageSize);
               }}
-              className="w-full rounded-full border border-slate-200/80 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+              className="w-full rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
             >
               <option value="all">All statuses</option>
               {statuses.map((status) => (
@@ -423,7 +325,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                 setSourceFilter(event.target.value);
                 setVisibleCount(pageSize);
               }}
-              className="w-full rounded-full border border-slate-200/80 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+              className="w-full rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
             >
               <option value="all">All sources</option>
               {sources.map((source) => (
@@ -445,7 +347,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                   setTagFilter(event.target.value);
                   setVisibleCount(pageSize);
                 }}
-                className="w-full rounded-full border border-slate-200/80 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200"
+                className="w-full rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm focus:border-[#4F2AA3]/40 focus:outline-none focus:ring-2 focus:ring-[#4F2AA3]/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
               >
                 <option value="all">All tags</option>
                 {tagOptions.map((tag) => (
@@ -458,7 +360,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
           )}
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-300">
+          <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
             Sort
           </span>
           {(
@@ -478,7 +380,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                   setVisibleCount(pageSize);
                 }}
                 aria-pressed={active}
-                className={`chip focus-ring rounded-full px-3 py-1 text-xs font-semibold ${
+                className={`chip focus-ring rounded-md px-3 py-1 text-xs font-semibold ${
                   active ? "chip-brand" : "chip-muted"
                 }`}
               >
@@ -500,7 +402,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                     setVisibleCount(pageSize);
                   }}
                   aria-pressed={active}
-                  className={`chip focus-ring rounded-full px-3 py-1 text-xs font-semibold ${
+                  className={`chip focus-ring rounded-md px-3 py-1 text-xs font-semibold ${
                     active ? "chip-brand" : "chip-muted"
                   }`}
                 >
@@ -510,7 +412,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
             })}
           </div>
         )}
-        <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500" aria-live="polite">
+        <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-500" aria-live="polite">
           Showing {shownCount} of {sortedMCPs.length} (catalog {scopedMCPs.length})
         </div>
       </section>
@@ -542,13 +444,15 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
               Load more MCP servers
             </button>
           ) : (
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <div className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
               End of results
             </div>
           )
         ) : null}
         <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
       </div>
+
+      <CatalogSearchBox placeholder="Search MCP servers or ask a question..." />
     </Layout>
   );
 }
@@ -716,11 +620,11 @@ function SignalRail({
   detailType: "latest" | "trending";
 }) {
   return (
-    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{description}</p>
+    <article className="card-elevated p-5">
+      <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{title}</div>
+      <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{description}</p>
       {items.length === 0 ? (
-        <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">{emptyText}</p>
+        <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{emptyText}</p>
       ) : (
         <ul className="mt-3 grid gap-2">
           {items.map((item) => {
@@ -736,10 +640,10 @@ function SignalRail({
               <li key={item.slug || item.id}>
                 <Link
                   href={`/aixcelerator/mcp/${item.slug || item.id}`}
-                  className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-blue/30 hover:text-brand-deep"
+                  className="card-elevated group flex items-center justify-between px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200"
                 >
                   <span className="truncate pr-3">{item.name}</span>
-                  <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 group-hover:text-brand-deep">
+                  <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-zinc-500 group-hover:text-brand-deep dark:text-zinc-400">
                     {detail}
                   </span>
                 </Link>
@@ -754,10 +658,10 @@ function SignalRail({
 
 function Stat({ title, value, note }: { title: string; value: string; note: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
-      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</div>
-      <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
-      <div className="mt-1 text-xs text-slate-600">{note}</div>
+    <div className="card-elevated p-4">
+      <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{title}</div>
+      <div className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{value}</div>
+      <div className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{note}</div>
     </div>
   );
 }

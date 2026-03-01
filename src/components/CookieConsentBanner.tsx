@@ -67,15 +67,15 @@ export default function CookieConsentBanner() {
       {showBanner ? (
         <section
           aria-label="Cookie consent"
-          className="fixed inset-x-0 bottom-0 z-[80] border-t border-slate-200/80 bg-white/98 shadow-[0_-18px_42px_rgba(15,23,42,0.15)] backdrop-blur dark:border-slate-700 dark:bg-slate-950/96"
+          className="fixed inset-x-0 bottom-0 z-[80] border-t border-zinc-200/80 bg-white/98 shadow-[0_-18px_42px_rgba(15,23,42,0.15)] backdrop-blur dark:border-zinc-700 dark:bg-zinc-950/96"
         >
           <div className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
             <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
-                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                   We use cookies for analytics, advertising, and site reliability.
                 </p>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
                   You can accept all, keep essential only, or customize preferences. See{" "}
                   <Link href="/privacy-policy" className="font-semibold text-brand-deep underline underline-offset-4">
                     Privacy Policy
@@ -91,21 +91,21 @@ export default function CookieConsentBanner() {
                 <button
                   type="button"
                   onClick={() => setPreferencesOpen((value) => !value)}
-                  className="focus-ring inline-flex h-10 items-center rounded-full border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-brand-blue/45 hover:text-brand-deep dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                  className="focus-ring inline-flex h-10 items-center rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-brand-purple-600/45 hover:text-brand-deep dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200"
                 >
                   Cookie preferences
                 </button>
                 <button
                   type="button"
                   onClick={() => savePreferences({ analytics: false, marketing: false })}
-                  className="focus-ring inline-flex h-10 items-center rounded-full border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                  className="focus-ring inline-flex h-10 items-center rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200"
                 >
                   Essential only
                 </button>
                 <button
                   type="button"
                   onClick={() => savePreferences({ analytics: true, marketing: true })}
-                  className="btn btn-primary h-10 px-4 text-sm"
+                  className="btn btn-cta h-10 px-4 text-sm"
                 >
                   Accept cookies
                 </button>
@@ -113,49 +113,49 @@ export default function CookieConsentBanner() {
             </div>
 
             {preferencesOpen ? (
-              <div className="mt-3 rounded-2xl border border-slate-200/80 bg-slate-50/95 p-4 dark:border-slate-700 dark:bg-slate-900/80">
+              <div className="mt-3 rounded-lg border border-zinc-200/80 bg-zinc-50/95 p-4 dark:border-zinc-700 dark:bg-zinc-900/80">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/90">
-                    <input type="checkbox" checked disabled className="mt-1 h-4 w-4 rounded border-slate-300" />
+                  <label className="flex items-start gap-3 rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900/90">
+                    <input type="checkbox" checked disabled className="mt-1 h-4 w-4 rounded border-zinc-300" />
                     <span>
-                      <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                         Essential cookies
                       </span>
-                      <span className="mt-1 block text-xs text-slate-600 dark:text-slate-300">
+                      <span className="mt-1 block text-xs text-zinc-600 dark:text-zinc-300">
                         Required for security, navigation, and core functionality.
                       </span>
                     </span>
                   </label>
 
-                  <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/90">
+                  <label className="flex items-start gap-3 rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900/90">
                     <input
                       type="checkbox"
                       checked={analyticsEnabled}
                       onChange={(event) => setAnalyticsEnabled(event.target.checked)}
-                      className="mt-1 h-4 w-4 rounded border-slate-300"
+                      className="mt-1 h-4 w-4 rounded border-zinc-300"
                     />
                     <span>
-                      <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                         Analytics cookies
                       </span>
-                      <span className="mt-1 block text-xs text-slate-600 dark:text-slate-300">
+                      <span className="mt-1 block text-xs text-zinc-600 dark:text-zinc-300">
                         Help us measure page usage and improve product quality.
                       </span>
                     </span>
                   </label>
 
-                  <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/90 sm:col-span-2">
+                  <label className="flex items-start gap-3 rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900/90 sm:col-span-2">
                     <input
                       type="checkbox"
                       checked={marketingEnabled}
                       onChange={(event) => setMarketingEnabled(event.target.checked)}
-                      className="mt-1 h-4 w-4 rounded border-slate-300"
+                      className="mt-1 h-4 w-4 rounded border-zinc-300"
                     />
                     <span>
-                      <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                         Advertising cookies
                       </span>
-                      <span className="mt-1 block text-xs text-slate-600 dark:text-slate-300">
+                      <span className="mt-1 block text-xs text-zinc-600 dark:text-zinc-300">
                         Support relevant campaign attribution and ad personalization.
                       </span>
                     </span>
@@ -165,14 +165,14 @@ export default function CookieConsentBanner() {
                   <button
                     type="button"
                     onClick={() => setPreferencesOpen(false)}
-                    className="focus-ring inline-flex h-9 items-center rounded-full border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                    className="focus-ring inline-flex h-9 items-center rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={() => savePreferences({ analytics: analyticsEnabled, marketing: marketingEnabled })}
-                    className="btn btn-primary h-9 px-4 text-sm"
+                    className="btn btn-cta h-9 px-4 text-sm"
                   >
                     Save preferences
                   </button>
@@ -188,7 +188,7 @@ export default function CookieConsentBanner() {
           type="button"
           onClick={() => setPreferencesOpen(true)}
           title={summary}
-          className="focus-ring fixed bottom-5 right-5 z-[70] inline-flex h-10 items-center rounded-full border border-slate-300 bg-white/95 px-4 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 shadow-md backdrop-blur transition hover:border-brand-blue/50 hover:text-brand-deep dark:border-slate-600 dark:bg-slate-950/95 dark:text-slate-200"
+          className="focus-ring fixed bottom-5 right-5 z-[70] inline-flex h-10 items-center rounded-lg border border-zinc-300 bg-white/95 px-4 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-700 shadow-md backdrop-blur transition hover:border-brand-purple-600/50 hover:text-brand-deep dark:border-zinc-600 dark:bg-zinc-950/95 dark:text-zinc-200"
           aria-label="Open cookie preferences"
         >
           Cookie preferences

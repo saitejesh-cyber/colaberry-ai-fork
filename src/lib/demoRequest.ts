@@ -9,6 +9,12 @@ export type DemoRequestInput = {
   website?: string;
   sourcePage?: string;
   sourcePath?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+  referrer?: string;
 };
 
 export type DemoRequestResponse = {

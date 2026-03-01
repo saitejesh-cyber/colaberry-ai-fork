@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Head from "next/head";
 import type { GetStaticProps } from "next";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import SectionHeader from "../components/SectionHeader";
 import {
   fetchAgents,
@@ -18,6 +18,7 @@ import {
   type UseCase,
 } from "../lib/cms";
 import { heroImage } from "../lib/media";
+import { seoTags, type SeoMeta } from "../lib/seo";
 
 type HomePodcastSignal = {
   id: number;
@@ -25,6 +26,9 @@ type HomePodcastSignal = {
   title: string;
   publishedDate: string | null;
   podcastType?: string | null;
+  coverImageUrl?: string | null;
+  duration?: string | null;
+  episodeNumber?: number | null;
 };
 
 type HomeAgentSignal = {
@@ -79,14 +83,14 @@ type HomeProps = {
 
 export default function Home({
   latestPodcasts,
-  trendingPodcasts,
   latestAgents,
-  trendingAgents,
   latestSkills,
-  trendingSkills,
   latestUseCases,
-  trendingUseCases,
   latestMCPs,
+  trendingPodcasts,
+  trendingAgents,
+  trendingSkills,
+  trendingUseCases,
   trendingMCPs,
 }: HomeProps) {
   const industries = [
@@ -102,129 +106,6 @@ export default function Home({
     { name: "Manufacturing", slug: "manufacturing", icon: "factory" as const },
     { name: "Fintech", slug: "fintech", icon: "truck" as const },
     { name: "Supply Chain", slug: "supply-chain", icon: "truck" as const },
-  ];
-
-  const rootIndustries = [
-    "Agriculture",
-    "Utilities",
-    "Oil & Gas",
-    "Biotech",
-    "Manufacturing",
-    "Supply Chain",
-  ];
-
-  const heroTags = [
-    "Agents",
-    "MCP servers",
-    "Skills",
-    "Podcasts",
-    "Case studies",
-    "Books",
-    "Use cases",
-    "Playbooks",
-    "Articles",
-    "Integrations",
-  ];
-
-  const heroSignals = [
-    {
-      title: "Governed rollout",
-      description: "Ownership, status, and readiness signals for every agent deployment.",
-      href: "/aixcelerator/agents",
-    },
-    {
-      title: "Connector-ready MCP",
-      description: "Standardized MCP servers mapped to tools and workflows.",
-      href: "/aixcelerator/mcp",
-    },
-    {
-      title: "Reusable skills",
-      description: "Capability units covering official, workflow, and orchestration tasks.",
-      href: "/aixcelerator/skills",
-    },
-    {
-      title: "Industry workspaces",
-      description: "Outcome-driven case studies and domain-aligned playbooks.",
-      href: "/industries",
-    },
-    {
-      title: "Knowledge signals",
-      description: "Podcasts, white papers, and updates in one discovery layer.",
-      href: "/resources",
-    },
-    {
-      title: "Trust-first research",
-      description: "Foundational principles that guide responsible AI delivery.",
-      href: "/resources/books#trust-before-intelligence",
-    },
-  ];
-
-  const heroKpis = [
-    {
-      label: "Catalog coverage",
-      value: "Agents + MCP + Skills",
-      note: "Unified discovery layer for operations and integration teams.",
-    },
-    {
-      label: "Governance posture",
-      value: "Enterprise",
-      note: "Ownership, verification, and deployment context tracked.",
-    },
-    {
-      label: "Knowledge surface",
-      value: "Resources + Updates",
-      note: "Signals from podcasts, research, and AI news briefings.",
-    },
-  ];
-
-  const heroSlides = [
-    {
-      eyebrow: "Agents",
-      title: "Agent operations radar",
-      description: "Track ownership, readiness, and evaluation signals in one view.",
-      image: heroImage("hero-agents-cinematic.webp"),
-      highlight: "Ownership + evals",
-      href: "/aixcelerator/agents",
-    },
-    {
-      eyebrow: "MCP",
-      title: "Integration surface map",
-      description: "Connect tools with standardized MCP server templates and patterns.",
-      image: heroImage("hero-mcp-cinematic.webp"),
-      highlight: "Connector-ready",
-      href: "/aixcelerator/mcp",
-    },
-    {
-      eyebrow: "Knowledge",
-      title: "Unified knowledge signals",
-      description: "Podcasts, white papers, and updates organized for fast discovery.",
-      image: heroImage("hero-resources-cinematic.webp"),
-      highlight: "Curated signals",
-      href: "/resources",
-    },
-  ];
-
-  const pillars = [
-    {
-      title: "Discoverable",
-      description: "Every asset is indexed with owners, status, and readiness signals.",
-    },
-    {
-      title: "Categorized",
-      description: "Industry and solution tags keep automation patterns easy to explore.",
-    },
-    {
-      title: "Searchable",
-      description: "Unified search across agents, MCPs, podcasts, and updates.",
-    },
-    {
-      title: "LLM-readable",
-      description: "Structured metadata and summaries ready for agent consumption.",
-    },
-    {
-      title: "Extensible",
-      description: "Add new catalogs, workflows, and automations without rework.",
-    },
   ];
 
   const catalogs = [
@@ -257,13 +138,6 @@ export default function Home({
       image: heroImage("hero-solutions-cinematic.webp"),
     },
     {
-      href: "/resources/case-studies",
-      title: "Case studies",
-      description: "Outcome stories with measurable impact and context.",
-      meta: "Outcomes",
-      image: heroImage("hero-platform-cinematic.webp"),
-    },
-    {
       href: "/resources/podcasts",
       title: "Podcasts + narratives",
       description: "Audio insights, transcripts, and linked artifacts.",
@@ -277,52 +151,25 @@ export default function Home({
       meta: "Books",
       image: heroImage("hero-industries-cinematic.webp"),
     },
-    {
-      href: "/resources/white-papers",
-      title: "Research & POVs",
-      description: "Technical guidance, white papers, and decision frameworks.",
-      meta: "Research",
-      image: heroImage("hero-industries-cinematic.webp"),
-    },
-    {
-      href: "/updates",
-      title: "Signals & updates",
-      description: "Product news, experiments, and ecosystem signals.",
-      meta: "Updates",
-      image: heroImage("hero-updates-cinematic.webp"),
-    },
   ];
 
   const platformFeatures = [
-    {
-      title: "Agents & assistants catalog",
-      description: "Adopt agents with clear ownership, status, and workflow alignment-ready for rollout.",
-    },
-    {
-      title: "MCP integration library",
-      description: "Standardize tool access via MCP with integration-ready server patterns and endpoints.",
-    },
-    {
-      title: "Observability + evaluation",
-      description: "Track outcomes and failures, then close the loop with evals to improve reliability.",
-    },
-    {
-      title: "Security by design",
-      description: "Access controls, data boundaries, and governance workflows designed for enterprise.",
-    },
-    {
-      title: "Industry workspaces",
-      description: "Bring domain context into delivery with repeatable playbooks and patterns.",
-    },
-    {
-      title: "Developer control",
-      description: "Use a clean platform surface that supports code-level control with faster patterns when needed.",
-    },
+    { title: "Agents & assistants catalog", description: "Adopt agents with clear ownership, status, and workflow alignment — ready for rollout." },
+    { title: "MCP integration library", description: "Standardize tool access via MCP with integration-ready server patterns and endpoints." },
+    { title: "Observability + evaluation", description: "Track outcomes and failures, then close the loop with evals to improve reliability." },
+    { title: "Security by design", description: "Access controls, data boundaries, and governance workflows designed for enterprise." },
+    { title: "Industry workspaces", description: "Bring domain context into delivery with repeatable playbooks and patterns." },
+    { title: "Developer control", description: "Use a clean platform surface that supports code-level control with faster patterns when needed." },
   ];
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai";
   const metaDescription =
     "Colaberry AI is a marketplace and destination for AI agents, MCP servers, skills, podcasts, case studies, and trusted research-built for SEO and LLM indexing.";
+  const seoMeta: SeoMeta = {
+    title: "Colaberry AI | The go-to destination for agents, MCPs, and AI knowledge",
+    description: metaDescription,
+    canonical: siteUrl,
+  };
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -348,451 +195,151 @@ export default function Home({
   return (
     <Layout>
       <Head>
-        <title>Colaberry AI | The go-to destination for agents, MCPs, and AI knowledge</title>
-        <meta name="description" content={metaDescription} />
-        <meta property="og:title" content="Colaberry AI | The go-to destination for agents, MCPs, and AI knowledge" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={siteUrl} />
-        <link rel="canonical" href={siteUrl} />
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
-      <section className="hero-surface rise-in p-6 sm:p-8 lg:p-10">
-        <div className="mb-6 rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/72">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300">
-                Enterprise discovery surface
-              </div>
-              <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
-                Unified catalog for agents, MCP servers, skills, use cases, podcasts, and updates with governance-ready metadata.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Link href="/aixcelerator" className="btn btn-secondary btn-sm">
-                Open platform
-              </Link>
-              <Link href="/resources" className="btn btn-secondary btn-sm">
-                Explore resources
-              </Link>
-            </div>
-          </div>
+      {/* ---- Hero (together.ai-inspired dark animated hero) ---- */}
+      <section className="relative overflow-hidden rounded-2xl" style={{ background: "var(--gradient-hero)" }}>
+        {/* Animated gradient mesh background */}
+        <div className="hero-gradient-mesh" aria-hidden="true">
+          <div className="hero-orb hero-orb-1" />
+          <div className="hero-orb hero-orb-2" />
+          <div className="hero-orb hero-orb-3" />
+          <div className="hero-orb hero-orb-center" />
         </div>
-        <HeroBannerSlider slides={heroSlides} rootIndustries={rootIndustries} />
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-          <section className="surface-panel p-5 lg:p-6">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
-              Operational snapshot
-            </div>
-            <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-              Enterprise readiness at a glance
-            </div>
+        {/* Subtle grid overlay */}
+        <div className="animated-signal-grid pointer-events-none absolute inset-0 opacity-[0.07]" aria-hidden="true" />
 
-            <div className="mt-4 grid gap-3">
-              {heroKpis.map((kpi) => (
-                <div
-                  key={kpi.label}
-                  className="rounded-2xl border border-slate-200/80 bg-white/85 p-3 shadow-sm dark:border-slate-700/80"
-                >
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 dark:text-slate-300">
-                    {kpi.label}
-                  </div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{kpi.value}</div>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">{kpi.note}</p>
-                </div>
-              ))}
-            </div>
+        {/* Radial vignette for depth */}
+        <div className="hero-vignette" aria-hidden="true" />
 
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <Link href="/request-demo" className="btn btn-primary">
-                Request a demo
-              </Link>
-              <Link href="/resources" className="btn btn-secondary">
-                Explore the catalog
-              </Link>
-            </div>
-          </section>
+        {/* Content — centered layout */}
+        <div className="relative z-10 mx-auto max-w-4xl px-8 py-24 text-center sm:py-32 lg:py-40">
+          <div
+            className="rise-in rise-delay-1 kicker-chip mx-auto inline-flex rounded-full px-4 py-1.5 tracking-[0.2em]"
+            style={{ borderColor: "rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#FAFAFA" }}
+          >
+            <span className="kicker-chip-dot" />
+            Enterprise AI Platform
+          </div>
 
-          <div className="space-y-6">
-            <section className="surface-panel p-5 lg:p-6">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
-                Search the catalog
-              </div>
-              <label htmlFor="catalog-search" className="sr-only">
-                Search
-              </label>
-              <form action="/search" method="get" role="search" className="mt-3 flex flex-col gap-2 sm:flex-row">
-                <input
-                  id="catalog-search"
-                  name="q"
-                  type="search"
-                  placeholder="Search agents, MCP servers, podcasts, use cases..."
-                  aria-describedby="catalog-search-help"
-                  className="w-full rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-slate-700 dark:bg-slate-900/75 dark:text-slate-100 dark:placeholder:text-slate-500"
-                />
-                <button type="submit" className="btn btn-primary btn-sm">
-                  Search
-                </button>
-              </form>
-              <p id="catalog-search-help" className="mt-2 text-xs text-slate-500 dark:text-slate-300">
-                Search spans agents, MCP servers, podcasts, and case studies.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600 dark:text-slate-300">
-                {heroTags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="chip rounded-full border border-slate-200/80 bg-white px-3 py-1 font-semibold"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </section>
+          <h1 className="rise-in rise-delay-2 mt-6 font-sans text-display-lg font-bold text-white sm:text-display-xl lg:text-display-2xl">
+            Discover, govern, and scale{" "}
+            <span className="text-gradient">enterprise AI</span>
+          </h1>
 
-            <section className="surface-panel p-5 lg:p-6">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
-                Proof signals
-              </div>
-              <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                What leaders see at a glance
-              </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {heroSignals.map((signal) => (
-                  (() => {
-                    const isExternal = signal.href.startsWith("http");
-                    const content = (
-                      <>
-                        <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{signal.title}</div>
-                        <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">{signal.description}</div>
-                        <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-deep">
-                          Explore <span aria-hidden="true">→</span>
-                        </div>
-                      </>
-                    );
+          <p className="rise-in rise-delay-3 mx-auto mt-6 max-w-2xl text-body-lg leading-relaxed text-zinc-400">
+            A unified catalog where teams discover, evaluate, and deploy AI agents, MCP servers, skills, and research — governed and structured for both people and LLMs.
+          </p>
 
-                    if (isExternal) {
-                      return (
-                        <a
-                          key={signal.title}
-                          href={signal.href}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="group rounded-2xl border border-slate-200/80 bg-white/90 p-3 transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-sm dark:border-slate-700/80"
-                          aria-label={`Explore ${signal.title}`}
-                        >
-                          {content}
-                        </a>
-                      );
-                    }
-
-                    return (
-                      <Link
-                        key={signal.title}
-                        href={signal.href}
-                        className="group rounded-2xl border border-slate-200/80 bg-white/90 p-3 transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-sm dark:border-slate-700/80"
-                        aria-label={`Explore ${signal.title}`}
-                      >
-                        {content}
-                      </Link>
-                    );
-                  })()
-                ))}
-              </div>
-            </section>
+          <div className="rise-in mt-8 flex flex-wrap justify-center gap-4" style={{ animationDelay: "0.32s" }}>
+            <Link href="/request-demo" className="btn btn-cta">
+              Book a demo
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+            <Link
+              href="/aixcelerator"
+              className="btn"
+              style={{ borderColor: "rgba(255,255,255,0.2)", color: "#FAFAFA", background: "rgba(255,255,255,0.06)" }}
+            >
+              Explore platform
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="mt-12">
-        <SectionHeader
-          kicker="Discovery framework"
-          title="Everything is indexed, searchable, and structured for automation"
-          description="Build a destination where every asset is discoverable, categorized, and ready for LLM consumption."
-        />
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {pillars.map((pillar, index) => {
-            const delayClass = index === 0 ? "" : `rise-delay-${Math.min(index, 3)}`;
-            return (
-              <PillarCard
-                key={pillar.title}
-                title={pillar.title}
-                description={pillar.description}
-                index={index}
-                className={`rise-in ${delayClass}`.trim()}
-              />
-            );
-          })}
+      {/* ---- Trust metrics ---- */}
+      <section className="reveal section-spacing">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <AnimatedMetric value="8+" label="Industries served" note="Agriculture to fintech" delay={0} />
+          <AnimatedMetric value="100+" label="Agent profiles" note="Cataloged and governed" delay={150} />
+          <AnimatedMetric value="50+" label="MCP servers" note="Integration-ready connectors" delay={300} />
+          <AnimatedMetric value="200+" label="Skills indexed" note="Reusable capability units" delay={450} />
         </div>
       </section>
 
-      <section className="mt-12">
+      <hr className="section-divider" />
+
+      <section className="reveal section-spacing">
         <SectionHeader
           kicker="Explore the catalog"
           title="A structured destination for agents, MCPs, podcasts, and research"
           description="Give teams and LLMs a single place to discover, compare, and deploy intelligence."
         />
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="stagger-grid revealed mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {catalogs.map((catalog) => (
             <CatalogCard key={catalog.title} {...catalog} />
           ))}
         </div>
       </section>
 
-      <section className="mt-12 surface-panel p-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <SectionHeader
-            kicker="Latest podcasts"
-            title="Latest and trending podcast signals"
-            description="Recent episodes and high-engagement conversations to help teams evaluate agents, MCP integrations, and delivery patterns."
-          />
-          <Link href="/resources/podcasts" className="btn btn-primary mt-3 sm:mt-0">
-            Browse all podcasts
-          </Link>
-        </div>
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <PodcastRail
-            title="Latest episodes"
-            description="Most recently published episodes from the full archive."
-            items={latestPodcasts}
-            detailType="latest"
-          />
-          <PodcastRail
-            title="Trending episodes"
-            description="Higher-engagement episodes based on play, share, and view signals."
-            items={trendingPodcasts}
-            detailType="trending"
-          />
-        </div>
-      </section>
+      {/* ---- Signal Dashboard (tabbed consolidation) ---- */}
+      <SignalDashboard
+        latestAgents={latestAgents}
+        trendingAgents={trendingAgents}
+        latestSkills={latestSkills}
+        trendingSkills={trendingSkills}
+        latestMCPs={latestMCPs}
+        trendingMCPs={trendingMCPs}
+        latestPodcasts={latestPodcasts}
+        trendingPodcasts={trendingPodcasts}
+        latestUseCases={latestUseCases}
+        trendingUseCases={trendingUseCases}
+      />
 
-      <section className="mt-12 surface-panel p-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <SectionHeader
-            kicker="Agent signals"
-            title="Latest and trending agents"
-            description="Fresh agent profiles and high-interest assistants mapped to enterprise workflows."
-          />
-          <Link href="/aixcelerator/agents" className="btn btn-primary mt-3 sm:mt-0">
-            Open agent catalog
-          </Link>
-        </div>
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <AgentRail
-            title="Latest updates"
-            description="Most recently updated agent profiles."
-            items={latestAgents}
-            detailType="latest"
-          />
-          <AgentRail
-            title="Trending agents"
-            description="Stronger quality and usage signals."
-            items={trendingAgents}
-            detailType="trending"
-          />
-        </div>
-      </section>
-
-      <section className="mt-12 surface-panel p-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <SectionHeader
-            kicker="Skill signals"
-            title="Latest and trending skills"
-            description="Reusable capability units teams can link to agents, MCP servers, and workflow automation."
-          />
-          <Link href="/aixcelerator/skills" className="btn btn-primary mt-3 sm:mt-0">
-            Open skills catalog
-          </Link>
-        </div>
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <SkillRail
-            title="Latest updates"
-            description="Most recently updated skill profiles."
-            items={latestSkills}
-            detailType="latest"
-          />
-          <SkillRail
-            title="Trending skills"
-            description="Stronger quality and usage signals."
-            items={trendingSkills}
-            detailType="trending"
-          />
-        </div>
-      </section>
-
-      <section className="mt-12 surface-panel p-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <SectionHeader
-            kicker="Use case signals"
-            title="Latest and trending use cases"
-            description="Fresh outcome playbooks and high-interest deployment patterns."
-          />
-          <Link href="/use-cases" className="btn btn-primary mt-3 sm:mt-0">
-            Open use case catalog
-          </Link>
-        </div>
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <UseCaseRail
-            title="Latest updates"
-            description="Most recently updated use case profiles."
-            items={latestUseCases}
-            detailType="latest"
-          />
-          <UseCaseRail
-            title="Trending use cases"
-            description="Use cases with stronger linkage and delivery signals."
-            items={trendingUseCases}
-            detailType="trending"
-          />
-        </div>
-      </section>
-
-      <section className="mt-12 surface-panel p-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <SectionHeader
-            kicker="MCP signals"
-            title="Latest and trending MCP servers"
-            description="Fresh connector inventory and high-interest MCP servers mapped to enterprise workflows."
-          />
-          <Link href="/aixcelerator/mcp" className="btn btn-primary mt-3 sm:mt-0">
-            Open MCP catalog
-          </Link>
-        </div>
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <McpRail
-            title="Latest updates"
-            description="Most recently updated MCP profiles."
-            items={latestMCPs}
-            detailType="latest"
-          />
-          <McpRail
-            title="Trending servers"
-            description="Stronger quality and usage signals."
-            items={trendingMCPs}
-            detailType="trending"
-          />
-        </div>
-      </section>
-
-      <section className="mt-12 surface-panel p-6">
-        <SectionHeader
-          kicker="Operational outcomes"
-          title="Enterprise-ready from day one"
-          description="Governance, observability, and integrations built into the core platform."
-        />
-        <div className="mt-6 grid gap-6 sm:grid-cols-4">
-          <Stat title="Weeks to value" value="Fast" note="Start with ready templates" />
-          <Stat title="Deployments" value="Repeatable" note="Versioned and auditable" />
-          <Stat title="Integrations" value="Extensible" note="MCP-ready connectivity" />
-          <Stat title="Governance" value="Built-in" note="Policies and ownership" />
-        </div>
-      </section>
-
-      <section className="mt-12">
+      <section className="reveal section-spacing">
         <SectionHeader
           kicker="Platform capabilities"
           title="Everything teams need to build, govern, and scale AI"
           description="From cataloging agents to evaluating outcomes, the platform supports full lifecycle delivery."
         />
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="stagger-grid revealed mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {platformFeatures.map((feature) => (
             <FeatureCard key={feature.title} {...feature} />
           ))}
         </div>
       </section>
 
-      <section className="mt-12 surface-panel p-6">
+      <section className="reveal section-spacing surface-panel p-6 sm:p-8">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <SectionHeader
-              kicker="Connect your stack"
-              title="Integrations-ready from day one"
-              description="Build assistants that can act across your tools-using a standardized MCP surface."
-            />
-          </div>
-          <Link
-            href="/aixcelerator/mcp"
-            className="btn btn-secondary mt-3 sm:mt-0"
-          >
+          <SectionHeader
+            kicker="Connect your stack"
+            title="Integrations-ready from day one"
+            description="Build assistants that can act across your tools — using a standardized MCP surface."
+          />
+          <Link href="/aixcelerator/mcp" className="btn btn-secondary mt-3 sm:mt-0">
             Explore MCP servers
           </Link>
         </div>
-
         <div className="mt-5 flex flex-wrap gap-2">
-          {[
-            "Slack",
-            "Microsoft Teams",
-            "Google Drive",
-            "Salesforce",
-            "ServiceNow",
-            "Workday",
-            "Jira",
-            "Okta",
-            "Zendesk",
-            "Snowflake",
-            "AWS",
-            "GitHub",
-          ].map((name) => (
-            <span
-              key={name}
-              className="chip chip-muted rounded-full border border-slate-200/80 bg-white px-3 py-1 text-xs font-semibold text-slate-700"
-            >
+          {["Slack", "Microsoft Teams", "Google Drive", "Salesforce", "ServiceNow", "Workday", "Jira", "Okta", "Zendesk", "Snowflake", "AWS", "GitHub"].map((name) => (
+            <span key={name} className="chip chip-muted rounded-md px-3 py-1.5 text-xs font-medium">
               {name}
             </span>
           ))}
         </div>
       </section>
 
-      <section className="mt-12 surface-panel p-6 lg:grid lg:grid-cols-12 lg:gap-8">
-        <div className="lg:col-span-5">
-          <SectionHeader
-            kicker="Our vision"
-            title="A vibrant destination for people, LLMs, and agents"
-            description="We’re building a place where teams can discover, deploy, and improve agentic systems-while staying grounded in the industries we already serve today and the ones we’ll serve next."
-          />
-
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/aixcelerator"
-              className="btn btn-primary"
-            >
-              Explore AIXcelerator
-            </Link>
-            <Link
-              href="/industries/agriculture"
-              className="btn btn-secondary"
-            >
-              View industries
-            </Link>
-          </div>
-        </div>
-
-        <div className="mt-6 lg:col-span-7 lg:mt-0">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
-                Industry expertise
-              </div>
-              <div className="mt-1 text-sm font-semibold text-slate-900">
-                Proven success across industries
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {industries.map((item) => (
-              <IndustryTile
-                key={item.slug}
-                href={`/industries/${item.slug}`}
-                title={item.name}
-                icon={item.icon}
-              />
-            ))}
-          </div>
+      <section className="reveal section-spacing">
+        <SectionHeader
+          kicker="Industry expertise"
+          title="Proven success across industries"
+          description="Domain-specific playbooks and patterns for your sector."
+        />
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {industries.map((item) => (
+            <IndustryTile key={item.slug} href={`/industries/${item.slug}`} title={item.name} icon={item.icon} />
+          ))}
         </div>
       </section>
 
-      <section className="mt-12 surface-panel p-6">
+      <section className="reveal section-spacing surface-panel p-6 sm:p-8">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <SectionHeader
@@ -913,25 +460,128 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   };
 };
 
-function PillarCard({
-  title,
-  description,
-  index,
-  className,
+const SIGNAL_TABS = ["Agents", "Skills", "MCP", "Podcasts", "Use Cases"] as const;
+type SignalTab = (typeof SIGNAL_TABS)[number];
+
+function SignalDashboard({
+  latestAgents,
+  trendingAgents,
+  latestSkills,
+  trendingSkills,
+  latestMCPs,
+  trendingMCPs,
+  latestPodcasts,
+  trendingPodcasts,
+  latestUseCases,
+  trendingUseCases,
 }: {
-  title: string;
-  description: string;
-  index: number;
-  className?: string;
+  latestAgents: HomeAgentSignal[];
+  trendingAgents: HomeAgentSignal[];
+  latestSkills: HomeSkillSignal[];
+  trendingSkills: HomeSkillSignal[];
+  latestMCPs: HomeMcpSignal[];
+  trendingMCPs: HomeMcpSignal[];
+  latestPodcasts: HomePodcastSignal[];
+  trendingPodcasts: HomePodcastSignal[];
+  latestUseCases: HomeUseCaseSignal[];
+  trendingUseCases: HomeUseCaseSignal[];
 }) {
+  const [activeTab, setActiveTab] = useState<SignalTab>("Agents");
+
+  const onTabChange = useCallback((tab: SignalTab) => {
+    setActiveTab(tab);
+  }, []);
+
   return (
-    <div className={`surface-panel border border-slate-200/80 bg-white/90 p-5 ${className ?? ""}`.trim()}>
-      <div className="inline-flex rounded-full border border-brand-blue/25 bg-brand-blue/5 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-deep">
-        {String(index + 1).padStart(2, "0")}
+    <section className="reveal section-spacing">
+      <SectionHeader
+        kicker="Platform signals"
+        title="Latest and trending across the catalog"
+        description="Fresh profiles and high-interest items across agents, skills, MCP servers, podcasts, and use cases."
+      />
+
+      {/* Tab bar */}
+      <div
+        className="mt-6 flex gap-1 overflow-x-auto rounded-lg border border-[var(--stroke)] bg-[var(--surface-soft)] p-1"
+        role="tablist"
+        aria-label="Signal category tabs"
+      >
+        {SIGNAL_TABS.map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab}
+            aria-controls={`signal-panel-${tab}`}
+            id={`signal-tab-${tab}`}
+            className={`shrink-0 rounded-md px-4 py-2 text-sm font-semibold transition-all ${
+              activeTab === tab
+                ? "bg-white text-[var(--text-primary)] shadow-sm dark:bg-[var(--surface-strong)]"
+                : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+            }`}
+            onClick={() => onTabChange(tab)}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
-      <div className="mt-3 text-base font-semibold text-slate-900">{title}</div>
-      <div className="mt-1 text-sm leading-relaxed text-slate-600">{description}</div>
-    </div>
+
+      {/* Tab panels */}
+      <div className="mt-5">
+        {activeTab === "Agents" && (
+          <div role="tabpanel" id="signal-panel-Agents" aria-labelledby="signal-tab-Agents" className="grid gap-4 lg:grid-cols-2">
+            <AgentRail title="Latest agents" description="Most recently updated." items={latestAgents} detailType="latest" />
+            {trendingAgents.length > 0 && (
+              <AgentRail title="Trending agents" description="Highest rated and most used." items={trendingAgents} detailType="trending" />
+            )}
+          </div>
+        )}
+        {activeTab === "Skills" && (
+          <div role="tabpanel" id="signal-panel-Skills" aria-labelledby="signal-tab-Skills" className="grid gap-4 lg:grid-cols-2">
+            <SkillRail title="Latest skills" description="Most recently updated." items={latestSkills} detailType="latest" />
+            {trendingSkills.length > 0 && (
+              <SkillRail title="Trending skills" description="Highest rated and most used." items={trendingSkills} detailType="trending" />
+            )}
+          </div>
+        )}
+        {activeTab === "MCP" && (
+          <div role="tabpanel" id="signal-panel-MCP" aria-labelledby="signal-tab-MCP" className="grid gap-4 lg:grid-cols-2">
+            <McpRail title="Latest MCP servers" description="Most recently updated." items={latestMCPs} detailType="latest" />
+            {trendingMCPs.length > 0 && (
+              <McpRail title="Trending MCP servers" description="Highest rated and most used." items={trendingMCPs} detailType="trending" />
+            )}
+          </div>
+        )}
+        {activeTab === "Podcasts" && (
+          <div role="tabpanel" id="signal-panel-Podcasts" aria-labelledby="signal-tab-Podcasts">
+            {latestPodcasts.length > 0 && (
+              <div className="mb-4">
+                <FeaturedPodcastCard episode={latestPodcasts[0]} />
+              </div>
+            )}
+            <div className="grid gap-4 lg:grid-cols-2">
+              <PodcastRail title="Latest episodes" description="Most recently published." items={latestPodcasts} />
+              {trendingPodcasts.length > 0 && (
+                <PodcastRail title="Trending episodes" description="Most viewed and referenced." items={trendingPodcasts} />
+              )}
+            </div>
+            <div className="mt-4 text-center">
+              <Link href="/resources/podcasts" className="btn btn-secondary">
+                Browse all episodes
+              </Link>
+            </div>
+          </div>
+        )}
+        {activeTab === "Use Cases" && (
+          <div role="tabpanel" id="signal-panel-Use Cases" aria-labelledby="signal-tab-Use Cases" className="grid gap-4 lg:grid-cols-2">
+            <UseCaseRail title="Latest use cases" description="Most recently updated." items={latestUseCases} detailType="latest" />
+            {trendingUseCases.length > 0 && (
+              <UseCaseRail title="Trending use cases" description="Most referenced and linked." items={trendingUseCases} detailType="trending" />
+            )}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -951,10 +601,10 @@ function CatalogCard({
   return (
     <Link
       href={href}
-      className="surface-panel surface-hover surface-interactive group flex h-full min-h-[268px] flex-col overflow-hidden border border-slate-200/80 bg-white/90 p-0"
+      className="card-glass card-shimmer gradient-border group flex h-full min-h-[268px] flex-col overflow-hidden p-0"
       aria-label={`Open ${title}`}
     >
-      <div className="media-premium-frame border-0 border-b border-slate-200/80 rounded-none">
+      <div className="media-premium-frame border-0 border-b border-zinc-200/80 rounded-none">
         <div className="relative aspect-[16/10] w-full">
           <Image
             src={image}
@@ -966,7 +616,7 @@ function CatalogCard({
           />
           <div className="media-premium-overlay" />
           <div className="absolute left-3 top-3">
-            <div className="chip chip-muted rounded-full border border-slate-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-700">
+            <div className="chip chip-muted rounded-md border border-zinc-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:border-zinc-600 dark:bg-zinc-900/90 dark:text-zinc-200">
               {meta}
             </div>
           </div>
@@ -974,13 +624,66 @@ function CatalogCard({
       </div>
       <div className="flex flex-1 items-start justify-between gap-4 p-5">
         <div>
-          <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</div>
-          <div className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{description}</div>
+          <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</div>
+          <div className="mt-1 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">{description}</div>
         </div>
-        <div className="mt-0.5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
+        <div className="mt-0.5 text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
           <span aria-hidden="true">→</span>
         </div>
       </div>
+    </Link>
+  );
+}
+
+function FeaturedPodcastCard({ episode }: { episode: HomePodcastSignal }) {
+  const isExternal = (episode.podcastType || "internal").toLowerCase() === "external";
+  return (
+    <Link
+      href={`/resources/podcasts/${episode.slug}`}
+      className="group section-card flex flex-col gap-4 rounded-lg p-4 transition sm:flex-row sm:items-center"
+    >
+      {episode.coverImageUrl ? (
+        <div className="relative h-32 w-full shrink-0 overflow-hidden rounded-lg sm:h-24 sm:w-40">
+          <Image
+            src={episode.coverImageUrl}
+            alt={episode.title}
+            fill
+            className="object-cover"
+            unoptimized
+            loading="lazy"
+            sizes="(min-width: 640px) 160px, 100vw"
+          />
+        </div>
+      ) : (
+        <div className="flex h-32 w-full shrink-0 items-center justify-center rounded-lg bg-[#DC2626]/10 dark:bg-[#DC2626]/20 sm:h-24 sm:w-40">
+          <svg viewBox="0 0 24 24" className="h-8 w-8 text-[#DC2626]" fill="none" aria-hidden="true">
+            <path d="M9 18V5l12-2v13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="6" cy="18" r="3" stroke="currentColor" strokeWidth="2" />
+            <circle cx="18" cy="16" r="3" stroke="currentColor" strokeWidth="2" />
+          </svg>
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-deep dark:text-[#FAFAFA]">
+            Latest episode
+          </span>
+          <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-semibold leading-none ${isExternal ? "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300" : "bg-[#DC2626]/10 text-[#18181B] dark:bg-[#DC2626]/20 dark:text-[#FAFAFA]"}`}>
+            {isExternal ? "External" : "Colaberry"}
+          </span>
+        </div>
+        <h4 className="mt-1 line-clamp-2 text-base font-semibold text-zinc-900 group-hover:text-brand-deep dark:text-zinc-100">
+          {episode.title}
+        </h4>
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-zinc-500 dark:text-zinc-400">
+          {formatPodcastDate(episode.publishedDate) || "Date pending"}
+          {episode.duration ? <span>· {episode.duration}</span> : null}
+          {episode.episodeNumber ? <span>· Episode {episode.episodeNumber}</span> : null}
+        </div>
+      </div>
+      <span className="hidden shrink-0 text-zinc-400 transition-transform group-hover:translate-x-1 group-hover:text-brand-deep sm:block" aria-hidden="true">
+        →
+      </span>
     </Link>
   );
 }
@@ -989,45 +692,67 @@ function PodcastRail({
   title,
   description,
   items,
-  detailType,
 }: {
   title: string;
   description: string;
   items: HomePodcastSignal[];
-  detailType: "latest" | "trending";
 }) {
   return (
-    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{description}</p>
+    <article className="section-card rounded-lg p-5">
+      <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{title}</div>
+      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{description}</p>
       {items.length === 0 ? (
-        <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">
+        <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
           Podcast signals will appear after next content sync.
         </p>
       ) : (
-        <ul className="mt-3 grid gap-2">
-          {items.map((episode) => (
-            <li key={episode.slug}>
-              <Link
-                href={`/resources/podcasts/${episode.slug}`}
-                className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900/70"
-              >
-                <div className="min-w-0">
-                  <div className="line-clamp-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    {episode.title}
+        <ul className="mt-4 grid gap-2">
+          {items.map((episode) => {
+            const isExternal = (episode.podcastType || "internal").toLowerCase() === "external";
+            return (
+              <li key={episode.slug}>
+                <Link
+                  href={`/resources/podcasts/${episode.slug}`}
+                  className="group section-card flex items-center gap-3 rounded-lg px-3 py-2.5 transition"
+                >
+                  {episode.coverImageUrl ? (
+                    <Image
+                      src={episode.coverImageUrl}
+                      alt=""
+                      width={48}
+                      height={48}
+                      className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                      unoptimized
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#DC2626]/10 dark:bg-[#DC2626]/20">
+                      <svg viewBox="0 0 24 24" className="h-4 w-4 text-[#DC2626]" fill="none" aria-hidden="true">
+                        <path d="M9 18V5l12-2v13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <circle cx="6" cy="18" r="3" stroke="currentColor" strokeWidth="2" />
+                        <circle cx="18" cy="16" r="3" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <span className="line-clamp-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                      {episode.title}
+                    </span>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-zinc-500 dark:text-zinc-400">
+                      {formatPodcastDate(episode.publishedDate) || "Date pending"}
+                      {episode.duration ? <span>· {episode.duration}</span> : null}
+                      <span className={`inline-flex rounded-md px-1.5 py-0.5 text-[10px] font-semibold leading-none ${isExternal ? "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300" : "bg-[#DC2626]/10 text-[#18181B] dark:bg-[#DC2626]/20 dark:text-[#FAFAFA]"}`}>
+                        {isExternal ? "External" : "Colaberry"}
+                      </span>
+                    </div>
                   </div>
-                  <div className="mt-1 text-xs text-slate-500 dark:text-slate-300">
-                    {detailType === "latest"
-                      ? formatPodcastDate(episode.publishedDate) || "Date pending"
-                      : `${(episode.podcastType || "internal").toLowerCase() === "external" ? "External" : "Colaberry"} signal`}
-                  </div>
-                </div>
-                <span className="ml-3 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
-                  →
-                </span>
-              </Link>
-            </li>
-          ))}
+                  <span className="ml-1 shrink-0 text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep dark:text-zinc-500">
+                    →
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </article>
@@ -1046,21 +771,21 @@ function AgentRail({
   detailType: "latest" | "trending";
 }) {
   return (
-    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{description}</p>
+    <article className="section-card rounded-lg p-5">
+      <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{title}</div>
+      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{description}</p>
       {items.length === 0 ? (
-        <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">Agent signals will appear after next refresh.</p>
+        <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">Agent signals will appear after next refresh.</p>
       ) : (
-        <ul className="mt-3 grid gap-2">
+        <ul className="mt-4 grid gap-2">
           {items.map((agent) => (
             <li key={agent.slug || agent.id}>
               <Link
                 href={`/aixcelerator/agents/${agent.slug || agent.id}`}
-                className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2"
+                className="group section-card flex items-center justify-between rounded-lg px-3 py-2.5 transition"
               >
-                <span className="truncate pr-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{agent.name}</span>
-                <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 group-hover:text-brand-deep">
+                <span className="truncate pr-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{agent.name}</span>
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 group-hover:text-brand-deep dark:text-zinc-400">
                   {detailType === "latest"
                     ? formatPodcastDate(agent.lastUpdated) || "Updated"
                     : agent.rating
@@ -1090,24 +815,24 @@ function SkillRail({
   detailType: "latest" | "trending";
 }) {
   return (
-    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{description}</p>
+    <article className="section-card rounded-lg p-5">
+      <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{title}</div>
+      <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{description}</p>
       {items.length === 0 ? (
-        <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">Skill signals will appear after next refresh.</p>
+        <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">Skill signals will appear after next refresh.</p>
       ) : (
         <ul className="mt-3 grid gap-2">
           {items.map((skill) => (
             <li key={skill.slug || skill.id}>
               <Link
                 href={`/aixcelerator/skills/${skill.slug || skill.id}`}
-                className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2"
+                className="section-card group flex items-center justify-between rounded-lg px-3 py-2"
               >
                 <div className="min-w-0">
-                  <div className="line-clamp-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  <div className="line-clamp-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                     {skill.name}
                   </div>
-                  <div className="mt-1 text-xs text-slate-500 dark:text-slate-300">
+                  <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                     {detailType === "latest"
                       ? formatPodcastDate(skill.lastUpdated) || "Updated"
                       : skill.rating
@@ -1117,7 +842,7 @@ function SkillRail({
                       : skill.category || "Trending"}
                   </div>
                 </div>
-                <span className="ml-3 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
+                <span className="ml-3 text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
                   →
                 </span>
               </Link>
@@ -1141,21 +866,21 @@ function UseCaseRail({
   detailType: "latest" | "trending";
 }) {
   return (
-    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{description}</p>
+    <article className="section-card rounded-lg p-5">
+      <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{title}</div>
+      <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{description}</p>
       {items.length === 0 ? (
-        <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">Use case signals will appear after next refresh.</p>
+        <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">Use case signals will appear after next refresh.</p>
       ) : (
         <ul className="mt-3 grid gap-2">
           {items.map((useCase) => (
             <li key={useCase.slug || useCase.id}>
               <Link
                 href={`/use-cases/${useCase.slug || useCase.id}`}
-                className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2"
+                className="section-card group flex items-center justify-between rounded-lg px-3 py-2"
               >
-                <span className="truncate pr-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{useCase.title}</span>
-                <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 group-hover:text-brand-deep">
+                <span className="truncate pr-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{useCase.title}</span>
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 group-hover:text-brand-deep dark:text-zinc-400">
                   {detailType === "latest"
                     ? formatPodcastDate(useCase.lastUpdated) || "Updated"
                     : useCase.verified
@@ -1183,21 +908,21 @@ function McpRail({
   detailType: "latest" | "trending";
 }) {
   return (
-    <article className="surface-panel border border-slate-200/80 bg-white/90 p-4">
-      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{description}</p>
+    <article className="section-card rounded-lg p-5">
+      <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{title}</div>
+      <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{description}</p>
       {items.length === 0 ? (
-        <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">MCP signals will appear after next refresh.</p>
+        <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">MCP signals will appear after next refresh.</p>
       ) : (
         <ul className="mt-3 grid gap-2">
           {items.map((mcp) => (
             <li key={mcp.slug || mcp.id}>
               <Link
                 href={`/aixcelerator/mcp/${mcp.slug || mcp.id}`}
-                className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white px-3 py-2"
+                className="section-card group flex items-center justify-between rounded-lg px-3 py-2"
               >
-                <span className="truncate pr-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{mcp.name}</span>
-                <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 group-hover:text-brand-deep">
+                <span className="truncate pr-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{mcp.name}</span>
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 group-hover:text-brand-deep dark:text-zinc-400">
                   {detailType === "latest"
                     ? formatPodcastDate(mcp.lastUpdated) || "Updated"
                     : mcp.rating
@@ -1229,10 +954,10 @@ function QuickLink({
   const content = (
     <div className="flex items-start justify-between gap-3">
       <div>
-        <div className="text-sm font-semibold text-slate-900">{title}</div>
-        <div className="mt-1 text-sm text-slate-600">{description}</div>
+        <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</div>
+        <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{description}</div>
       </div>
-      <div className="mt-0.5 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
+      <div className="mt-0.5 text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep dark:text-zinc-500">
         <span aria-hidden="true">→</span>
       </div>
     </div>
@@ -1244,7 +969,7 @@ function QuickLink({
         href={href}
         target="_blank"
         rel="noreferrer"
-        className="surface-panel surface-hover surface-interactive group p-4"
+        className="card-glass gradient-border group flex items-start justify-between gap-3 p-5"
         aria-label={`Open ${title}`}
       >
         {content}
@@ -1253,21 +978,9 @@ function QuickLink({
   }
 
   return (
-    <Link href={href} className="surface-panel surface-hover surface-interactive group p-4" aria-label={`Open ${title}`}>
+    <Link href={href} className="card-glass gradient-border group flex items-start justify-between gap-3 p-5" aria-label={`Open ${title}`}>
       {content}
     </Link>
-  );
-}
-
-function FeatureCard({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="surface-panel border border-slate-200/80 bg-white/90 p-5">
-      <div className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-brand-blue/25 bg-brand-blue/10 text-brand-deep dark:border-brand-teal/35 dark:bg-slate-900/80 dark:text-brand-ice">
-        <span aria-hidden="true">+</span>
-      </div>
-      <div className="mt-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</div>
-      <div className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{description}</div>
-    </div>
   );
 }
 
@@ -1290,6 +1003,9 @@ function toHomePodcastSignal(item: PodcastEpisode): HomePodcastSignal {
     title: item.title,
     publishedDate: item.publishedDate || null,
     podcastType: item.podcastType || null,
+    coverImageUrl: item.coverImageUrl || null,
+    duration: item.duration || null,
+    episodeNumber: typeof item.episodeNumber === "number" ? item.episodeNumber : null,
   };
 }
 
@@ -1496,231 +1212,6 @@ function formatUsageLabel(value: number) {
   return String(value);
 }
 
-function Stat({
-  title,
-  value,
-  note,
-}: {
-  title: string;
-  value: string;
-  note: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm">
-      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">
-        {title}
-      </div>
-      <div className="mt-2 text-lg font-semibold text-slate-900">{value}</div>
-      <div className="mt-1 text-xs text-slate-600">{note}</div>
-    </div>
-  );
-}
-
-type HeroSlide = {
-  eyebrow: string;
-  title: string;
-  description: string;
-  image: string;
-  highlight: string;
-  href: string;
-};
-
-function HeroBannerSlider({ slides, rootIndustries }: { slides: HeroSlide[]; rootIndustries: string[] }) {
-  const slideCount = slides.length;
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [manualPaused, setManualPaused] = useState(false);
-  const [interactionPaused, setInteractionPaused] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [progress, setProgress] = useState(0);
-
-  const isPaused = manualPaused || interactionPaused || prefersReducedMotion;
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const handleChange = () => setPrefersReducedMotion(media.matches);
-    handleChange();
-    if (media.addEventListener) {
-      media.addEventListener("change", handleChange);
-    } else {
-      media.addListener(handleChange);
-    }
-    return () => {
-      if (media.removeEventListener) {
-        media.removeEventListener("change", handleChange);
-      } else {
-        media.removeListener(handleChange);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (slideCount < 2 || isPaused) return;
-    const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % slideCount);
-    }, 6200);
-    return () => window.clearInterval(timer);
-  }, [slideCount, isPaused]);
-
-  useEffect(() => {
-    if (slideCount < 2 || isPaused) return;
-    const cycleMs = 6200;
-    const startAt = window.performance.now();
-    let frameId = 0;
-    const tick = () => {
-      const elapsed = (window.performance.now() - startAt) % cycleMs;
-      setProgress((elapsed / cycleMs) * 100);
-      frameId = window.requestAnimationFrame(tick);
-    };
-    frameId = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(frameId);
-  }, [activeIndex, isPaused, slideCount]);
-
-  if (slideCount === 0) return null;
-
-  const activeSlide = slides[activeIndex] ?? slides[0];
-  const progressValue = isPaused ? 0 : progress;
-  const goToSlide = (nextIndex: number) => {
-    const bounded = (nextIndex + slideCount) % slideCount;
-    setActiveIndex(bounded);
-  };
-
-  return (
-    <section
-      className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-slate-950 shadow-[0_34px_72px_rgba(2,6,23,0.46)]"
-      aria-roledescription="carousel"
-      aria-label="Hero highlights"
-      onMouseEnter={() => setInteractionPaused(true)}
-      onMouseLeave={() => setInteractionPaused(false)}
-      onFocusCapture={() => setInteractionPaused(true)}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node)) {
-          setInteractionPaused(false);
-        }
-      }}
-    >
-      <div className="absolute inset-x-0 top-0 z-20 h-1 bg-white/10">
-        <div
-          className="h-full bg-gradient-to-r from-brand-aqua via-brand-teal to-sky-300 transition-[width] duration-200 ease-linear"
-          style={{ width: `${progressValue}%` }}
-        />
-      </div>
-      <div className="absolute inset-0">
-        {slides.map((slide, index) => (
-          <div
-            key={slide.title}
-            className={`absolute inset-0 transition-opacity duration-700 ${index === activeIndex ? "opacity-100" : "opacity-0"}`}
-            aria-hidden={index !== activeIndex}
-          >
-            <Image
-              src={slide.image}
-              alt={slide.title}
-              fill
-              sizes="100vw"
-              priority={index === 0}
-              quality={92}
-              className={`media-premium-image object-cover object-center transition-transform duration-[6200ms] ${!prefersReducedMotion && index === activeIndex ? "scale-[1.05]" : "scale-100"}`}
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/88 via-slate-950/58 to-slate-900/25" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/82 via-slate-950/20 to-transparent" />
-          </div>
-        ))}
-      </div>
-      <div className="pointer-events-none absolute inset-0 z-[5]">
-        <div className="absolute -left-16 top-14 h-40 w-40 rounded-full bg-sky-500/20 blur-3xl" />
-        <div className="absolute -right-10 bottom-20 h-48 w-48 rounded-full bg-cyan-400/15 blur-3xl" />
-        <div className="absolute left-0 right-0 top-0 h-[32%] bg-gradient-to-b from-black/20 to-transparent" />
-      </div>
-
-      <div className="relative z-10 flex min-h-[440px] flex-col justify-between p-7 sm:min-h-[520px] sm:p-10 lg:min-h-[560px] lg:p-12">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-sky-300/30 bg-slate-950/45 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-100 shadow-sm backdrop-blur">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
-            AI operations platform
-          </div>
-
-          <h1 className="font-display mt-6 text-4xl font-semibold leading-[1.03] tracking-[-0.03em] text-white sm:text-5xl lg:text-6xl">
-            The go-to destination for discoverable agents, MCPs, and AI knowledge
-          </h1>
-
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-200 sm:text-lg">
-            {activeSlide.description}
-          </p>
-          <div className="mt-3 text-xs font-medium uppercase tracking-[0.16em] text-slate-300/90">
-            Slide {activeIndex + 1} of {slideCount} • {activeSlide.highlight}
-          </div>
-
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link href="/request-demo" className="btn btn-primary">
-              Request a demo
-            </Link>
-            <Link
-              href={activeSlide.href}
-              className="btn border border-white/35 bg-white/90 text-slate-900 hover:bg-white"
-            >
-              Explore {activeSlide.eyebrow}
-            </Link>
-          </div>
-
-          <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
-            Rooted in {rootIndustries.join(" • ")}
-          </p>
-        </div>
-
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-slate-950/45 px-3 py-2 text-xs font-semibold text-slate-100 backdrop-blur">
-            <span className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-xs uppercase tracking-[0.14em] text-slate-200">
-              {activeSlide.eyebrow}
-            </span>
-            <span>{activeSlide.title}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="focus-ring inline-flex h-9 items-center justify-center rounded-full border border-white/28 bg-slate-950/45 px-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:border-sky-300/60 disabled:cursor-not-allowed disabled:opacity-60"
-              onClick={() => setManualPaused((previous) => !previous)}
-              aria-pressed={manualPaused}
-              aria-label={manualPaused ? "Resume hero rotation" : "Pause hero rotation"}
-              disabled={prefersReducedMotion}
-            >
-              {manualPaused || prefersReducedMotion ? "Play" : "Pause"}
-            </button>
-            <button
-              type="button"
-              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/28 bg-slate-950/45 text-white transition hover:border-sky-300/60"
-              onClick={() => goToSlide(activeIndex - 1)}
-              aria-label="Show previous hero slide"
-            >
-              <span aria-hidden="true">←</span>
-            </button>
-            {slides.map((slide, index) => (
-              <button
-                key={`${slide.title}-${index}`}
-                type="button"
-                onClick={() => goToSlide(index)}
-                className={`h-2.5 rounded-full transition ${
-                  index === activeIndex ? "w-7 bg-brand-aqua" : "w-2.5 bg-white/40 hover:bg-white/70"
-                }`}
-                aria-label={`Go to hero slide ${index + 1}`}
-                aria-current={index === activeIndex ? "true" : undefined}
-              />
-            ))}
-            <button
-              type="button"
-              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/28 bg-slate-950/45 text-white transition hover:border-sky-300/60"
-              onClick={() => goToSlide(activeIndex + 1)}
-              aria-label="Show next hero slide"
-            >
-              <span aria-hidden="true">→</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 type IndustryIcon = "leaf" | "tower" | "droplet" | "dna" | "factory" | "truck";
 
 function IndustryTile({
@@ -1738,13 +1229,13 @@ function IndustryTile({
       className="surface-panel surface-hover surface-interactive group relative flex flex-col items-center gap-3 p-4 text-center"
       aria-label={`View ${title} industry`}
     >
-      <div className="absolute right-4 top-4 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
+      <div className="absolute right-4 top-4 text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-deep">
         <span aria-hidden="true">→</span>
       </div>
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-700">
+      <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-zinc-200/40 bg-zinc-50 text-zinc-600 dark:border-zinc-700/20 dark:bg-zinc-800/40 dark:text-zinc-300">
         <IndustryIconSvg icon={icon} />
       </div>
-      <div className="text-sm font-semibold text-slate-900">{title}</div>
+      <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</div>
     </Link>
   );
 }
@@ -1860,4 +1351,72 @@ function IndustryIconSvg({ icon }: { icon: IndustryIcon }) {
         </svg>
       );
   }
+}
+
+function AnimatedMetric({
+  value,
+  label,
+  note,
+  delay = 0,
+}: {
+  value: string;
+  label: string;
+  note: string;
+  delay?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className="card-glass gradient-border p-5 text-center"
+    >
+      <div
+        className={visible ? "counter-animate" : "opacity-0"}
+        style={{ animationDelay: `${delay}ms` }}
+      >
+        <div className="font-sans text-display-sm font-bold bg-gradient-to-r from-[#DC2626] to-[#18181B] bg-clip-text text-transparent">
+          {value}
+        </div>
+        <div className="mt-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{label}</div>
+        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{note}</p>
+      </div>
+    </div>
+  );
+}
+
+function FeatureCard({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <article className="card-glass card-shimmer gradient-border p-6">
+      <h3 className="text-[0.9375rem] font-semibold text-zinc-900 dark:text-zinc-100">
+        {title}
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+        {description}
+      </p>
+    </article>
+  );
 }

@@ -1,0 +1,46 @@
+{
+  "platform": {
+    "prompt": "Ultrawide photorealistic 3D render of a futuristic enterprise AI command center. Massive curved holographic displays floating in a dark room, showing real-time data flows, neural network graphs, and system dashboards. Sleek dark zinc-gray metallic surfaces with subtle coral-red LED accent strips along edges. Cinematic depth of field, volumetric fog and lighting, 8K quality. Dark moody atmosphere, no people, no text, no watermarks, premium enterprise tech aesthetic.",
+    "context": "Main platform overview — used on homepage, AIXcelerator hub, assistant, request-demo, skills pages"
+  },
+  "agents": {
+    "prompt": "Ultrawide photorealistic 3D render of an autonomous AI agent swarm operating in a dark enterprise environment. Dozens of glowing geometric nodes connected by luminous neural pathways floating in space. Each node pulses with coral-red energy while data streams flow between them in zinc-gray light trails. Cinematic volumetric lighting, shallow depth of field, 8K detail. Dark background, no people, no text, no watermarks.",
+    "context": "AI agents catalog page — shows autonomous agent capabilities and orchestration"
+  },
+  "mcp": {
+    "prompt": "Ultrawide photorealistic 3D render of a futuristic server protocol infrastructure. Towering crystalline server racks connected by glowing fiber-optic bridges in a dark data center. Holographic protocol handshake visualizations floating between nodes. Dark zinc-charcoal environment with coral-red status indicators and connection beams. Cinematic depth of field, volumetric lighting, 8K quality. No people, no text, no watermarks.",
+    "context": "MCP server catalog page — shows model context protocol server infrastructure"
+  },
+  "resources": {
+    "prompt": "Ultrawide photorealistic 3D render of a futuristic digital knowledge library. Floating holographic book spines and document panels arranged in a vast dark space, with streams of glowing data particles flowing between them. Dark zinc-gray architecture with subtle coral-red accent lighting on shelf edges. Cinematic volumetric fog, depth of field, 8K quality. No people, no text, no watermarks, premium enterprise aesthetic.",
+    "context": "Resource hub page — gateway to articles, podcasts, books, case studies, white papers"
+  },
+  "solutions": {
+    "prompt": "Ultrawide photorealistic 3D render of an enterprise AI workflow automation system. Interconnected holographic process nodes forming an elegant pipeline in dark space. Each stage shows miniature data transformations with glowing zinc-silver connectors and coral-red completion indicators. Cinematic lighting with subtle volumetric rays, shallow depth of field, 8K detail. No people, no text, no watermarks.",
+    "context": "Solutions and use-cases pages — shows enterprise workflow automation capabilities"
+  },
+  "industries": {
+    "prompt": "Ultrawide photorealistic 3D render of a multi-sector AI deployment visualization. Abstract geometric representations of different industry verticals (manufacturing gears, healthcare molecules, finance charts, energy grids) floating as holographic sectors around a central AI core. Dark zinc-charcoal environment with coral-red energy connections between sectors. Cinematic volumetric lighting, depth of field, 8K quality. No people, no text, no watermarks.",
+    "context": "Industry verticals page — shows AI deployment across agriculture, energy, healthcare, finance, etc."
+  },
+  "updates": {
+    "prompt": "Ultrawide photorealistic 3D render of a futuristic real-time news and data monitoring station. Multiple floating holographic screens showing live feeds, notification streams, and timeline visualizations in a dark control room. Dark zinc-gray surfaces with coral-red alert indicators and pulse animations frozen in time. Cinematic depth of field, volumetric lighting, 8K quality. No people, no text, no watermarks.",
+    "context": "Updates/news page — shows latest platform updates and changelog"
+  },
+  "podcasts": {
+    "prompt": "Ultrawide photorealistic 3D render of a premium futuristic podcast recording studio. A sleek dark studio space with floating holographic audio waveform visualizations, spectral frequency displays, and sound wave particles. Professional broadcast equipment with dark zinc-charcoal finish and coral-red power indicators. Cinematic volumetric lighting cutting through subtle fog, 8K quality. No people, no text, no watermarks.",
+    "context": "Podcast hub — audio content section with episodes, companies, tags"
+  },
+  "books": {
+    "prompt": "Ultrawide photorealistic 3D render of a futuristic digital library archive. Towering shelves of holographic book volumes with glowing spines stretching into darkness. A central reading platform with floating open book projecting luminous pages. Dark zinc-charcoal architecture with warm coral-red accent lighting on architectural details. Cinematic depth of field, volumetric rays through shelves, 8K quality. No people, no text, no watermarks.",
+    "context": "Books resource page — curated book recommendations and reading list"
+  },
+  "whitepapers": {
+    "prompt": "Ultrawide photorealistic 3D render of an advanced research data visualization laboratory. Floating holographic charts, statistical models, and research paper abstracts rendered as 3D data sculptures in a dark lab space. Intricate data mesh networks glowing in zinc-silver with coral-red highlighted findings. Cinematic volumetric lighting, shallow depth of field, 8K quality. No people, no text, no watermarks.",
+    "context": "White papers page — in-depth research documents and technical reports"
+  },
+  "case-studies": {
+    "prompt": "Ultrawide photorealistic 3D render of a futuristic analytics success dashboard. Large floating holographic screens showing performance metrics, ROI charts, upward trend graphs, and achievement milestones. Dark zinc-charcoal war room environment with coral-red success indicators glowing on key metrics. Cinematic depth of field, volumetric lighting from screens, 8K quality. No people, no text, no watermarks.",
+    "context": "Case studies page — real-world success stories and implementation results"
+  }
+}

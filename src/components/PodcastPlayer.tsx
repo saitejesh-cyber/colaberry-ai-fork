@@ -110,7 +110,7 @@ export default function PodcastPlayer({
           <div
             role="status"
             aria-live="polite"
-            className="absolute inset-0 flex items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-300"
+            className="absolute inset-0 flex items-center justify-between gap-4 rounded-lg border border-zinc-200/80 bg-white/90 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-300"
           >
             <span>Loading podcast player…</span>
             {!shouldLoad && (
@@ -138,7 +138,7 @@ export default function PodcastPlayer({
         ref={audioRef}
         controls
         onPlay={onPlay}
-        className="w-full rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm"
+        className="w-full rounded-lg border border-zinc-200/80 bg-white/90 p-3 shadow-sm"
       >
         <source src={audioUrl} />
         Your browser does not support the audio element.

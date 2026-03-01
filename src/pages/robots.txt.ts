@@ -6,6 +6,7 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   const body = [
     "User-agent: *",
     "Allow: /",
+    "Allow: /llms.txt",
     "Disallow: /api/",
     `Sitemap: ${siteUrl}/sitemap.xml`,
     "",

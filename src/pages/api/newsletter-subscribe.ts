@@ -23,6 +23,12 @@ type SubscribePayload = {
   email?: unknown;
   sourcePath?: unknown;
   sourcePage?: unknown;
+  utmSource?: unknown;
+  utmMedium?: unknown;
+  utmCampaign?: unknown;
+  utmTerm?: unknown;
+  utmContent?: unknown;
+  referrer?: unknown;
   consent?: unknown;
   website?: unknown;
 };
@@ -202,8 +208,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const email = normalizeText(payload.email, 180).toLowerCase();
-  const sourcePath = normalizeText(payload.sourcePath, 160) || null;
+  const sourcePath = normalizeText(payload.sourcePath, 220) || null;
   const sourcePage = normalizeText(payload.sourcePage, 80) || "unknown";
+  const utmSource = normalizeText(payload.utmSource, 120) || null;
+  const utmMedium = normalizeText(payload.utmMedium, 120) || null;
+  const utmCampaign = normalizeText(payload.utmCampaign, 160) || null;
+  const utmTerm = normalizeText(payload.utmTerm, 120) || null;
+  const utmContent = normalizeText(payload.utmContent, 120) || null;
   const honeypot = normalizeText(payload.website, 80);
   const consent = payload.consent === true || payload.consent === "true";
 
@@ -227,7 +238,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const userAgent = normalizeText(req.headers["user-agent"], 500) || null;
-  const referrer = normalizeText(req.headers.referer, 500) || null;
+  const referrer = normalizeText(payload.referrer, 500) || normalizeText(req.headers.referer, 500) || null;
   const nowIso = new Date().toISOString();
 
   try {
@@ -251,6 +262,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         emailHash,
         referrer,
         userAgent,
+        utmSource,
+        utmMedium,
+        utmCampaign,
+        utmTerm,
+        utmContent,
       },
     };
 

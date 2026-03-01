@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Strapi responses are polymorphic across populate modes and normalized by mapper functions in this module. */
 const CMS_URL = (process.env.CMS_URL || process.env.NEXT_PUBLIC_CMS_URL || "").trim().replace(/\/$/, "");
-const CMS_API_TOKEN = (process.env.CMS_API_TOKEN || process.env.NEXT_PUBLIC_CMS_API_TOKEN || "").trim();
+const CMS_API_TOKEN = (process.env.CMS_API_TOKEN || "").trim();
 const CMS_CACHE_TTL_MS = Number(process.env.NEXT_PUBLIC_CMS_CACHE_TTL_MS || 300000);
+const CMS_ALLOW_DRAFT_FALLBACK =
+  process.env.CMS_ALLOW_DRAFT_FALLBACK === "true" || process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
 
 type CacheEntry<T> = {
   expiresAt: number;
@@ -389,6 +391,80 @@ export type Skill = {
   coverImageAlt?: string | null;
 };
 
+export type Book = {
+  id: number;
+  title: string;
+  slug: string;
+  summary?: string | null;
+  longDescription?: string | null;
+  status?: string | null;
+  visibility?: "public" | "private" | string | null;
+  source?: "internal" | "external" | "partner" | string | null;
+  sourceUrl?: string | null;
+  sourceName?: string | null;
+  verified?: boolean | null;
+  industry?: string | null;
+  category?: ArticleCategory | null;
+  publisher?: string | null;
+  publishDate?: string | null;
+  edition?: string | null;
+  isbn?: string | null;
+  language?: string | null;
+  format?: string | null;
+  pageCount?: number | null;
+  readingTime?: string | null;
+  keyBenefits?: string | null;
+  useCasesText?: string | null;
+  limitations?: string | null;
+  requirements?: string | null;
+  exampleWorkflow?: string | null;
+  usageCount?: number | null;
+  rating?: number | null;
+  lastUpdated?: string | null;
+  downloadUrl?: string | null;
+  previewUrl?: string | null;
+  tags: Tag[];
+  companies: Company[];
+  useCases: UseCaseReference[];
+  coverImageUrl?: string | null;
+  coverImageAlt?: string | null;
+};
+
+export type CaseStudy = {
+  id: number;
+  title: string;
+  slug: string;
+  summary?: string | null;
+  longDescription?: string | null;
+  status?: string | null;
+  visibility?: "public" | "private" | string | null;
+  source?: "internal" | "external" | "partner" | string | null;
+  sourceUrl?: string | null;
+  sourceName?: string | null;
+  verified?: boolean | null;
+  industry?: string | null;
+  category?: ArticleCategory | null;
+  clientName?: string | null;
+  challenge?: string | null;
+  solution?: string | null;
+  outcomes?: string | null;
+  metrics?: string | null;
+  keyBenefits?: string | null;
+  requirements?: string | null;
+  limitations?: string | null;
+  exampleWorkflow?: string | null;
+  timeline?: string | null;
+  implementationSteps?: string | null;
+  usageCount?: number | null;
+  rating?: number | null;
+  lastUpdated?: string | null;
+  tags: Tag[];
+  companies: Company[];
+  useCases: UseCaseReference[];
+  coverImageUrl?: string | null;
+  coverImageAlt?: string | null;
+};
+
 function mapNavLink(item: any): GlobalNavLink {
   const attrs = item?.attributes ?? item;
   const rawOrder = attrs?.order;
@@ -584,6 +660,15 @@ function mapReferenceList(value: any): UseCaseReference[] {
     .filter((entry: UseCaseReference) => Boolean(entry.name || entry.slug));
 }
 
+function mapCategory(value: any): ArticleCategory | null {
+  const attrs = value?.data?.attributes ?? value?.attributes ?? value ?? null;
+  if (!attrs?.name && !attrs?.slug) return null;
+  return {
+    name: attrs?.name ?? "",
+    slug: attrs?.slug ?? "",
+  };
+}
+
 function mapUseCase(item: any): UseCase {
   const attrs = item?.attributes ?? item;
   const tags = attrs?.tags?.data?.map(mapTag) ?? (attrs?.tags ?? []).map(mapTag);
@@ -704,6 +789,116 @@ function mapSkill(item: any): Skill {
     companies,
     agents,
     mcpServers,
+    useCases,
+    coverImageUrl,
+    coverImageAlt,
+  };
+}
+
+function mapBook(item: any): Book {
+  const attrs = item?.attributes ?? item;
+  const tags = attrs?.tags?.data?.map(mapTag) ?? (attrs?.tags ?? []).map(mapTag);
+  const companies =
+    attrs?.companies?.data?.map(mapCompany) ??
+    (attrs?.companies ?? []).map(mapCompany);
+  const useCases = mapReferenceList(attrs?.useCases);
+  const rawCoverUrl =
+    attrs?.coverImage?.data?.attributes?.url ??
+    attrs?.coverImage?.attributes?.url ??
+    null;
+  const coverImageUrl = normalizeMediaUrl(rawCoverUrl);
+  const coverImageAlt =
+    attrs?.coverImage?.data?.attributes?.alternativeText ??
+    attrs?.coverImage?.attributes?.alternativeText ??
+    null;
+
+  return {
+    id: item?.id ?? attrs?.id ?? 0,
+    title: attrs?.title ?? "",
+    slug: attrs?.slug ?? "",
+    summary: attrs?.summary ?? null,
+    longDescription: attrs?.longDescription ?? null,
+    status: attrs?.status ?? null,
+    visibility: attrs?.visibility ?? null,
+    source: attrs?.source ?? null,
+    sourceUrl: attrs?.sourceUrl ?? null,
+    sourceName: attrs?.sourceName ?? null,
+    verified: attrs?.verified ?? null,
+    industry: attrs?.industry ?? null,
+    category: mapCategory(attrs?.category),
+    publisher: attrs?.publisher ?? null,
+    publishDate: attrs?.publishDate ?? null,
+    edition: attrs?.edition ?? null,
+    isbn: attrs?.isbn ?? null,
+    language: attrs?.language ?? null,
+    format: attrs?.format ?? null,
+    pageCount: typeof attrs?.pageCount === "number" ? attrs.pageCount : null,
+    readingTime: attrs?.readingTime ?? null,
+    keyBenefits: attrs?.keyBenefits ?? null,
+    useCasesText: attrs?.useCasesText ?? attrs?.useCasesSummary ?? null,
+    limitations: attrs?.limitations ?? null,
+    requirements: attrs?.requirements ?? null,
+    exampleWorkflow: attrs?.exampleWorkflow ?? null,
+    usageCount: typeof attrs?.usageCount === "number" ? attrs.usageCount : null,
+    rating: typeof attrs?.rating === "number" ? attrs.rating : null,
+    lastUpdated: attrs?.lastUpdated ?? attrs?.updatedAt ?? null,
+    downloadUrl: attrs?.downloadUrl ?? null,
+    previewUrl: attrs?.previewUrl ?? null,
+    tags,
+    companies,
+    useCases,
+    coverImageUrl,
+    coverImageAlt,
+  };
+}
+
+function mapCaseStudy(item: any): CaseStudy {
+  const attrs = item?.attributes ?? item;
+  const tags = attrs?.tags?.data?.map(mapTag) ?? (attrs?.tags ?? []).map(mapTag);
+  const companies =
+    attrs?.companies?.data?.map(mapCompany) ??
+    (attrs?.companies ?? []).map(mapCompany);
+  const useCases = mapReferenceList(attrs?.useCases);
+  const rawCoverUrl =
+    attrs?.coverImage?.data?.attributes?.url ??
+    attrs?.coverImage?.attributes?.url ??
+    null;
+  const coverImageUrl = normalizeMediaUrl(rawCoverUrl);
+  const coverImageAlt =
+    attrs?.coverImage?.data?.attributes?.alternativeText ??
+    attrs?.coverImage?.attributes?.alternativeText ??
+    null;
+
+  return {
+    id: item?.id ?? attrs?.id ?? 0,
+    title: attrs?.title ?? "",
+    slug: attrs?.slug ?? "",
+    summary: attrs?.summary ?? null,
+    longDescription: attrs?.longDescription ?? null,
+    status: attrs?.status ?? null,
+    visibility: attrs?.visibility ?? null,
+    source: attrs?.source ?? null,
+    sourceUrl: attrs?.sourceUrl ?? null,
+    sourceName: attrs?.sourceName ?? null,
+    verified: attrs?.verified ?? null,
+    industry: attrs?.industry ?? null,
+    category: mapCategory(attrs?.category),
+    clientName: attrs?.clientName ?? null,
+    challenge: attrs?.challenge ?? null,
+    solution: attrs?.solution ?? null,
+    outcomes: attrs?.outcomes ?? null,
+    metrics: attrs?.metrics ?? null,
+    keyBenefits: attrs?.keyBenefits ?? null,
+    requirements: attrs?.requirements ?? null,
+    limitations: attrs?.limitations ?? null,
+    exampleWorkflow: attrs?.exampleWorkflow ?? null,
+    timeline: attrs?.timeline ?? null,
+    implementationSteps: attrs?.implementationSteps ?? null,
+    usageCount: typeof attrs?.usageCount === "number" ? attrs.usageCount : null,
+    rating: typeof attrs?.rating === "number" ? attrs.rating : null,
+    lastUpdated: attrs?.lastUpdated ?? attrs?.updatedAt ?? null,
+    tags,
+    companies,
     useCases,
     coverImageUrl,
     coverImageAlt,
@@ -901,26 +1096,37 @@ export async function fetchPodcastEpisodes(options: { maxRecords?: number; sortB
       : Number.POSITIVE_INFINITY;
   let page = 1;
   const results: PodcastEpisode[] = [];
+  const buildQuery = (currentPage: number, publicationState: "live" | "preview") =>
+    `${CMS_URL}/api/podcast-episodes` +
+    `?sort=publishedDate:desc` +
+    `&filters[podcastStatus][$eq]=published` +
+    `&publicationState=${publicationState}` +
+    `&pagination[page]=${currentPage}` +
+    `&pagination[pageSize]=${pageSize}` +
+    `&populate[tags][fields][0]=name` +
+    `&populate[tags][fields][1]=slug` +
+    `&populate[companies][fields][0]=name` +
+    `&populate[companies][fields][1]=slug` +
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText` +
+    `&populate[platformLinks]=*`;
 
   while (true) {
-    const json = await fetchCMSJson<CMSCollectionResponse>(
-      `${CMS_URL}/api/podcast-episodes` +
-        `?sort=publishedDate:desc` +
-        `&filters[podcastStatus][$eq]=published` +
-        `&publicationState=live` +
-        `&pagination[page]=${page}` +
-        `&pagination[pageSize]=${pageSize}` +
-        `&populate[tags][fields][0]=name` +
-        `&populate[tags][fields][1]=slug` +
-        `&populate[companies][fields][0]=name` +
-        `&populate[companies][fields][1]=slug` +
-        `&populate[coverImage][fields][0]=url` +
-        `&populate[coverImage][fields][1]=alternativeText` +
-        `&populate[platformLinks]=*`,
-      { cacheMs: CMS_CACHE_TTL_MS }
-    );
+    let json = await fetchCMSJson<CMSCollectionResponse>(buildQuery(page, "live"), {
+      cacheMs: CMS_CACHE_TTL_MS,
+    });
 
-    const data = json?.data || [];
+    let data = json?.data || [];
+    if (page === 1 && results.length === 0 && data.length === 0 && CMS_ALLOW_DRAFT_FALLBACK) {
+      const previewJson = await fetchCMSJson<CMSCollectionResponse>(buildQuery(page, "preview"), {
+        cacheMs: CMS_CACHE_TTL_MS,
+      }).catch(() => null);
+      if (previewJson?.data?.length) {
+        json = previewJson;
+        data = previewJson.data || [];
+      }
+    }
+
     if (!data.length) break;
 
     const remaining = maxRecords - results.length;
@@ -955,21 +1161,34 @@ export async function fetchGlobalNavigation(): Promise<GlobalNavigation | null> 
 }
 
 export async function fetchPodcastBySlug(slug: string) {
-  const json = await fetchCMSJson<CMSCollectionResponse>(
+  const buildQuery = (publicationState: "live" | "preview") =>
     `${CMS_URL}/api/podcast-episodes` +
-      `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
-      `&filters[podcastStatus][$eq]=published` +
-      `&publicationState=live` +
-      `&populate[tags][fields][0]=name` +
-      `&populate[tags][fields][1]=slug` +
-      `&populate[companies][fields][0]=name` +
-      `&populate[companies][fields][1]=slug` +
-      `&populate[coverImage][fields][0]=url` +
-      `&populate[coverImage][fields][1]=alternativeText` +
-      `&populate[platformLinks]=*`,
-    { cacheMs: CMS_CACHE_TTL_MS }
-  );
-  return json?.data?.[0] ? mapEpisode(json.data[0]) : null;
+    `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
+    `&filters[podcastStatus][$eq]=published` +
+    `&publicationState=${publicationState}` +
+    `&populate[tags][fields][0]=name` +
+    `&populate[tags][fields][1]=slug` +
+    `&populate[companies][fields][0]=name` +
+    `&populate[companies][fields][1]=slug` +
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText` +
+    `&populate[platformLinks]=*`;
+
+  const json = await fetchCMSJson<CMSCollectionResponse>(buildQuery("live"), {
+    cacheMs: CMS_CACHE_TTL_MS,
+  });
+  if (json?.data?.[0]) {
+    return mapEpisode(json.data[0]);
+  }
+
+  if (!CMS_ALLOW_DRAFT_FALLBACK) {
+    return null;
+  }
+
+  const previewJson = await fetchCMSJson<CMSCollectionResponse>(buildQuery("preview"), {
+    cacheMs: CMS_CACHE_TTL_MS,
+  }).catch(() => null);
+  return previewJson?.data?.[0] ? mapEpisode(previewJson.data[0]) : null;
 }
 
 export async function fetchArticles(options: { maxRecords?: number } = {}) {
@@ -1022,6 +1241,176 @@ export async function fetchArticles(options: { maxRecords?: number } = {}) {
   return results;
 }
 
+export async function fetchBooks(
+  visibility?: "public" | "private",
+  options: { maxRecords?: number; sortBy?: "latest" | "title" } = {}
+) {
+  const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
+  const sortBy = options.sortBy === "title" ? "title" : "latest";
+  const sortQuery =
+    sortBy === "title"
+      ? `&sort=title:asc`
+      : `&sort[0]=lastUpdated:desc&sort[1]=updatedAt:desc&sort[2]=publishDate:desc&sort[3]=title:asc`;
+  const pageSize = 50;
+  const maxRecords =
+    typeof options.maxRecords === "number" && options.maxRecords > 0
+      ? Math.floor(options.maxRecords)
+      : Number.POSITIVE_INFINITY;
+  let page = 1;
+  const results: Book[] = [];
+  const buildPageQuery = (currentPage: number, publicationState: "live" | "preview") =>
+    `${CMS_URL}/api/books` +
+    `?` +
+    `${sortQuery.replace(/^&/, "")}` +
+    `${visibilityFilter}` +
+    `&publicationState=${publicationState}` +
+    `&fields[0]=title` +
+    `&fields[1]=slug` +
+    `&fields[2]=summary` +
+    `&fields[3]=status` +
+    `&fields[4]=visibility` +
+    `&fields[5]=source` +
+    `&fields[6]=sourceName` +
+    `&fields[7]=verified` +
+    `&fields[8]=industry` +
+    `&fields[9]=publisher` +
+    `&fields[10]=publishDate` +
+    `&fields[11]=edition` +
+    `&fields[12]=format` +
+    `&fields[13]=pageCount` +
+    `&fields[14]=readingTime` +
+    `&fields[15]=usageCount` +
+    `&fields[16]=rating` +
+    `&fields[17]=lastUpdated` +
+    `&pagination[page]=${currentPage}` +
+    `&pagination[pageSize]=${pageSize}` +
+    `&populate[tags][fields][0]=name` +
+    `&populate[tags][fields][1]=slug` +
+    `&populate[companies][fields][0]=name` +
+    `&populate[companies][fields][1]=slug` +
+    `&populate[useCases][fields][0]=title` +
+    `&populate[useCases][fields][1]=slug` +
+    `&populate[category][fields][0]=name` +
+    `&populate[category][fields][1]=slug` +
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText`;
+
+  while (true) {
+    let json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live"), {
+      cacheMs: CMS_CACHE_TTL_MS,
+    });
+    let data = json?.data || [];
+    if (page === 1 && results.length === 0 && data.length === 0 && CMS_ALLOW_DRAFT_FALLBACK) {
+      const previewJson = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "preview"), {
+        cacheMs: CMS_CACHE_TTL_MS,
+      }).catch(() => null);
+      if (previewJson?.data?.length) {
+        json = previewJson;
+        data = previewJson.data || [];
+      }
+    }
+    const remaining = Math.max(maxRecords - results.length, 0);
+    if (remaining <= 0) {
+      break;
+    }
+    results.push(...data.slice(0, remaining).map(mapBook));
+    if (results.length >= maxRecords) {
+      break;
+    }
+
+    const pagination = json?.meta?.pagination;
+    if (!pagination || page >= pagination.pageCount) {
+      break;
+    }
+    page += 1;
+  }
+
+  return results;
+}
+
+export async function fetchCaseStudies(
+  visibility?: "public" | "private",
+  options: { maxRecords?: number; sortBy?: "latest" | "title" } = {}
+) {
+  const visibilityFilter = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
+  const sortBy = options.sortBy === "title" ? "title" : "latest";
+  const sortQuery =
+    sortBy === "title"
+      ? `&sort=title:asc`
+      : `&sort[0]=lastUpdated:desc&sort[1]=updatedAt:desc&sort[2]=title:asc`;
+  const pageSize = 50;
+  const maxRecords =
+    typeof options.maxRecords === "number" && options.maxRecords > 0
+      ? Math.floor(options.maxRecords)
+      : Number.POSITIVE_INFINITY;
+  let page = 1;
+  const results: CaseStudy[] = [];
+  const buildPageQuery = (currentPage: number, publicationState: "live" | "preview") =>
+    `${CMS_URL}/api/case-studies` +
+    `?` +
+    `${sortQuery.replace(/^&/, "")}` +
+    `${visibilityFilter}` +
+    `&publicationState=${publicationState}` +
+    `&fields[0]=title` +
+    `&fields[1]=slug` +
+    `&fields[2]=summary` +
+    `&fields[3]=status` +
+    `&fields[4]=visibility` +
+    `&fields[5]=source` +
+    `&fields[6]=sourceName` +
+    `&fields[7]=verified` +
+    `&fields[8]=industry` +
+    `&fields[9]=clientName` +
+    `&fields[10]=timeline` +
+    `&fields[11]=usageCount` +
+    `&fields[12]=rating` +
+    `&fields[13]=lastUpdated` +
+    `&pagination[page]=${currentPage}` +
+    `&pagination[pageSize]=${pageSize}` +
+    `&populate[tags][fields][0]=name` +
+    `&populate[tags][fields][1]=slug` +
+    `&populate[companies][fields][0]=name` +
+    `&populate[companies][fields][1]=slug` +
+    `&populate[useCases][fields][0]=title` +
+    `&populate[useCases][fields][1]=slug` +
+    `&populate[category][fields][0]=name` +
+    `&populate[category][fields][1]=slug` +
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText`;
+
+  while (true) {
+    let json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live"), {
+      cacheMs: CMS_CACHE_TTL_MS,
+    });
+    let data = json?.data || [];
+    if (page === 1 && results.length === 0 && data.length === 0 && CMS_ALLOW_DRAFT_FALLBACK) {
+      const previewJson = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "preview"), {
+        cacheMs: CMS_CACHE_TTL_MS,
+      }).catch(() => null);
+      if (previewJson?.data?.length) {
+        json = previewJson;
+        data = previewJson.data || [];
+      }
+    }
+    const remaining = Math.max(maxRecords - results.length, 0);
+    if (remaining <= 0) {
+      break;
+    }
+    results.push(...data.slice(0, remaining).map(mapCaseStudy));
+    if (results.length >= maxRecords) {
+      break;
+    }
+
+    const pagination = json?.meta?.pagination;
+    if (!pagination || page >= pagination.pageCount) {
+      break;
+    }
+    page += 1;
+  }
+
+  return results;
+}
+
 export async function fetchArticleBySlug(slug: string) {
   const json = await fetchCMSJson<CMSCollectionResponse>(
     `${CMS_URL}/api/articles` +
@@ -1050,40 +1439,50 @@ export async function fetchUseCases(
       : Number.POSITIVE_INFINITY;
   let page = 1;
   const results: UseCase[] = [];
+  const buildPageQuery = (currentPage: number, publicationState: "live" | "preview") =>
+    `${CMS_URL}/api/use-cases` +
+    `?` +
+    `${sortQuery.replace(/^&/, "")}` +
+    `${visibilityFilter}` +
+    `&publicationState=${publicationState}` +
+    `&fields[0]=title` +
+    `&fields[1]=slug` +
+    `&fields[2]=summary` +
+    `&fields[3]=industry` +
+    `&fields[4]=category` +
+    `&fields[5]=status` +
+    `&fields[6]=visibility` +
+    `&fields[7]=source` +
+    `&fields[8]=sourceName` +
+    `&fields[9]=verified` +
+    `&fields[10]=lastUpdated` +
+    `&pagination[page]=${currentPage}` +
+    `&pagination[pageSize]=${pageSize}` +
+    `&populate[tags][fields][0]=name` +
+    `&populate[tags][fields][1]=slug` +
+    `&populate[companies][fields][0]=name` +
+    `&populate[companies][fields][1]=slug` +
+    `&populate[agents][fields][0]=name` +
+    `&populate[agents][fields][1]=slug` +
+    `&populate[mcpServers][fields][0]=name` +
+    `&populate[mcpServers][fields][1]=slug` +
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText`;
 
   while (true) {
-    const json = await fetchCMSJson<CMSCollectionResponse>(
-      `${CMS_URL}/api/use-cases` +
-        `?` +
-        `${sortQuery.replace(/^&/, "")}` +
-        `${visibilityFilter}` +
-        `&publicationState=live` +
-        `&fields[0]=title` +
-        `&fields[1]=slug` +
-        `&fields[2]=summary` +
-        `&fields[3]=industry` +
-        `&fields[4]=category` +
-        `&fields[5]=status` +
-        `&fields[6]=visibility` +
-        `&fields[7]=source` +
-        `&fields[8]=sourceName` +
-        `&fields[9]=verified` +
-        `&fields[10]=lastUpdated` +
-        `&pagination[page]=${page}` +
-        `&pagination[pageSize]=${pageSize}` +
-        `&populate[tags][fields][0]=name` +
-        `&populate[tags][fields][1]=slug` +
-        `&populate[companies][fields][0]=name` +
-        `&populate[companies][fields][1]=slug` +
-        `&populate[agents][fields][0]=name` +
-        `&populate[agents][fields][1]=slug` +
-        `&populate[mcpServers][fields][0]=name` +
-        `&populate[mcpServers][fields][1]=slug` +
-        `&populate[coverImage][fields][0]=url` +
-        `&populate[coverImage][fields][1]=alternativeText`,
-      { cacheMs: CMS_CACHE_TTL_MS }
-    );
-    const data = json?.data || [];
+    let json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live"), {
+      cacheMs: CMS_CACHE_TTL_MS,
+    });
+    let data = json?.data || [];
+    if (page === 1 && results.length === 0 && data.length === 0 && CMS_ALLOW_DRAFT_FALLBACK) {
+      const previewJson = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "preview"), {
+        cacheMs: CMS_CACHE_TTL_MS,
+      }).catch(() => null);
+      if (previewJson?.data?.length) {
+        json = previewJson;
+        data = previewJson.data || [];
+      }
+    }
     const remaining = Math.max(maxRecords - results.length, 0);
     if (remaining <= 0) {
       break;
@@ -1104,14 +1503,27 @@ export async function fetchUseCases(
 }
 
 export async function fetchUseCaseBySlug(slug: string) {
-  const json = await fetchCMSJson<CMSCollectionResponse>(
+  const buildQuery = (publicationState: "live" | "preview") =>
     `${CMS_URL}/api/use-cases` +
-      `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
-      `&publicationState=live` +
-      `&populate=*`,
-    { cacheMs: CMS_CACHE_TTL_MS }
-  );
-  return json?.data?.[0] ? mapUseCase(json.data[0]) : null;
+    `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
+    `&publicationState=${publicationState}` +
+    `&populate=*`;
+
+  const json = await fetchCMSJson<CMSCollectionResponse>(buildQuery("live"), {
+    cacheMs: CMS_CACHE_TTL_MS,
+  });
+  if (json?.data?.[0]) {
+    return mapUseCase(json.data[0]);
+  }
+
+  if (!CMS_ALLOW_DRAFT_FALLBACK) {
+    return null;
+  }
+
+  const previewJson = await fetchCMSJson<CMSCollectionResponse>(buildQuery("preview"), {
+    cacheMs: CMS_CACHE_TTL_MS,
+  }).catch(() => null);
+  return previewJson?.data?.[0] ? mapUseCase(previewJson.data[0]) : null;
 }
 
 export async function fetchSkills(
@@ -1151,7 +1563,6 @@ export async function fetchSkills(
     `?` +
     `${sortQuery.replace(/^&/, "")}` +
     `${visibilityFilter}` +
-    `&publicationState=live` +
     `${listFields}` +
     `&pagination[pageSize]=${pageSize}`;
   const fullPopulateQuery =
@@ -1177,7 +1588,7 @@ export async function fetchSkills(
     let json: CMSCollectionResponse | null = null;
     try {
       json = await fetchCMSJson<CMSCollectionResponse>(
-        `${baseQuery}&pagination[page]=${page}${fullPopulateQuery}`,
+        `${baseQuery}&publicationState=live&pagination[page]=${page}${fullPopulateQuery}`,
         { cacheMs: CMS_CACHE_TTL_MS }
       );
     } catch (error) {
@@ -1195,7 +1606,7 @@ export async function fetchSkills(
       if (status === 400) {
         // Fallback when older Strapi schema rejects one of the populate keys.
         json = await fetchCMSJson<CMSCollectionResponse>(
-          `${baseQuery}&pagination[page]=${page}${minimalPopulateQuery}`,
+          `${baseQuery}&publicationState=live&pagination[page]=${page}${minimalPopulateQuery}`,
           { cacheMs: CMS_CACHE_TTL_MS }
         ).catch(() => null);
         if (json) {
@@ -1206,13 +1617,13 @@ export async function fetchSkills(
       } else if (status === 401 || status === 403) {
         // Fallback for tokens that don't yet include skills scope.
         json = await fetchCMSJson<CMSCollectionResponse>(
-          `${baseQuery}&pagination[page]=${page}${fullPopulateQuery}`,
+          `${baseQuery}&publicationState=live&pagination[page]=${page}${fullPopulateQuery}`,
           { cacheMs: CMS_CACHE_TTL_MS, authMode: "none" }
         ).catch(() => null);
 
         if (!json) {
           json = await fetchCMSJson<CMSCollectionResponse>(
-            `${baseQuery}&pagination[page]=${page}${minimalPopulateQuery}`,
+            `${baseQuery}&publicationState=live&pagination[page]=${page}${minimalPopulateQuery}`,
             { cacheMs: CMS_CACHE_TTL_MS, authMode: "none" }
           ).catch(() => null);
         }
@@ -1226,7 +1637,17 @@ export async function fetchSkills(
     }
 
     if (!json) break;
-    const data = json?.data || [];
+    let data = json?.data || [];
+    if (page === 1 && results.length === 0 && data.length === 0 && CMS_ALLOW_DRAFT_FALLBACK) {
+      const previewJson = await fetchCMSJson<CMSCollectionResponse>(
+        `${baseQuery}&publicationState=preview&pagination[page]=${page}${fullPopulateQuery}`,
+        { cacheMs: CMS_CACHE_TTL_MS }
+      ).catch(() => null);
+      if (previewJson?.data?.length) {
+        json = previewJson;
+        data = previewJson.data || [];
+      }
+    }
     const remaining = Math.max(maxRecords - results.length, 0);
     if (remaining <= 0) {
       break;
@@ -1247,14 +1668,27 @@ export async function fetchSkills(
 }
 
 export async function fetchSkillBySlug(slug: string) {
-  const json = await fetchCMSJson<CMSCollectionResponse>(
+  const buildQuery = (publicationState: "live" | "preview") =>
     `${CMS_URL}/api/skills` +
-      `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
-      `&publicationState=live` +
-      `&populate=*`,
-    { cacheMs: CMS_CACHE_TTL_MS }
-  );
-  return json?.data?.[0] ? mapSkill(json.data[0]) : null;
+    `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
+    `&publicationState=${publicationState}` +
+    `&populate=*`;
+
+  const json = await fetchCMSJson<CMSCollectionResponse>(buildQuery("live"), {
+    cacheMs: CMS_CACHE_TTL_MS,
+  });
+  if (json?.data?.[0]) {
+    return mapSkill(json.data[0]);
+  }
+
+  if (!CMS_ALLOW_DRAFT_FALLBACK) {
+    return null;
+  }
+
+  const previewJson = await fetchCMSJson<CMSCollectionResponse>(buildQuery("preview"), {
+    cacheMs: CMS_CACHE_TTL_MS,
+  }).catch(() => null);
+  return previewJson?.data?.[0] ? mapSkill(previewJson.data[0]) : null;
 }
 
 export async function fetchAgents(
@@ -1287,26 +1721,92 @@ export async function fetchAgents(
       : Number.POSITIVE_INFINITY;
   let page = 1;
   const results: ReturnType<typeof mapAgent>[] = [];
+  const fullPopulateQuery =
+    `&populate[tags][fields][0]=name` +
+    `&populate[tags][fields][1]=slug` +
+    `&populate[companies][fields][0]=name` +
+    `&populate[companies][fields][1]=slug` +
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText`;
+  const minimalPopulateQuery =
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText`;
+  const buildPageQuery = (
+    currentPage: number,
+    publicationState: "live" | "preview",
+    populateQuery: string
+  ) =>
+    `${CMS_URL}/api/agents` +
+    `?` +
+    `${sortQuery.replace(/^&/, "")}` +
+    `${visibilityFilter}` +
+    `&publicationState=${publicationState}` +
+    `${listFields}` +
+    `&pagination[page]=${currentPage}` +
+    `&pagination[pageSize]=${pageSize}` +
+    `${populateQuery}`;
 
   while (true) {
-    const json = await fetchCMSJson<CMSCollectionResponse>(
-      `${CMS_URL}/api/agents` +
-        `?` +
-        `${sortQuery.replace(/^&/, "")}` +
-        `${visibilityFilter}` +
-        `&publicationState=live` +
-        `${listFields}` +
-        `&pagination[page]=${page}` +
-        `&pagination[pageSize]=${pageSize}` +
-        `&populate[tags][fields][0]=name` +
-        `&populate[tags][fields][1]=slug` +
-        `&populate[companies][fields][0]=name` +
-        `&populate[companies][fields][1]=slug` +
-        `&populate[coverImage][fields][0]=url` +
-        `&populate[coverImage][fields][1]=alternativeText`,
-      { cacheMs: CMS_CACHE_TTL_MS }
-    );
-    const data = json?.data || [];
+    let json: CMSCollectionResponse | null = null;
+
+    try {
+      json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live", fullPopulateQuery), {
+        cacheMs: CMS_CACHE_TTL_MS,
+      });
+    } catch (error) {
+      const status = parseCMSStatusCode(error);
+      const shouldTryFallback = page === 1 && results.length === 0;
+
+      if (!shouldTryFallback) {
+        throw error;
+      }
+
+      if (status === 404) {
+        return [];
+      }
+
+      if (status === 400) {
+        json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live", minimalPopulateQuery), {
+          cacheMs: CMS_CACHE_TTL_MS,
+        }).catch(() => null);
+
+        if (!json) {
+          return [];
+        }
+      } else if (status === 401 || status === 403) {
+        json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live", fullPopulateQuery), {
+          cacheMs: CMS_CACHE_TTL_MS,
+          authMode: "none",
+        }).catch(() => null);
+
+        if (!json) {
+          json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live", minimalPopulateQuery), {
+            cacheMs: CMS_CACHE_TTL_MS,
+            authMode: "none",
+          }).catch(() => null);
+        }
+
+        if (!json) {
+          return [];
+        }
+      } else {
+        throw error;
+      }
+    }
+
+    if (!json) break;
+
+    let data = json?.data || [];
+    if (page === 1 && results.length === 0 && data.length === 0 && CMS_ALLOW_DRAFT_FALLBACK) {
+      const previewJson = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "preview", fullPopulateQuery), {
+        cacheMs: CMS_CACHE_TTL_MS,
+      }).catch(() => null);
+      if (previewJson?.data?.length) {
+        json = previewJson;
+        data = previewJson.data || [];
+      }
+    }
+
     const remaining = Math.max(maxRecords - results.length, 0);
     if (remaining <= 0) {
       break;
@@ -1357,26 +1857,92 @@ export async function fetchMCPServers(
       : Number.POSITIVE_INFINITY;
   let page = 1;
   const results: ReturnType<typeof mapMCPServer>[] = [];
+  const fullPopulateQuery =
+    `&populate[tags][fields][0]=name` +
+    `&populate[tags][fields][1]=slug` +
+    `&populate[companies][fields][0]=name` +
+    `&populate[companies][fields][1]=slug` +
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText`;
+  const minimalPopulateQuery =
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText`;
+  const buildPageQuery = (
+    currentPage: number,
+    publicationState: "live" | "preview",
+    populateQuery: string
+  ) =>
+    `${CMS_URL}/api/mcp-servers` +
+    `?` +
+    `${sortQuery.replace(/^&/, "")}` +
+    `${visibilityFilter}` +
+    `&publicationState=${publicationState}` +
+    `${listFields}` +
+    `&pagination[page]=${currentPage}` +
+    `&pagination[pageSize]=${pageSize}` +
+    `${populateQuery}`;
 
   while (true) {
-    const json = await fetchCMSJson<CMSCollectionResponse>(
-      `${CMS_URL}/api/mcp-servers` +
-        `?` +
-        `${sortQuery.replace(/^&/, "")}` +
-        `${visibilityFilter}` +
-        `&publicationState=live` +
-        `${listFields}` +
-        `&pagination[page]=${page}` +
-        `&pagination[pageSize]=${pageSize}` +
-        `&populate[tags][fields][0]=name` +
-        `&populate[tags][fields][1]=slug` +
-        `&populate[companies][fields][0]=name` +
-        `&populate[companies][fields][1]=slug` +
-        `&populate[coverImage][fields][0]=url` +
-        `&populate[coverImage][fields][1]=alternativeText`,
-      { cacheMs: CMS_CACHE_TTL_MS }
-    );
-    const data = json?.data || [];
+    let json: CMSCollectionResponse | null = null;
+
+    try {
+      json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live", fullPopulateQuery), {
+        cacheMs: CMS_CACHE_TTL_MS,
+      });
+    } catch (error) {
+      const status = parseCMSStatusCode(error);
+      const shouldTryFallback = page === 1 && results.length === 0;
+
+      if (!shouldTryFallback) {
+        throw error;
+      }
+
+      if (status === 404) {
+        return [];
+      }
+
+      if (status === 400) {
+        json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live", minimalPopulateQuery), {
+          cacheMs: CMS_CACHE_TTL_MS,
+        }).catch(() => null);
+
+        if (!json) {
+          return [];
+        }
+      } else if (status === 401 || status === 403) {
+        json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live", fullPopulateQuery), {
+          cacheMs: CMS_CACHE_TTL_MS,
+          authMode: "none",
+        }).catch(() => null);
+
+        if (!json) {
+          json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live", minimalPopulateQuery), {
+            cacheMs: CMS_CACHE_TTL_MS,
+            authMode: "none",
+          }).catch(() => null);
+        }
+
+        if (!json) {
+          return [];
+        }
+      } else {
+        throw error;
+      }
+    }
+
+    if (!json) break;
+
+    let data = json?.data || [];
+    if (page === 1 && results.length === 0 && data.length === 0 && CMS_ALLOW_DRAFT_FALLBACK) {
+      const previewJson = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "preview", fullPopulateQuery), {
+        cacheMs: CMS_CACHE_TTL_MS,
+      }).catch(() => null);
+      if (previewJson?.data?.length) {
+        json = previewJson;
+        data = previewJson.data || [];
+      }
+    }
+
     const remaining = Math.max(maxRecords - results.length, 0);
     if (remaining <= 0) {
       break;
@@ -1397,7 +1963,7 @@ export async function fetchMCPServers(
 }
 
 export async function fetchAgentBySlug(slug: string) {
-  const json = await fetchCMSJson<CMSCollectionResponse>(
+  const query =
     `${CMS_URL}/api/agents` +
       `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
       `&publicationState=live` +
@@ -1406,14 +1972,26 @@ export async function fetchAgentBySlug(slug: string) {
       `&populate[companies][fields][0]=name` +
       `&populate[companies][fields][1]=slug` +
       `&populate[coverImage][fields][0]=url` +
-      `&populate[coverImage][fields][1]=alternativeText`,
-    { cacheMs: CMS_CACHE_TTL_MS }
-  );
-  return json?.data?.[0] ? mapAgent(json.data[0]) : null;
+      `&populate[coverImage][fields][1]=alternativeText`;
+
+  const json = await fetchCMSJson<CMSCollectionResponse>(query, { cacheMs: CMS_CACHE_TTL_MS });
+  if (json?.data?.[0]) {
+    return mapAgent(json.data[0]);
+  }
+
+  if (!CMS_ALLOW_DRAFT_FALLBACK) {
+    return null;
+  }
+
+  const previewQuery = query.replace("&publicationState=live", "&publicationState=preview");
+  const previewJson = await fetchCMSJson<CMSCollectionResponse>(previewQuery, {
+    cacheMs: CMS_CACHE_TTL_MS,
+  }).catch(() => null);
+  return previewJson?.data?.[0] ? mapAgent(previewJson.data[0]) : null;
 }
 
 export async function fetchMCPServerBySlug(slug: string) {
-  const json = await fetchCMSJson<CMSCollectionResponse>(
+  const query =
     `${CMS_URL}/api/mcp-servers` +
       `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
       `&publicationState=live` +
@@ -1422,10 +2000,22 @@ export async function fetchMCPServerBySlug(slug: string) {
       `&populate[companies][fields][0]=name` +
       `&populate[companies][fields][1]=slug` +
       `&populate[coverImage][fields][0]=url` +
-      `&populate[coverImage][fields][1]=alternativeText`,
-    { cacheMs: CMS_CACHE_TTL_MS }
-  );
-  return json?.data?.[0] ? mapMCPServer(json.data[0]) : null;
+      `&populate[coverImage][fields][1]=alternativeText`;
+
+  const json = await fetchCMSJson<CMSCollectionResponse>(query, { cacheMs: CMS_CACHE_TTL_MS });
+  if (json?.data?.[0]) {
+    return mapMCPServer(json.data[0]);
+  }
+
+  if (!CMS_ALLOW_DRAFT_FALLBACK) {
+    return null;
+  }
+
+  const previewQuery = query.replace("&publicationState=live", "&publicationState=preview");
+  const previewJson = await fetchCMSJson<CMSCollectionResponse>(previewQuery, {
+    cacheMs: CMS_CACHE_TTL_MS,
+  }).catch(() => null);
+  return previewJson?.data?.[0] ? mapMCPServer(previewJson.data[0]) : null;
 }
 
 function normalizeTagKey(tag?: { name?: string; slug?: string } | null) {

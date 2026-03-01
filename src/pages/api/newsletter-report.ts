@@ -26,6 +26,7 @@ type SubscriberAttributes = {
   unsubscribedAt?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
+  metadata?: unknown;
 };
 
 type CMSCollectionResponse = {
@@ -45,6 +46,12 @@ type ReportRow = {
   status: string;
   sourcePage: string;
   sourcePath: string;
+  utmSource: string;
+  utmMedium: string;
+  utmCampaign: string;
+  utmTerm: string;
+  utmContent: string;
+  referrer: string;
   subscribedAt: string;
   unsubscribedAt: string;
   createdAt: string;
@@ -54,6 +61,11 @@ type ReportRow = {
 function normalizeText(value: unknown, maxLength = 200) {
   if (typeof value !== "string") return "";
   return value.trim().slice(0, maxLength);
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
 }
 
 function readQueryValue(value: string | string[] | undefined) {
@@ -121,12 +133,19 @@ async function cmsFetch<T>(path: string, init: RequestInit = {}) {
 
 function toRow(entry: CMSCollectionItem): ReportRow {
   const attrs = entry.attributes ?? {};
+  const metadata = asRecord(attrs.metadata);
   return {
     id: String(entry.documentId || entry.id || ""),
     email: normalizeText(attrs.email, 220),
     status: normalizeText(attrs.status, 32) || "unknown",
     sourcePage: normalizeText(attrs.sourcePage, 120),
     sourcePath: normalizeText(attrs.sourcePath, 220),
+    utmSource: normalizeText(metadata?.utmSource, 120),
+    utmMedium: normalizeText(metadata?.utmMedium, 120),
+    utmCampaign: normalizeText(metadata?.utmCampaign, 160),
+    utmTerm: normalizeText(metadata?.utmTerm, 120),
+    utmContent: normalizeText(metadata?.utmContent, 120),
+    referrer: normalizeText(metadata?.referrer, 320),
     subscribedAt: normalizeText(attrs.subscribedAt, 64),
     unsubscribedAt: normalizeText(attrs.unsubscribedAt, 64),
     createdAt: normalizeText(attrs.createdAt, 64),
@@ -147,6 +166,12 @@ function rowsToCsv(rows: ReportRow[]) {
     "status",
     "sourcePage",
     "sourcePath",
+    "utmSource",
+    "utmMedium",
+    "utmCampaign",
+    "utmTerm",
+    "utmContent",
+    "referrer",
     "subscribedAt",
     "unsubscribedAt",
     "createdAt",
@@ -168,6 +193,7 @@ function buildSummary(rows: ReportRow[]) {
     bounced: 0,
     unknown: 0,
     bySourcePage: {} as Record<string, number>,
+    byUtmCampaign: {} as Record<string, number>,
   };
 
   for (const row of rows) {
@@ -179,6 +205,9 @@ function buildSummary(rows: ReportRow[]) {
 
     const key = row.sourcePage || "unknown";
     summary.bySourcePage[key] = (summary.bySourcePage[key] || 0) + 1;
+
+    const campaignKey = row.utmCampaign || "none";
+    summary.byUtmCampaign[campaignKey] = (summary.byUtmCampaign[campaignKey] || 0) + 1;
   }
 
   return summary;
@@ -211,7 +240,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ? `&filters[status][$eq]=${encodeURIComponent(statusFilter)}`
         : "";
       const response = await cmsFetch<CMSCollectionResponse>(
-        `/api/newsletter-subscribers?pagination[page]=${page}&pagination[pageSize]=${pageSize}${statusQuery}&fields[0]=email&fields[1]=status&fields[2]=sourcePage&fields[3]=sourcePath&fields[4]=subscribedAt&fields[5]=unsubscribedAt&fields[6]=createdAt&fields[7]=updatedAt&sort=createdAt:desc`
+        `/api/newsletter-subscribers?pagination[page]=${page}&pagination[pageSize]=${pageSize}${statusQuery}&fields[0]=email&fields[1]=status&fields[2]=sourcePage&fields[3]=sourcePath&fields[4]=subscribedAt&fields[5]=unsubscribedAt&fields[6]=createdAt&fields[7]=updatedAt&fields[8]=metadata&sort=createdAt:desc`
       );
       const pageRows = (response.data || []).map(toRow);
       rows.push(...pageRows);

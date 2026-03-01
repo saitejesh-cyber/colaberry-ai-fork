@@ -4,8 +4,14 @@ import Head from "next/head";
 import type { GetServerSideProps } from "next";
 import EnterprisePageHero from "../../../../components/EnterprisePageHero";
 import StatePanel from "../../../../components/StatePanel";
-import type { Company, Tag } from "../../../../lib/cms";
+import {
+  fetchPodcastEpisodes,
+  type Company,
+  type PodcastEpisode,
+  type Tag,
+} from "../../../../lib/cms";
 import { heroImage } from "../../../../lib/media";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../../lib/seo";
 
 type TaggedEpisode = {
   id: number;
@@ -33,44 +39,18 @@ export const getServerSideProps: GetServerSideProps<PodcastTagPageProps, RoutePa
     return { notFound: true };
   }
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_CMS_URL}/api/podcast-episodes` +
-        `?filters[tags][slug][$eq]=${tag}` +
-        `&filters[podcastStatus][$eq]=published` +
-        `&publicationState=live` +
-        `&populate[tags][fields][0]=name` +
-        `&populate[tags][fields][1]=slug` +
-        `&populate[companies][fields][0]=name` +
-        `&populate[companies][fields][1]=slug`,
-      { cache: "no-store" }
-    );
-
-    const json = await res.json();
-    const rawData = Array.isArray(json?.data) ? json.data : [];
-    const episodes: TaggedEpisode[] =
-      rawData.map((item: { id?: number; attributes?: Record<string, unknown> }) => {
-        const attrs = (item.attributes ?? item) as {
-          title?: string;
-          slug?: string;
-          tags?: { data?: Tag[] } | Tag[];
-          companies?: { data?: Company[] } | Company[];
-        };
-        return {
-          id: item.id ?? 0,
-          title: attrs.title ?? "Podcast episode",
-          slug: attrs.slug ?? "",
-          tags: Array.isArray(attrs.tags)
-            ? attrs.tags
-            : Array.isArray(attrs.tags?.data)
-            ? attrs.tags.data
-            : [],
-          companies: Array.isArray(attrs.companies)
-            ? attrs.companies
-            : Array.isArray(attrs.companies?.data)
-            ? attrs.companies.data
-            : [],
-        };
-      }) || [];
+    const allEpisodes = await fetchPodcastEpisodes({ maxRecords: 500 });
+    const episodes: TaggedEpisode[] = allEpisodes
+      .filter((episode: PodcastEpisode) =>
+        (episode.tags || []).some((entry) => entry.slug?.toLowerCase() === tag.toLowerCase())
+      )
+      .map((episode) => ({
+        id: episode.id,
+        title: episode.title,
+        slug: episode.slug,
+        tags: episode.tags || [],
+        companies: episode.companies || [],
+      }));
 
     return {
       props: {
@@ -95,18 +75,35 @@ export default function PodcastTagPage({
   episodes,
   fetchError,
 }: PodcastTagPageProps) {
+  const seoMeta: SeoMeta = {
+    title: `#${tag} Podcasts | Colaberry AI`,
+    description: `Podcast episodes tagged with #${tag}, including linked companies and direct episode access.`,
+    canonical: buildCanonical(`/resources/podcasts/tag/${encodeURIComponent(tag)}`),
+  };
   const uniqueCompanyCount = new Set(
     episodes.flatMap((episode) => (episode.companies || []).map((company) => company.slug).filter(Boolean))
   ).size;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai").replace(/\/$/, "");
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `#${tag} podcast episodes`,
+    itemListElement: episodes.map((episode, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: episode.title,
+      url: `${siteUrl}/resources/podcasts/${episode.slug}`,
+    })),
+  };
 
   return (
     <Layout>
       <Head>
-        <title>{`#${tag} Podcasts | Colaberry AI`}</title>
-        <meta
-          name="description"
-          content={`Podcast episodes tagged with #${tag}, including linked companies and direct episode access.`}
-        />
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
       </Head>
       {fetchError && (
         <div className="section-spacing">
@@ -151,13 +148,13 @@ export default function PodcastTagPage({
       <ul className="section-spacing grid gap-4">
         {episodes.map((e) => (
           <li key={e.id} className="surface-panel section-shell p-4">
-            <div className="text-sm font-semibold text-slate-900">{e.title}</div>
+            <div className="text-sm font-semibold text-zinc-900">{e.title}</div>
             <div className="mt-3 flex flex-wrap gap-2">
               {e.companies?.map((company) => (
                 <Link
                   key={company.slug}
                   href={`/resources/podcasts/company?slug=${encodeURIComponent(company.slug)}`}
-                  className="chip chip-brand rounded-full px-2.5 py-1 text-xs font-semibold"
+                  className="chip chip-brand rounded-md px-2.5 py-1 text-xs font-semibold"
                 >
                   {company.name}
                 </Link>

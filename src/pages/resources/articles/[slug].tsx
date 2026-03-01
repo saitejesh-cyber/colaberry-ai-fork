@@ -8,6 +8,7 @@ import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import StatePanel from "../../../components/StatePanel";
 import { Article, ArticleMedia, fetchArticleBySlug } from "../../../lib/cms";
 import { heroImage } from "../../../lib/media";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 
 type ArticleDetailProps = {
   article: Article;
@@ -42,32 +43,48 @@ export const getStaticProps: GetStaticProps<ArticleDetailProps> = async ({ param
 };
 
 export default function ArticleDetailPage({ article }: ArticleDetailProps) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai";
-  const canonicalUrl = `${siteUrl}/resources/articles/${article.slug}`;
   const publishedLabel = formatDateLabel(article.publishedAt || article.updatedAt);
   const blocks = Array.isArray(article.blocks) ? article.blocks : [];
+  const seoMeta: SeoMeta = {
+    title: `${article.title} | Articles | Colaberry AI`,
+    description: article.description || "Enterprise AI article from Colaberry AI resources.",
+    canonical: buildCanonical(`/resources/articles/${article.slug}`),
+    ogType: "article",
+    ogImage: article.coverImageUrl || null,
+    ogImageAlt: article.coverImageAlt || article.title,
+  };
 
   return (
     <Layout>
       <Head>
-        <title>{`${article.title} | Articles | Colaberry AI`}</title>
-        <meta
-          name="description"
-          content={article.description || "Enterprise AI article from Colaberry AI resources."}
-        />
-        <link rel="canonical" href={canonicalUrl} />
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": article.title,
+          "description": article.description || "Enterprise AI article from Colaberry AI resources.",
+          "url": buildCanonical(`/resources/articles/${article.slug}`),
+          ...(article.coverImageUrl ? { "image": article.coverImageUrl } : {}),
+          ...(article.publishedAt ? { "datePublished": article.publishedAt } : {}),
+          ...(article.updatedAt ? { "dateModified": article.updatedAt } : {}),
+          ...(article.author?.name ? { "author": { "@type": "Person", "name": article.author.name } } : {}),
+          "publisher": { "@type": "Organization", "name": "Colaberry AI" },
+        }) }} />
       </Head>
 
-      <nav className="flex flex-wrap items-center gap-2 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/resources" className="hover:text-slate-700">
+      <nav className="flex flex-wrap items-center gap-2 text-xs text-zinc-500" aria-label="Breadcrumb">
+        <Link href="/resources" className="hover:text-zinc-700">
           Resources
         </Link>
         <span>/</span>
-        <Link href="/resources/articles" className="hover:text-slate-700">
+        <Link href="/resources/articles" className="hover:text-zinc-700">
           Articles
         </Link>
         <span>/</span>
-        <span className="text-slate-700" aria-current="page">
+        <span className="text-zinc-700" aria-current="page">
           {article.title}
         </span>
       </nav>
@@ -137,7 +154,7 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
         </div>
       ) : (
         <article className="surface-panel section-shell section-spacing p-6 sm:p-8">
-          <div className="prose max-w-none text-slate-700 dark:text-slate-200">
+          <div className="prose max-w-none text-zinc-700 dark:text-zinc-200">
             {blocks.map((block, index) => {
               const component = block.__component || "";
               if (component === "shared.rich-text") {
@@ -176,9 +193,9 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
                 const quoteTitle = typeof block.title === "string" ? block.title : "";
                 if (!quoteBody && !quoteTitle) return null;
                 return (
-                  <blockquote key={`quote-${index}`} className="section-card my-6 rounded-2xl p-5">
-                    {quoteTitle ? <div className="mb-2 text-sm font-semibold text-slate-900">{quoteTitle}</div> : null}
-                    {quoteBody ? <p className="m-0 text-slate-700">{quoteBody}</p> : null}
+                  <blockquote key={`quote-${index}`} className="section-card my-6 rounded-lg p-5">
+                    {quoteTitle ? <div className="mb-2 text-sm font-semibold text-zinc-900">{quoteTitle}</div> : null}
+                    {quoteBody ? <p className="m-0 text-zinc-700">{quoteBody}</p> : null}
                   </blockquote>
                 );
               }
@@ -193,7 +210,7 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
                       alt={media.alt || article.title}
                       width={1400}
                       height={840}
-                      className="h-auto w-full rounded-2xl border border-slate-200/80 object-cover"
+                      className="h-auto w-full rounded-lg border border-zinc-200/80 object-cover"
                       unoptimized
                       loading="lazy"
                     />
@@ -213,7 +230,7 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
                         alt={media.alt || `${article.title} media ${mediaIndex + 1}`}
                         width={1200}
                         height={720}
-                        className="h-auto w-full rounded-2xl border border-slate-200/80 object-cover"
+                        className="h-auto w-full rounded-lg border border-zinc-200/80 object-cover"
                         unoptimized
                         loading="lazy"
                       />

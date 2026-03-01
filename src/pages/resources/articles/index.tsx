@@ -6,6 +6,7 @@ import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import StatePanel from "../../../components/StatePanel";
 import { heroImage } from "../../../lib/media";
 import { Article, fetchArticles } from "../../../lib/cms";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 
 type ArticlesPageProps = {
   articles: Article[];
@@ -32,14 +33,26 @@ export const getStaticProps: GetStaticProps<ArticlesPageProps> = async () => {
 };
 
 export default function ArticlesPage({ articles, fetchError }: ArticlesPageProps) {
+  const seoMeta: SeoMeta = {
+    title: "Articles | Colaberry AI",
+    description: "Enterprise AI articles, analyses, and practical implementation guidance from Colaberry AI.",
+    canonical: buildCanonical("/resources/articles"),
+  };
+
   return (
     <Layout>
       <Head>
-        <title>Articles | Colaberry AI</title>
-        <meta
-          name="description"
-          content="Enterprise AI articles, analyses, and practical implementation guidance from Colaberry AI."
-        />
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Colaberry AI Articles",
+          "description": "Enterprise AI articles, analyses, and practical implementation guidance.",
+          "url": `${process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai"}/resources/articles`,
+        }) }} />
       </Head>
 
       <EnterprisePageHero
@@ -100,24 +113,24 @@ export default function ArticlesPage({ articles, fetchError }: ArticlesPageProps
               <Link
                 key={article.id}
                 href={`/resources/articles/${article.slug}`}
-                className="surface-panel section-card surface-hover surface-interactive group p-5"
+                className="card-feature group p-5"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <span className="chip chip-muted rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700">
+                  <span className="chip chip-muted rounded-md border border-zinc-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700">
                     {category}
                   </span>
                   {updatedLabel ? (
-                    <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-300">
+                    <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-600 dark:text-zinc-300">
                       {updatedLabel}
                     </span>
                   ) : null}
                 </div>
-                <div className="mt-3 text-base font-semibold text-slate-900">{article.title}</div>
-                <p className="mt-2 line-clamp-3 text-sm text-slate-600">
+                <div className="mt-3 text-[0.9375rem] font-semibold text-zinc-900">{article.title}</div>
+                <p className="mt-2 line-clamp-3 text-sm text-zinc-600">
                   {article.description || "Open this article to read the full content."}
                 </p>
                 {article.author?.name ? (
-                  <p className="mt-3 text-xs font-medium text-slate-500">By {article.author.name}</p>
+                  <p className="mt-3 text-xs font-medium text-zinc-500">By {article.author.name}</p>
                 ) : null}
               </Link>
             );

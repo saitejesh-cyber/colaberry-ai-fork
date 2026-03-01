@@ -11,6 +11,12 @@ type DemoRequestPayload = {
   message?: string;
   sourcePage?: string;
   sourcePath?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+  referrer?: string;
   website?: string;
 };
 
@@ -26,6 +32,15 @@ function normalizeText(value: string | undefined, max = 240) {
 function normalizeEmail(value: string | undefined) {
   if (!value) return "";
   return String(value).trim().toLowerCase();
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function isValidEmail(value: string) {
@@ -86,8 +101,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const message = normalizeText(payload.message, MAX_MESSAGE_LENGTH);
   const sourcePage = normalizeText(payload.sourcePage, 120) || "request-demo";
   const sourcePath = normalizeText(payload.sourcePath, 240);
+  const utmSource = normalizeText(payload.utmSource, 140);
+  const utmMedium = normalizeText(payload.utmMedium, 140);
+  const utmCampaign = normalizeText(payload.utmCampaign, 180);
+  const utmTerm = normalizeText(payload.utmTerm, 160);
+  const utmContent = normalizeText(payload.utmContent, 160);
+  const referrer = normalizeText(payload.referrer, 360);
 
   const subject = `Demo request${company ? ` — ${company}` : ""}`;
+  const htmlName = escapeHtml(name || "Not provided");
+  const htmlEmail = escapeHtml(email);
+  const htmlCompany = escapeHtml(company || "Not provided");
+  const htmlRole = escapeHtml(role || "Not provided");
+  const htmlTeamSize = escapeHtml(teamSize || "Not provided");
+  const htmlTimeline = escapeHtml(timeline || "Not provided");
+  const htmlSourcePage = escapeHtml(sourcePage);
+  const htmlSourcePath = escapeHtml(sourcePath || "Unknown");
+  const htmlUtmSource = escapeHtml(utmSource || "Not provided");
+  const htmlUtmMedium = escapeHtml(utmMedium || "Not provided");
+  const htmlUtmCampaign = escapeHtml(utmCampaign || "Not provided");
+  const htmlUtmTerm = escapeHtml(utmTerm || "Not provided");
+  const htmlUtmContent = escapeHtml(utmContent || "Not provided");
+  const htmlReferrer = escapeHtml(referrer || "Not provided");
+  const htmlMessage = escapeHtml(message || "No additional notes provided.");
   const detailLines = [
     `Name: ${name || "Not provided"}`,
     `Email: ${email}`,
@@ -97,6 +133,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     `Timeline: ${timeline || "Not provided"}`,
     `Source page: ${sourcePage}`,
     `Source path: ${sourcePath || "Unknown"}`,
+    `UTM source: ${utmSource || "Not provided"}`,
+    `UTM medium: ${utmMedium || "Not provided"}`,
+    `UTM campaign: ${utmCampaign || "Not provided"}`,
+    `UTM term: ${utmTerm || "Not provided"}`,
+    `UTM content: ${utmContent || "Not provided"}`,
+    `Referrer: ${referrer || "Not provided"}`,
     "",
     "Message:",
     message || "No additional notes provided.",
@@ -107,17 +149,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     <div style="font-family:Arial,sans-serif;color:#0f172a;">
       <h2 style="margin:0 0 12px;">New demo request</h2>
       <table style="border-collapse:collapse;font-size:14px;line-height:1.5;">
-        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Name</td><td>${name || "Not provided"}</td></tr>
-        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Email</td><td>${email}</td></tr>
-        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Company</td><td>${company || "Not provided"}</td></tr>
-        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Role</td><td>${role || "Not provided"}</td></tr>
-        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Team size</td><td>${teamSize || "Not provided"}</td></tr>
-        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Timeline</td><td>${timeline || "Not provided"}</td></tr>
-        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Source page</td><td>${sourcePage}</td></tr>
-        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Source path</td><td>${sourcePath || "Unknown"}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Name</td><td>${htmlName}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Email</td><td>${htmlEmail}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Company</td><td>${htmlCompany}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Role</td><td>${htmlRole}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Team size</td><td>${htmlTeamSize}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Timeline</td><td>${htmlTimeline}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Source page</td><td>${htmlSourcePage}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Source path</td><td>${htmlSourcePath}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">UTM source</td><td>${htmlUtmSource}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">UTM medium</td><td>${htmlUtmMedium}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">UTM campaign</td><td>${htmlUtmCampaign}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">UTM term</td><td>${htmlUtmTerm}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">UTM content</td><td>${htmlUtmContent}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Referrer</td><td>${htmlReferrer}</td></tr>
       </table>
       <p style="margin:16px 0 4px;font-weight:600;">Message</p>
-      <p style="margin:0;">${message || "No additional notes provided."}</p>
+      <p style="margin:0;">${htmlMessage}</p>
     </div>
   `;
 

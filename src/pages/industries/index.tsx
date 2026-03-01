@@ -1,11 +1,54 @@
+import type { GetStaticProps } from "next";
 import Layout from "../../components/Layout";
-import Link from "next/link";
-import SectionHeader from "../../components/SectionHeader";
-import MediaPanel from "../../components/MediaPanel";
+import Head from "next/head";
 import PremiumMediaCard from "../../components/PremiumMediaCard";
+import EnterpriseCtaBand from "../../components/EnterpriseCtaBand";
+import EnterprisePageHero from "../../components/EnterprisePageHero";
 import { heroImage } from "../../lib/media";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
+import { fetchAgents, fetchUseCases } from "../../lib/cms";
 
-export default function IndustriesIndex() {
+type IndustryCount = { agents: number; useCases: number };
+type IndustriesProps = { industryCounts: Record<string, IndustryCount> };
+
+export const getStaticProps: GetStaticProps<IndustriesProps> = async () => {
+  const industryCounts: Record<string, IndustryCount> = {};
+  try {
+    const [agentsResult, useCasesResult] = await Promise.allSettled([
+      fetchAgents("public"),
+      fetchUseCases("public"),
+    ]);
+    const agents = agentsResult.status === "fulfilled" ? agentsResult.value : [];
+    const useCases = useCasesResult.status === "fulfilled" ? useCasesResult.value : [];
+    // Count agents per industry (agents have an "industry" or "industries" field)
+    for (const agent of agents) {
+      const ind = (agent as any).industry || (agent as any).industries?.[0] || "";
+      const slug = typeof ind === "string" ? ind.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and") : "";
+      if (slug) {
+        if (!industryCounts[slug]) industryCounts[slug] = { agents: 0, useCases: 0 };
+        industryCounts[slug].agents++;
+      }
+    }
+    // Count use cases per industry
+    for (const uc of useCases) {
+      const ind = (uc as any).industry || (uc as any).industries?.[0] || "";
+      const slug = typeof ind === "string" ? ind.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and") : "";
+      if (slug) {
+        if (!industryCounts[slug]) industryCounts[slug] = { agents: 0, useCases: 0 };
+        industryCounts[slug].useCases++;
+      }
+    }
+  } catch {}
+  return { props: { industryCounts }, revalidate: 600 };
+};
+
+export default function IndustriesIndex({ industryCounts }: IndustriesProps) {
+  const seoMeta: SeoMeta = {
+    title: "Industries | Colaberry AI",
+    description: "Industry-specific AI workspaces for agents, MCP patterns, use cases, and measurable outcomes.",
+    canonical: buildCanonical("/industries"),
+  };
+
   const industries = [
     { name: "Agriculture", slug: "agriculture", image: heroImage("hero-agents-cinematic.webp") },
     { name: "Energy", slug: "energy", image: heroImage("hero-updates-cinematic.webp") },
@@ -49,39 +92,57 @@ export default function IndustriesIndex() {
 
   return (
     <Layout>
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-        <div className="flex flex-col gap-3">
-          <SectionHeader
-            as="h1"
-            size="xl"
-            kicker="Industry expertise"
-            title="Industries"
-            description="Domain-led delivery. Explore industry pages with aligned solutions, case studies, and AI workspaces."
-          />
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {industryHighlights.map((item) => (
-              <PremiumMediaCard
-                key={item.title}
-                href={item.href}
-                title={item.title}
-                description={item.description}
-                meta={item.meta}
-                image={item.image}
-                size="sm"
-              />
-            ))}
-          </div>
-        </div>
-        <MediaPanel
-          kicker="Industry coverage"
-          title="Service line coverage map"
-          description="A quick view of industry-aligned AI service lines."
-          image={heroImage("hero-industries-cinematic.webp")}
-          alt="Industry landscape overview"
-          aspect="wide"
-          fit="cover"
+      <Head>
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              name: "Colaberry AI Industries",
+              description:
+                "Industry-specific AI workspaces for agents, MCP patterns, use cases, and measurable outcomes.",
+              url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai"}/industries`,
+            }),
+          }}
         />
-      </div>
+      </Head>
+      <EnterprisePageHero
+        kicker="Industry expertise"
+        title="Industries"
+        description="Domain-led delivery surfaces for sector-specific agents, MCP patterns, use cases, and outcomes."
+        image={heroImage("hero-industries-cinematic.webp")}
+        alt="Industry landscape overview"
+        imageKicker="Coverage"
+        imageTitle="Service line coverage map"
+        imageDescription="Industry-aligned AI delivery contexts with playbooks and measurable outcomes."
+        chips={["Agriculture", "Energy", "Utilities", "Healthcare", "Manufacturing", "Supply chain"]}
+        primaryAction={{ label: "Explore solutions", href: "/solutions" }}
+        secondaryAction={{ label: "Browse case studies", href: "/resources/case-studies", variant: "secondary" }}
+        metrics={[
+          { label: "Industry tracks", value: `${industries.length}`, note: "Current vertical delivery surfaces." },
+          { label: "Launch path", value: "Catalog → outcome", note: "From signals to deployable patterns." },
+          { label: "Distribution", value: "Global", note: "Shared framework, domain-adapted execution." },
+        ]}
+      />
+
+      <section className="mt-6 grid gap-3 sm:grid-cols-2">
+        {industryHighlights.map((item) => (
+          <PremiumMediaCard
+            key={item.title}
+            href={item.href}
+            title={item.title}
+            description={item.description}
+            meta={item.meta}
+            image={item.image}
+            size="sm"
+          />
+        ))}
+      </section>
 
       <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
         {industries.map((item) => (
@@ -89,7 +150,14 @@ export default function IndustriesIndex() {
             key={item.slug}
             href={`/industries/${item.slug}`}
             title={item.name}
-            description="Case studies, outcomes, and context."
+            description={(() => {
+              const counts = industryCounts[item.slug];
+              if (!counts || (counts.agents === 0 && counts.useCases === 0)) return "Case studies, outcomes, and context.";
+              const parts: string[] = [];
+              if (counts.agents > 0) parts.push(`${counts.agents} agent${counts.agents === 1 ? "" : "s"}`);
+              if (counts.useCases > 0) parts.push(`${counts.useCases} use case${counts.useCases === 1 ? "" : "s"}`);
+              return parts.join(" \u00b7 ") + " in the catalog.";
+            })()}
             meta="Industry"
             image={item.image}
             size="sm"
@@ -97,20 +165,15 @@ export default function IndustriesIndex() {
         ))}
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <Link
-          href="/resources/case-studies"
-          className="btn btn-secondary"
-        >
-          Browse case studies
-        </Link>
-        <Link
-          href="/solutions"
-          className="btn btn-primary"
-        >
-          Explore solutions
-        </Link>
-      </div>
+      <EnterpriseCtaBand
+        kicker="Industry expansion"
+        title="Move from catalog to outcome with domain-ready AI delivery"
+        description="Combine industry context, governed agents, and MCP integrations into repeatable playbooks that teams can deploy with confidence."
+        primaryHref="/solutions"
+        primaryLabel="Explore solutions"
+        secondaryHref="/resources/case-studies"
+        secondaryLabel="Browse case studies"
+      />
     </Layout>
   );
 }

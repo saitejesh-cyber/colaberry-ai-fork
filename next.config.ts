@@ -18,6 +18,7 @@ const cmsRemotePattern = (() => {
 
 const nextConfig: NextConfig = {
   images: {
+    qualities: [75, 90],
     remotePatterns: cmsRemotePattern ? [cmsRemotePattern] : [],
     localPatterns: [
       {
@@ -65,6 +66,25 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
           },
+          ...(process.env.NODE_ENV === "production"
+            ? [
+                {
+                  key: "Content-Security-Policy",
+                  value: [
+                    "default-src 'self'",
+                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.buzzsprout.com",
+                    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                    "font-src 'self' https://fonts.gstatic.com data:",
+                    `img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com ${cmsUrl ? new URL(cmsUrl).origin : ""}`.trim(),
+                    `connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com ${cmsUrl || ""}`.trim(),
+                    "frame-src 'self' https://www.buzzsprout.com",
+                    "frame-ancestors 'self'",
+                    "base-uri 'self'",
+                    "form-action 'self'",
+                  ].join("; "),
+                },
+              ]
+            : []),
         ],
       },
       {

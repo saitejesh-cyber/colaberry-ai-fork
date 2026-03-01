@@ -1,11 +1,38 @@
 import Layout from "../../components/Layout";
+import Head from "next/head";
 import Link from "next/link";
 import EnterprisePageHero from "../../components/EnterprisePageHero";
 import { heroImage } from "../../lib/media";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
 
 export default function WhitePapers() {
+  const seoMeta: SeoMeta = {
+    title: "White Papers | Colaberry AI",
+    description: "Technical deep-dives, POVs, and reference architectures for enterprise teams deploying AI at scale.",
+    canonical: buildCanonical("/resources/white-papers"),
+  };
+
   return (
     <Layout>
+      <Head>
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              "name": "White Papers | Colaberry AI",
+              "description": "Technical deep-dives, POVs, and reference architectures for enterprise teams deploying AI at scale.",
+              "url": `${process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai"}/resources/white-papers`,
+            }),
+          }}
+        />
+      </Head>
+
       <EnterprisePageHero
         kicker="Resources"
         title="White papers"
@@ -63,13 +90,13 @@ export default function WhitePapers() {
 
 function Card({ title, description }: { title: string; description: string }) {
   return (
-    <div className="surface-panel section-shell p-6">
+    <div className="card-feature p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-base font-semibold text-slate-900">{title}</div>
-          <div className="mt-1 text-sm text-slate-600">{description}</div>
+          <div className="text-[0.9375rem] font-semibold text-zinc-900">{title}</div>
+          <div className="mt-1 text-sm text-zinc-600">{description}</div>
         </div>
-        <span className="chip chip-muted rounded-full px-2.5 py-1 text-xs font-semibold">
+        <span className="chip chip-muted rounded-md px-2.5 py-1 text-xs font-semibold">
           Planned
         </span>
       </div>

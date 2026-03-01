@@ -1,16 +1,24 @@
-import { FormEvent, useState } from "react";
-import { DEFAULT_DEMO_REQUEST_MESSAGE, submitDemoRequest } from "../lib/demoRequest";
+import { FormEvent, useMemo, useState } from "react";
+import { DEFAULT_DEMO_REQUEST_MESSAGE, isValidWorkEmail, submitDemoRequest } from "../lib/demoRequest";
+import { getTrackingContext } from "../lib/tracking";
 
 type DemoRequestFormProps = {
   sourcePage?: string;
   sourcePath?: string;
+  onSuccess?: () => void;
 };
 
 type SubmissionState = "idle" | "submitting" | "success" | "error";
 
+type FieldErrors = {
+  name?: string;
+  email?: string;
+};
+
 export default function DemoRequestForm({
   sourcePage = "request-demo",
   sourcePath,
+  onSuccess,
 }: DemoRequestFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -22,10 +30,48 @@ export default function DemoRequestForm({
   const [website, setWebsite] = useState("");
   const [state, setState] = useState<SubmissionState>("idle");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const trackingContext = useMemo(() => getTrackingContext(), []);
+
+  const resolvedSourcePath = useMemo(() => {
+    if (sourcePath) return sourcePath;
+    if (typeof window === "undefined") return undefined;
+    return `${window.location.pathname}${window.location.search || ""}`;
+  }, [sourcePath]);
+
+  function validateEmail(value: string): string | undefined {
+    if (!value.trim()) return "Work email is required.";
+    if (!isValidWorkEmail(value)) return "Please enter a valid work email address.";
+    return undefined;
+  }
+
+  function validateName(value: string): string | undefined {
+    if (!value.trim()) return "Name is required.";
+    return undefined;
+  }
+
+  function handleBlur(field: string) {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    if (field === "email") {
+      setFieldErrors((prev) => ({ ...prev, email: validateEmail(email) }));
+    }
+    if (field === "name") {
+      setFieldErrors((prev) => ({ ...prev, name: validateName(name) }));
+    }
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (state === "submitting") return;
+
+    // Validate all required fields before submit
+    const nameError = validateName(name);
+    const emailError = validateEmail(email);
+    setFieldErrors({ name: nameError, email: emailError });
+    setTouched({ name: true, email: true });
+
+    if (nameError || emailError) return;
 
     setState("submitting");
     setStatusMessage(null);
@@ -41,7 +87,13 @@ export default function DemoRequestForm({
         message,
         website,
         sourcePage,
-        sourcePath,
+        sourcePath: resolvedSourcePath,
+        utmSource: trackingContext.utmSource,
+        utmMedium: trackingContext.utmMedium,
+        utmCampaign: trackingContext.utmCampaign,
+        utmTerm: trackingContext.utmTerm,
+        utmContent: trackingContext.utmContent,
+        referrer: trackingContext.referrer,
       });
 
       if (!payload.ok) {
@@ -60,6 +112,9 @@ export default function DemoRequestForm({
       setTimeline("");
       setMessage("");
       setWebsite("");
+      setFieldErrors({});
+      setTouched({});
+      onSuccess?.();
     } catch {
       setState("error");
       setStatusMessage("Unable to send request right now.");
@@ -68,51 +123,100 @@ export default function DemoRequestForm({
 
   const statusClass =
     state === "success"
-      ? "text-emerald-700 dark:text-emerald-300"
+      ? "text-[var(--trusted-text)] dark:text-[var(--trusted-text)]"
       : state === "error"
-      ? "text-rose-700 dark:text-rose-300"
-      : "text-slate-500 dark:text-slate-400";
+      ? "text-[var(--failure-text)] dark:text-[var(--failure-text)]"
+      : "text-zinc-500 dark:text-zinc-400";
+
+  const inputBaseClass = "input-premium mt-2";
+
+  const inputErrorClass =
+    "input-premium mt-2 !border-[var(--failure-stroke)] focus:!border-[var(--failure-text)] focus:!shadow-[0_0_0_3px_var(--failure-stroke)/30]";
 
   return (
     <form
       id="demo-request-form"
       onSubmit={onSubmit}
       className="surface-panel mt-8 p-6"
+      noValidate
     >
-      <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+      <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
         Request a tailored walkthrough
       </div>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
         Tell us about your team and we will prepare a demo that fits your workflows.
       </p>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-          Name
+        <div>
+          <label
+            htmlFor="demo-name"
+            className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400"
+          >
+            Name <span className="text-[var(--failure-text)]" aria-hidden="true">*</span>
+          </label>
           <input
+            id="demo-name"
             type="text"
             name="name"
             autoComplete="name"
+            required
+            aria-required="true"
+            aria-invalid={touched.name && !!fieldErrors.name}
+            aria-describedby={touched.name && fieldErrors.name ? "demo-name-error" : undefined}
             value={name}
-            onChange={(event) => setName(event.target.value)}
-            className="mt-2 w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
+            onChange={(event) => {
+              setName(event.target.value);
+              if (touched.name) {
+                setFieldErrors((prev) => ({ ...prev, name: validateName(event.target.value) }));
+              }
+            }}
+            onBlur={() => handleBlur("name")}
+            className={touched.name && fieldErrors.name ? inputErrorClass : inputBaseClass}
             placeholder="Your name"
           />
-        </label>
-        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-          Work email
+          {touched.name && fieldErrors.name ? (
+            <p id="demo-name-error" className="mt-1 text-xs text-[var(--failure-text)] dark:text-[var(--failure-text)]" role="alert">
+              {fieldErrors.name}
+            </p>
+          ) : null}
+        </div>
+
+        <div>
+          <label
+            htmlFor="demo-email"
+            className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400"
+          >
+            Work email <span className="text-[var(--failure-text)]" aria-hidden="true">*</span>
+          </label>
           <input
+            id="demo-email"
             type="email"
             name="email"
             autoComplete="email"
             required
+            aria-required="true"
+            aria-invalid={touched.email && !!fieldErrors.email}
+            aria-describedby={touched.email && fieldErrors.email ? "demo-email-error" : undefined}
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="mt-2 w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
+            onChange={(event) => {
+              setEmail(event.target.value);
+              if (touched.email) {
+                setFieldErrors((prev) => ({ ...prev, email: validateEmail(event.target.value) }));
+              }
+            }}
+            onBlur={() => handleBlur("email")}
+            className={touched.email && fieldErrors.email ? inputErrorClass : inputBaseClass}
             placeholder="name@company.com"
           />
-        </label>
-        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+          {touched.email && fieldErrors.email ? (
+            <p id="demo-email-error" className="mt-1 text-xs text-[var(--failure-text)] dark:text-[var(--failure-text)]" role="alert">
+              {fieldErrors.email}
+            </p>
+          ) : null}
+        </div>
+
+        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Company
           <input
             type="text"
@@ -120,11 +224,11 @@ export default function DemoRequestForm({
             autoComplete="organization"
             value={company}
             onChange={(event) => setCompany(event.target.value)}
-            className="mt-2 w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
+            className={inputBaseClass}
             placeholder="Company name"
           />
         </label>
-        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Role
           <input
             type="text"
@@ -132,28 +236,28 @@ export default function DemoRequestForm({
             autoComplete="organization-title"
             value={role}
             onChange={(event) => setRole(event.target.value)}
-            className="mt-2 w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
+            className={inputBaseClass}
             placeholder="Title or team"
           />
         </label>
-        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Team size
           <input
             type="text"
             name="teamSize"
             value={teamSize}
             onChange={(event) => setTeamSize(event.target.value)}
-            className="mt-2 w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
+            className={inputBaseClass}
             placeholder="e.g. 10-50"
           />
         </label>
-        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Timeline
           <select
             name="timeline"
             value={timeline}
             onChange={(event) => setTimeline(event.target.value)}
-            className="mt-2 w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100"
+            className="input-premium mt-2"
           >
             <option value="">Select timeline</option>
             <option value="Immediate">Immediate</option>
@@ -165,14 +269,14 @@ export default function DemoRequestForm({
         </label>
       </div>
 
-      <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+      <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
         Notes
         <textarea
           name="message"
           value={message}
           onChange={(event) => setMessage(event.target.value)}
           rows={4}
-          className="mt-2 w-full resize-none rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
+          className="input-premium mt-2 resize-none"
           placeholder={DEFAULT_DEMO_REQUEST_MESSAGE}
         />
       </label>
@@ -188,16 +292,16 @@ export default function DemoRequestForm({
       />
 
       <div className="mt-5 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <button type="submit" className="btn btn-primary" disabled={state === "submitting"}>
+        <button type="submit" className="btn btn-cta" disabled={state === "submitting"}>
           {state === "submitting" ? "Sending request..." : "Submit demo request"}
         </button>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
           We reply within 1-2 business days. Your info stays internal.
         </p>
       </div>
 
       {statusMessage ? (
-        <p className={`mt-3 text-sm ${statusClass}`} aria-live="polite">
+        <p className={`mt-3 text-sm ${statusClass}`} role={state === "error" ? "alert" : "status"} aria-live="polite">
           {statusMessage}
         </p>
       ) : null}

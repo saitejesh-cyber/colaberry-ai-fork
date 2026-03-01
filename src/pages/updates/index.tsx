@@ -1,12 +1,12 @@
 import Layout from "../../components/Layout";
-import Link from "next/link";
 import Head from "next/head";
 import { GetStaticProps } from "next";
 import SectionHeader from "../../components/SectionHeader";
-import MediaPanel from "../../components/MediaPanel";
 import StatePanel from "../../components/StatePanel";
 import PremiumMediaCard from "../../components/PremiumMediaCard";
+import EnterpriseCtaBand from "../../components/EnterpriseCtaBand";
 import NewsletterSignup from "../../components/NewsletterSignup";
+import EnterprisePageHero from "../../components/EnterprisePageHero";
 import { heroImage } from "../../lib/media";
 import {
   fetchGaiInsightsBriefing,
@@ -14,6 +14,7 @@ import {
   GaiBriefing,
   GaiRatingItem,
 } from "../../lib/gaiInsights";
+import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
 
 type UpdatesProps = {
   ratings: GaiRatingItem[];
@@ -95,48 +96,65 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
     },
   ];
 
+  const seoMeta: SeoMeta = {
+    title: "Updates | Colaberry AI",
+    description: "Announcements, releases, and curated AI ecosystem signals in one enterprise feed.",
+    canonical: buildCanonical("/updates"),
+  };
+
   return (
     <Layout>
       <Head>
-        <title>Updates | Colaberry AI</title>
-      </Head>
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-        <div className="flex flex-col gap-3">
-          <div className="chip chip-brand inline-flex w-fit items-center gap-2 rounded-full border border-brand-blue/20 bg-white py-1 pl-2 pr-3 text-xs text-brand-deep">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-aqua" />
-            Modular layer
-          </div>
-          <SectionHeader
-            as="h1"
-            size="xl"
-            title="News & product"
-            description="Announcements, product updates, and curated industry news-combined into a single signal feed."
-          />
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {updateHighlights.map((item) => (
-              <PremiumMediaCard
-                key={item.title}
-                href={item.href}
-                title={item.title}
-                description={item.description}
-                image={item.image}
-                meta={item.meta}
-                external={item.external}
-                size="sm"
-              />
-            ))}
-          </div>
-        </div>
-        <MediaPanel
-          kicker="Signal feed"
-          title="Updates and announcements"
-          description="Product releases and ecosystem signals in one place."
-          image={heroImage("hero-updates-cinematic.webp")}
-          alt="City skyline highlighting update signals"
-          aspect="wide"
-          fit="cover"
+        <title>{seoMeta.title}</title>
+        {seoTags(seoMeta).map(({ key, ...props }) => (
+          "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
+        ))}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              "name": "Colaberry AI Updates",
+              "description": "Announcements, releases, and curated AI ecosystem signals in one enterprise feed.",
+              "url": `${process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai"}/updates`,
+            }),
+          }}
         />
-      </div>
+      </Head>
+      <EnterprisePageHero
+        kicker="Modular layer"
+        title="News & product"
+        description="Announcements, releases, and curated AI ecosystem signals in one enterprise feed."
+        image={heroImage("hero-updates-cinematic.webp")}
+        alt="City skyline highlighting update signals"
+        imageKicker="Signal feed"
+        imageTitle="Updates and announcements"
+        imageDescription="Product shipping notes, curated headlines, and briefing-level intelligence."
+        chips={["Product releases", "Daily briefings", "Top-rated AI news", "Research drops"]}
+        primaryAction={{ label: "Open updates feed", href: "/updates" }}
+        secondaryAction={{ label: "View GAI Insights", href: "https://gaiinsights.com/ratings", external: true, variant: "secondary" }}
+        metrics={[
+          { label: "Top-rated news", value: `${ratings.length}`, note: "Curated items in current refresh." },
+          { label: "Briefing signals", value: `${briefing.items.length}`, note: "Headlines in current briefing." },
+          { label: "Refresh cycle", value: "6h", note: "Cache and revalidation cadence." },
+        ]}
+      />
+
+      <section className="mt-6 grid gap-3 sm:grid-cols-2">
+        {updateHighlights.map((item) => (
+          <PremiumMediaCard
+            key={item.title}
+            href={item.href}
+            title={item.title}
+            description={item.description}
+            image={item.image}
+            meta={item.meta}
+            external={item.external}
+            size="sm"
+          />
+        ))}
+      </section>
 
       {fetchError && (
         <div className="mt-6">
@@ -159,7 +177,7 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
       )}
 
       <div className="mt-6 grid gap-4 sm:mt-8 lg:grid-cols-[1.2fr_0.8fr]">
-        <section className="surface-panel border border-slate-200/80 bg-white/90 p-6">
+        <section className="surface-panel border border-zinc-200/80 bg-white/90 p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <SectionHeader
               kicker="Curated feed"
@@ -190,15 +208,15 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
               {ratings.slice(0, 8).map((item, index) => (
                 <li
                   key={`${item.title}-${item.date || index}`}
-                  className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm"
+                  className="card-elevated p-4"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <span className="text-xs font-semibold text-slate-500">
+                    <span className="text-xs font-semibold text-zinc-500">
                       {item.date || "Latest rating"}
                     </span>
                     {item.rating ? (
                       <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${ratingTone(
+                        className={`rounded-md px-2.5 py-1 text-xs font-semibold uppercase ${ratingTone(
                           item.rating
                         )}`}
                       >
@@ -210,12 +228,12 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
                     href={item.url || "https://gaiinsights.com/ratings"}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-2 block text-sm font-semibold text-brand-deep hover:text-brand-blue"
+                    className="mt-2 block text-sm font-semibold text-[#4F2AA3] hover:text-[#6240C5] dark:text-[#7B5CE0] dark:hover:text-[#C4B3FF]"
                   >
                     {item.title}
                   </a>
                   {item.rationale ? (
-                    <p className="mt-2 text-xs text-slate-600 line-clamp-3">{item.rationale}</p>
+                    <p className="mt-2 text-xs text-zinc-600 line-clamp-3">{item.rationale}</p>
                   ) : null}
                 </li>
               ))}
@@ -223,7 +241,7 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
           )}
         </section>
 
-        <section className="surface-panel border border-slate-200/80 bg-white/90 p-6">
+        <section className="surface-panel border border-zinc-200/80 bg-white/90 p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <SectionHeader
               kicker="Daily briefing"
@@ -258,16 +276,16 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
               {briefing.items.slice(0, 12).map((item, index) => (
                 <li
                   key={`${item.title}-${index}`}
-                  className="flex items-start gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-2"
+                  className="card-elevated flex items-start gap-3 px-3 py-2"
                 >
-                  <span className="mt-0.5 text-xs font-semibold text-slate-400">
+                  <span className="mt-0.5 text-xs font-semibold text-zinc-400">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <a
                     href={item.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-sm font-semibold text-brand-deep hover:text-brand-blue"
+                    className="text-sm font-semibold text-[#4F2AA3] hover:text-[#6240C5] dark:text-[#7B5CE0] dark:hover:text-[#C4B3FF]"
                   >
                     {item.title}
                   </a>
@@ -278,7 +296,7 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
         </section>
       </div>
 
-      <section className="surface-panel mt-6 border border-slate-200/80 bg-white/90 p-6">
+      <section className="surface-panel mt-6 border border-zinc-200/80 bg-white/90 p-6">
         <SectionHeader
           kicker="Subscription"
           title="Newsletter and release alerts"
@@ -296,20 +314,15 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
         </div>
       </section>
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <Link
-          href="/resources"
-          className="btn btn-secondary"
-        >
-          Explore resources
-        </Link>
-        <Link
-          href="/aixcelerator"
-          className="btn btn-primary"
-        >
-          Explore AIXcelerator
-        </Link>
-      </div>
+      <EnterpriseCtaBand
+        kicker="Update workflow"
+        title="Turn AI signals into enterprise action"
+        description="Connect product releases, curated news, and implementation playbooks into one decision surface for delivery teams."
+        primaryHref="/aixcelerator"
+        primaryLabel="Explore AIXcelerator"
+        secondaryHref="/resources"
+        secondaryLabel="Explore resources"
+      />
     </Layout>
   );
 }
@@ -323,7 +336,7 @@ function ratingTone(rating: string) {
     return "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/30 dark:text-amber-100 dark:ring-amber-500/35";
   }
   if (normalized.includes("watch") || normalized.includes("optional")) {
-    return "bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200 dark:bg-slate-800/75 dark:text-slate-100 dark:ring-slate-600/70";
+    return "bg-zinc-100 text-zinc-600 ring-1 ring-inset ring-zinc-200 dark:bg-zinc-800/75 dark:text-zinc-100 dark:ring-zinc-600/70";
   }
-  return "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200 dark:bg-slate-800/75 dark:text-slate-100 dark:ring-slate-600/70";
+  return "bg-zinc-100 text-zinc-700 ring-1 ring-inset ring-zinc-200 dark:bg-zinc-800/75 dark:text-zinc-100 dark:ring-zinc-600/70";
 }
