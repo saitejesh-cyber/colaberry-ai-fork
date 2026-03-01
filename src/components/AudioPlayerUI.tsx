@@ -131,7 +131,7 @@ export default function AudioPlayerUI({
         }}
       >
         <div
-          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#DC2626] to-[#18181B] transition-[width] duration-100"
+          className="absolute inset-y-0 left-0 rounded-full bg-[var(--pivot-fill)] transition-[width] duration-100"
           style={{ width: `${progress}%` }}
         />
         <div

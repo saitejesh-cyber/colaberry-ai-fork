@@ -1204,21 +1204,6 @@ button:focus-visible {
   color: #FAFAFA;
 }
 
-/* ── Podcast card hover ── */
-.podcast-card-hover {
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
-  border-radius: 0.75rem;
-  margin-inline: -0.75rem;
-  padding-inline: 0.75rem;
-}
-.podcast-card-hover:hover {
-  background: var(--neutral-fill);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-.dark .podcast-card-hover:hover {
-  background: var(--surface-elevated);
-}
-
 .footer-surface {
   background: #E8E5DE;
   border-top: none;
@@ -1576,6 +1561,84 @@ footer .footer-link:focus-visible {
 .dark .card-elevated:hover {
   border-color: #52525B;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------------------------------------------------------------------------
+ * iOS-style toggle switch
+ * Usage: <button role="switch" aria-checked="true|false" class="toggle-switch">
+ *          <span class="toggle-knob" />
+ *        </button>
+ * 44px wide × 24px tall pill. Active color = --pivot-fill (coral).
+ * --------------------------------------------------------------------------- */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 24px;
+  border-radius: 9999px;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  background: #D4D4D8;
+  transition: background-color 200ms var(--ease-expo-out);
+}
+
+.toggle-switch[aria-checked="true"] {
+  background: var(--pivot-fill);
+}
+
+.toggle-switch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--stroke-focus);
+}
+
+.toggle-switch[disabled] {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.toggle-knob {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.06);
+  transition: transform 200ms var(--ease-expo-out);
+}
+
+.toggle-switch[aria-checked="true"] .toggle-knob {
+  transform: translateX(20px);
+}
+
+.dark .toggle-switch {
+  background: #52525B;
+}
+
+.dark .toggle-switch[aria-checked="true"] {
+  background: var(--pivot-fill);
+}
+
+.dark .toggle-knob {
+  background: #FAFAFA;
+}
+
+/* Cookie banner slide-up animation */
+@keyframes cookie-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.cookie-banner-enter {
+  animation: cookie-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .card-feature {
@@ -2130,7 +2193,7 @@ footer .footer-link:focus-visible {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--pivot-fill), var(--trusted-fill));
+  background: var(--pivot-fill);
   transform-origin: left;
   z-index: var(--z-sticky);
   pointer-events: none;

@@ -257,6 +257,16 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
 
       {/* ── Compact episode header ── */}
       <header className="section-shell px-4 pt-4 pb-2 sm:px-6">
+        <Link
+          href="/resources/podcasts"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M19 12H5" />
+            <path d="M12 19l-7-7 7-7" />
+          </svg>
+          All Episodes
+        </Link>
         <h1 className="font-display text-display-lg font-bold text-zinc-900 dark:text-zinc-100 sm:text-display-xl lg:text-display-2xl">
           {episode.title}
         </h1>
@@ -281,9 +291,9 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
 
       <div className="section-shell px-4 pt-4 pb-8 sm:px-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6">
-          <div id="player" ref={playerRef} className="detail-section">
-            <div className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-600 dark:text-zinc-300">
-              Listen to the podcast
+          <div id="player" ref={playerRef}>
+            <div className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+              Player
             </div>
             <div className="mt-3">
               <PodcastPlayer
@@ -386,30 +396,10 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {episode.tags.map((tag) => (
-                <Link
-                  key={tag.slug}
-                  href={`/resources/podcasts/tag/${tag.slug}`}
-                  className="chip chip-muted rounded-md px-2.5 py-1 text-xs font-semibold"
-                >
-                  #{tag.name}
-                </Link>
-              ))}
-              {episode.companies.map((company) => (
-                <Link
-                  key={company.slug}
-                  href={`/resources/podcasts/company?slug=${encodeURIComponent(company.slug)}`}
-                  className="chip chip-neutral rounded-md px-2.5 py-1 text-xs font-semibold"
-                >
-                  {company.name}
-                </Link>
-              ))}
-            </div>
           </div>
 
           {/* ── Description / Transcript tabs ── */}
-          <div id="transcript" className="detail-section">
+          <div id="transcript" className="mt-8">
             <div role="tablist" className="flex items-center gap-1 rounded-lg border border-zinc-200/80 p-1 w-fit dark:border-zinc-700">
               <button
                 type="button"
@@ -475,6 +465,22 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
         </div>
 
         <aside className="flex flex-col gap-4">
+          {/* Podcast identity panel */}
+          <div className="detail-section flex flex-col items-center text-center">
+            <Image
+              src={episode.coverImageUrl || PODCAST_BRAND_IMAGE}
+              alt={episode.coverImageAlt || episode.title}
+              width={200}
+              height={200}
+              className="h-48 w-48 rounded-2xl shadow-md"
+              unoptimized
+            />
+            <h3 className="mt-4 text-sm font-bold text-zinc-900 dark:text-zinc-100">Colaberry AI Podcast</h3>
+            {episode.episodeNumber ? (
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Episode {episode.episodeNumber}</p>
+            ) : null}
+          </div>
+
           {subscribeLinks.length > 0 ? (
             <div className="detail-section">
               <div className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
@@ -553,14 +559,14 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                 <li key={item.slug}>
                   <Link
                     href={`/resources/podcasts/${item.slug}`}
-                    className="focus-ring flex h-full gap-4 rounded-xl bg-[#F5F3EE] p-4 transition-colors hover:bg-[#EDEAE3] dark:bg-[#1E1D1A] dark:hover:bg-[#252420]"
+                    className="focus-ring card-elevated flex h-full gap-5 p-4"
                   >
                     <Image
                       src={itemArtwork}
                       alt={item.coverImageAlt || item.title}
-                      width={48}
-                      height={48}
-                      className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                      width={80}
+                      height={80}
+                      className="h-20 w-20 shrink-0 rounded-xl object-cover"
                       unoptimized
                     />
                     <div className="min-w-0 flex-1">
@@ -591,8 +597,23 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
 
       {showMiniPlayer && (
         <div className="pointer-events-none fixed bottom-4 left-1/2 z-50 w-[min(100%-2rem,64rem)] -translate-x-1/2">
-          <div className="pointer-events-auto card-elevated p-3 shadow-lg backdrop-blur">
+          <div className="pointer-events-auto card-elevated relative overflow-hidden p-3 shadow-lg backdrop-blur">
+            {/* Mini player progress bar */}
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-zinc-200/50 dark:bg-zinc-700/50">
+              <div className="h-full bg-[var(--pivot-fill)] transition-[width] duration-200" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
+            </div>
             <div className="flex flex-wrap items-center gap-3">
+              {/* Mini player artwork */}
+              <div className="hidden h-10 w-10 shrink-0 overflow-hidden rounded-lg sm:block">
+                <Image
+                  src={episode.coverImageUrl || PODCAST_BRAND_IMAGE}
+                  alt={episode.title}
+                  width={40}
+                  height={40}
+                  className="h-full w-full object-cover"
+                  unoptimized
+                />
+              </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -643,7 +664,6 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
         </div>
       )}
 
-      <ShareActions title={episode.title} />
     </Layout>
   );
 }
@@ -672,31 +692,6 @@ function ScrollProgress() {
   );
 }
 
-function ShareActions({ title: _title }: { title: string }) {
-  const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-  return (
-    <div className="fixed bottom-6 right-6 z-30 flex gap-2">
-      <button
-        type="button"
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--stroke)] bg-[var(--surface-strong)] shadow-lg transition-colors hover:bg-[var(--surface-soft)]"
-        aria-label="Copy link"
-        onClick={copy}
-      >
-        {copied ? (
-          <svg viewBox="0 0 20 20" className="h-4 w-4 text-[var(--trust-green)]" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-        ) : (
-          <svg viewBox="0 0 24 24" className="h-4 w-4 text-[var(--text-secondary)]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
-        )}
-      </button>
-    </div>
-  );
-}
 
 function formatDate(value?: string | null) {
   if (!value) return null;

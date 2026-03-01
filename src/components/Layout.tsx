@@ -190,11 +190,8 @@ const SOCIAL_ICON_PATHS: Record<string, ReactNode> = {
   ),
   youtube: (
     <>
-      <path
-        d="M23 12s0-4.3-.6-5.7c-.4-1-1.2-1.8-2.2-2.2C18.8 3.5 12 3.5 12 3.5s-6.8 0-8.2.6c-1 .4-1.8 1.2-2.2 2.2C1 7.7 1 12 1 12s0 4.3.6 5.7c.4 1 1.2 1.8 2.2 2.2 1.4.6 8.2.6 8.2.6s6.8 0 8.2-.6c1-.4 1.8-1.2 2.2-2.2.6-1.4.6-5.7.6-5.7Z"
-        fill="currentColor"
-      />
-      <polygon points="10 8.5 16 12 10 15.5" fill="#ffffff" />
+      <rect x="2" y="4.5" width="20" height="15" rx="3" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <polygon points="10 8.5 16 12 10 15.5" fill="currentColor" />
     </>
   ),
 };

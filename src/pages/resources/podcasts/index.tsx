@@ -191,17 +191,17 @@ export default function Podcasts({
       ) : null}
 
       {/* ── Clean header with pill tabs + search ── */}
-      <section className="section-shell px-4 pt-8 pb-4 sm:px-6">
-        <h1 className="font-display text-display-sm font-bold text-zinc-900 dark:text-zinc-100 sm:text-display-md">
+      <section className="section-shell px-4 pt-12 pb-6 sm:px-6 sm:pt-16">
+        <h1 className="font-display text-display-md font-bold text-zinc-900 dark:text-zinc-100 sm:text-display-lg lg:text-display-xl">
           Podcasts
         </h1>
 
         <div className="mt-4 flex items-center justify-between">
           {/* Sort pill tabs */}
-          <div className="flex items-center gap-1 rounded-lg border border-zinc-200/80 p-1 dark:border-zinc-700">
+          <div className="flex items-center gap-1 rounded-xl border border-zinc-200/80 p-1.5 dark:border-zinc-700">
             <Link
               href="/resources/podcasts"
-              className={`flex min-h-[36px] items-center rounded-md px-4 py-1.5 text-xs font-semibold transition ${
+              className={`flex min-h-[40px] items-center rounded-lg px-5 py-2 text-sm font-semibold transition ${
                 activeSort === "latest"
                   ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
                   : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
@@ -211,7 +211,7 @@ export default function Podcasts({
             </Link>
             <Link
               href="/resources/podcasts?sort=trending"
-              className={`flex min-h-[36px] items-center rounded-md px-4 py-1.5 text-xs font-semibold transition ${
+              className={`flex min-h-[40px] items-center rounded-lg px-5 py-2 text-sm font-semibold transition ${
                 activeSort === "trending"
                   ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
                   : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
@@ -245,7 +245,7 @@ export default function Podcasts({
               placeholder="Search episodes..."
               autoFocus
               aria-label="Search episodes"
-              className="h-10 w-full rounded-lg border border-zinc-200/80 bg-white px-4 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/25 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+              className="input-premium h-10"
             />
             {activeSort !== "latest" ? <input type="hidden" name="sort" value={activeSort} /> : null}
           </form>
@@ -253,7 +253,7 @@ export default function Podcasts({
       </section>
 
       {/* ── Content area: hero + list | sidebar ── */}
-      <section className="section-shell px-4 pt-2 pb-8 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8 lg:items-start">
+      <section className="section-shell px-4 pt-6 pb-12 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8 lg:items-start">
         {/* Left column */}
         <div>
           {episodes.length === 0 ? (
@@ -281,9 +281,9 @@ export default function Podcasts({
                 const heroFullUrl = `${siteUrl}${heroUrl}`;
 
                 return (
-                  <div className="flex flex-col gap-5 rounded-2xl bg-[#F5F3EE] p-5 dark:bg-[#1E1D1A] sm:flex-row sm:items-start sm:gap-6">
+                  <div className="group/hero flex flex-col gap-5 rounded-2xl bg-[#F5F3EE] p-6 dark:bg-[#1E1D1A] sm:flex-row sm:items-start sm:gap-8 sm:p-8">
                     {/* Artwork */}
-                    <div className="relative w-full shrink-0 overflow-hidden rounded-xl sm:w-64 lg:w-72">
+                    <div className="relative w-full shrink-0 overflow-hidden rounded-2xl shadow-lg sm:w-72 lg:w-80">
                       <Link href={heroUrl} tabIndex={-1} aria-hidden="true">
                         <PodcastArtwork
                           src={heroArtwork}
@@ -327,22 +327,32 @@ export default function Podcasts({
                       </Link>
 
                       {heroSubtitle ? (
-                        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
-                          <span className="font-medium text-zinc-700 dark:text-zinc-300">Listen now</span>
-                          <span className="mx-1 text-zinc-300 dark:text-zinc-600">|</span>
+                        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
                           {heroSubtitle}
                         </p>
                       ) : null}
 
-                      <p className="mt-3 text-xs font-medium uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
-                        {formatShortDate(hero.publishedDate) ? (
-                          <>{formatShortDate(hero.publishedDate)}<span aria-hidden="true"> · </span></>
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                        {hero.episodeNumber ? (
+                          <span className="rounded-md bg-white/60 px-2 py-0.5 font-bold tabular-nums text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                            Ep. {hero.episodeNumber}
+                          </span>
                         ) : null}
-                        <span>{heroIsExternal ? "External" : "Colaberry AI Podcast"}</span>
-                      </p>
+                        {formatShortDate(hero.publishedDate) ? (
+                          <span className="font-medium text-zinc-400 dark:text-zinc-500">{formatShortDate(hero.publishedDate)}</span>
+                        ) : null}
+                        {hero.duration ? (
+                          <>
+                            <span className="text-zinc-300 dark:text-zinc-600" aria-hidden="true">·</span>
+                            <span className="font-medium text-zinc-400 dark:text-zinc-500">{hero.duration}</span>
+                          </>
+                        ) : null}
+                        <span className="text-zinc-300 dark:text-zinc-600" aria-hidden="true">·</span>
+                        <span className="font-medium text-zinc-400 dark:text-zinc-500">{heroIsExternal ? "External" : "Colaberry AI"}</span>
+                      </div>
 
                       {/* Hero share row */}
-                      <div className="mt-3 flex items-center gap-1">
+                      <div className="mt-3 flex items-center gap-1 sm:opacity-0 sm:transition-opacity sm:group-hover/hero:opacity-100">
                         <button
                           type="button"
                           aria-label={copiedSlug === hero.slug ? "Copied" : "Copy link"}
@@ -399,7 +409,7 @@ export default function Podcasts({
               })()}
 
               {/* ── Episode list (remaining episodes) ── */}
-              <div className="divide-y divide-zinc-200/60 dark:divide-zinc-700/50">
+              <div className="mt-4 flex flex-col gap-4">
                 {displayedEpisodes.slice(1).map((episode) => {
                   const canPlay = Boolean(episode.audioUrl);
                   const isPlaying = playingSlug === episode.slug;
@@ -414,7 +424,7 @@ export default function Podcasts({
                   const fullUrl = `${siteUrl}${episodeUrl}`;
 
                   return (
-                    <div key={episode.id} className="podcast-card-hover flex gap-4 py-5 sm:gap-5 sm:py-6">
+                    <div key={episode.id} className="group/card card-elevated flex gap-5 p-5 sm:p-6">
                       {/* Left: Content */}
                       <div className="min-w-0 flex-1">
                         <Link
@@ -428,22 +438,30 @@ export default function Podcasts({
                         </Link>
 
                         {subtitle ? (
-                          <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
-                            <span className="font-medium text-zinc-700 dark:text-zinc-300">Listen now</span>
-                            <span className="mx-1 text-zinc-300 dark:text-zinc-600">|</span>
+                          <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
                             {subtitle}
                           </p>
                         ) : null}
 
-                        <p className="mt-2 text-xs font-medium uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
-                          {shortDate ? (
-                            <>{shortDate}<span aria-hidden="true"> · </span></>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                          {episode.episodeNumber ? (
+                            <span className="rounded-md bg-zinc-100 px-2 py-0.5 font-bold tabular-nums text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                              Ep. {episode.episodeNumber}
+                            </span>
                           ) : null}
-                          <span>{isExternal ? "External" : "Colaberry AI Podcast"}</span>
-                        </p>
+                          {shortDate ? <span className="font-medium text-zinc-400 dark:text-zinc-500">{shortDate}</span> : null}
+                          {episode.duration ? (
+                            <>
+                              <span className="text-zinc-300 dark:text-zinc-600" aria-hidden="true">·</span>
+                              <span className="font-medium text-zinc-400 dark:text-zinc-500">{episode.duration}</span>
+                            </>
+                          ) : null}
+                          <span className="text-zinc-300 dark:text-zinc-600" aria-hidden="true">·</span>
+                          <span className="font-medium text-zinc-400 dark:text-zinc-500">{isExternal ? "External" : "Colaberry AI"}</span>
+                        </div>
 
                         {/* Share / action row */}
-                        <div className="mt-3 flex items-center gap-1">
+                        <div className="mt-3 flex items-center gap-1 sm:opacity-0 sm:transition-opacity sm:group-hover/card:opacity-100">
                           <button
                             type="button"
                             aria-label={copiedSlug === episode.slug ? "Copied" : "Copy link"}
