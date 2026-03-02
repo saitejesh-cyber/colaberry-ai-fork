@@ -256,7 +256,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
       ]} />
 
       {/* ── Compact episode header ── */}
-      <header className="section-shell px-4 pt-4 pb-2 sm:px-6">
+      <header className="section-shell overflow-hidden px-4 pt-4 pb-2 sm:px-6">
         <Link
           href="/resources/podcasts"
           className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
@@ -267,7 +267,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
           </svg>
           All Episodes
         </Link>
-        <h1 className="font-display text-display-lg font-bold text-zinc-900 dark:text-zinc-100 sm:text-display-xl lg:text-display-2xl">
+        <h1 className="font-display text-2xl font-bold text-zinc-900 break-words dark:text-zinc-100 sm:text-display-lg lg:text-display-2xl">
           {episode.title}
         </h1>
         <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
@@ -289,8 +289,8 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
         </div>
       </header>
 
-      <div className="section-shell px-4 pt-4 pb-8 sm:px-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-        <div className="flex flex-col gap-6">
+      <div className="section-shell overflow-hidden px-4 pt-4 pb-8 sm:px-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+        <div className="flex min-w-0 flex-col gap-6">
           <div id="player" ref={playerRef}>
             <div className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
               Player
@@ -432,7 +432,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
             </div>
 
             {contentTab === "description" ? (
-              <div className="prose mt-4 max-w-none">
+              <div className="prose mt-4 max-w-none overflow-hidden [overflow-wrap:break-word]">
                 {episode.description ? (
                   <RichText blocks={episode.description} />
                 ) : null}
@@ -453,7 +453,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                 <TranscriptTimeline segments={transcriptSegments} audioRef={audioRef} />
               </div>
             ) : hasTranscriptText ? (
-              <div className="prose mt-4 max-h-[60vh] max-w-none overflow-y-auto rounded-lg border border-zinc-200/60 p-4 text-sm dark:border-zinc-700/50">
+              <div className="prose mt-4 max-h-[60vh] max-w-none overflow-y-auto overflow-x-hidden rounded-lg border border-zinc-200/60 p-4 text-sm [overflow-wrap:break-word] dark:border-zinc-700/50">
                 {transcriptIsHtml ? (
                   <div dangerouslySetInnerHTML={{ __html: episode.transcript as string }} />
                 ) : (
@@ -536,7 +536,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
       </div>
 
       {relatedEpisodes.length > 0 ? (
-        <section className="detail-section section-spacing">
+        <section className="detail-section section-spacing overflow-hidden">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <SectionHeader
               as="h2"
