@@ -1679,7 +1679,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
       ) : null}
       {isCatalogWorkspace && discoveryOpen ? (
-        <div className="fixed bottom-4 left-4 right-4 z-40 sm:left-auto sm:right-6">
+        <div className="hidden sm:block fixed bottom-4 right-6 left-auto z-40 max-w-md">
           <div className="surface-panel border border-zinc-200/70 bg-white/95 p-4 shadow-xl dark:border-[#3F3F46] dark:bg-[#18181B]/90">
             <div className="flex items-start justify-between gap-4">
               <div>
