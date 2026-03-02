@@ -137,8 +137,8 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
               alt={article.coverImageAlt || article.title}
               fill
               className="h-full w-full object-cover"
-              unoptimized
               loading="lazy"
+              sizes="(min-width: 1280px) 1280px, 100vw"
             />
           </div>
         </div>
@@ -211,8 +211,8 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
                       width={1400}
                       height={840}
                       className="h-auto w-full rounded-lg border border-zinc-200/80 object-cover"
-                      unoptimized
                       loading="lazy"
+                      sizes="(min-width: 1280px) 1200px, 100vw"
                     />
                   </figure>
                 );
@@ -231,8 +231,8 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
                         width={1200}
                         height={720}
                         className="h-auto w-full rounded-lg border border-zinc-200/80 object-cover"
-                        unoptimized
                         loading="lazy"
+                        sizes="(min-width: 640px) 50vw, 100vw"
                       />
                     ))}
                   </div>

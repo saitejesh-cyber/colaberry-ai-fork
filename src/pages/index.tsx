@@ -711,7 +711,6 @@ function FeaturedPodcastCard({ episode }: { episode: HomePodcastSignal }) {
             alt={episode.title}
             fill
             className="object-cover"
-            unoptimized
             loading="lazy"
             sizes="(min-width: 640px) 160px, 100vw"
           />
@@ -784,8 +783,8 @@ function PodcastRail({
                       width={48}
                       height={48}
                       className="h-10 w-10 shrink-0 rounded-lg object-cover"
-                      unoptimized
                       loading="lazy"
+                      sizes="48px"
                     />
                   ) : (
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#DC2626]/10 dark:bg-[#DC2626]/20">

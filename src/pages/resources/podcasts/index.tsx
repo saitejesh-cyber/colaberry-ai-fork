@@ -703,7 +703,8 @@ function PodcastArtwork({
       width={1400}
       height={900}
       className={className || "h-full w-full object-cover"}
-      unoptimized
+      sizes="(min-width: 1024px) 50vw, 100vw"
+      loading="lazy"
       onError={() => {
         if (imageSrc !== PODCAST_FALLBACK_IMAGE) {
           setImageSrc(PODCAST_FALLBACK_IMAGE);

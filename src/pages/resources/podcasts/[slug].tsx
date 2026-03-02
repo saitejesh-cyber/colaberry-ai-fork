@@ -473,7 +473,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
               width={200}
               height={200}
               className="h-48 w-48 rounded-2xl shadow-md"
-              unoptimized
+              sizes="192px"
             />
             <h3 className="mt-4 text-sm font-bold text-zinc-900 dark:text-zinc-100">Colaberry AI Podcast</h3>
             {episode.episodeNumber ? (
@@ -567,7 +567,8 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                       width={80}
                       height={80}
                       className="h-20 w-20 shrink-0 rounded-xl object-cover"
-                      unoptimized
+                      sizes="80px"
+                      loading="lazy"
                     />
                     <div className="min-w-0 flex-1">
                       {formatDate(item.publishedDate) ? (
@@ -611,7 +612,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                   width={40}
                   height={40}
                   className="h-full w-full object-cover"
-                  unoptimized
+                  sizes="40px"
                 />
               </div>
               <div className="flex items-center gap-2">
