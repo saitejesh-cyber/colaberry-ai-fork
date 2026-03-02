@@ -36,23 +36,34 @@ type PodcastsPageProps = {
   activeType: PodcastTypeFilter;
   searchQuery: string;
   canonicalPath: string;
+  totalEpisodes: number;
+  initialHasMore: boolean;
 };
 
 export default function Podcasts({
-  episodes,
+  episodes: initialEpisodes,
   companies,
   fetchError,
   activeSort,
   activeType,
   searchQuery,
   canonicalPath,
+  totalEpisodes,
+  initialHasMore,
 }: PodcastsPageProps) {
   const [playingSlug, setPlayingSlug] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(Boolean(searchQuery.trim()));
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [allEpisodes, setAllEpisodes] = useState<PodcastEpisode[]>(initialEpisodes);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [displayTotal, setDisplayTotal] = useState(totalEpisodes);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Refs to avoid stale closures in IntersectionObserver callback
+  const loadingRef = useRef(false);
+  const pageRef = useRef(1);
 
   // Sidebar newsletter state
   const [sidebarEmail, setSidebarEmail] = useState("");
@@ -129,24 +140,54 @@ export default function Podcasts({
     logPodcastEvent("play", source, { slug: episode.slug, title: episode.title });
   };
 
-  const displayedEpisodes = episodes.slice(0, visibleCount);
-  const hasMore = visibleCount < episodes.length;
+  // Reset when SSR props change (sort/filter/search navigation)
+  useEffect(() => {
+    setAllEpisodes(initialEpisodes);
+    setHasMore(initialHasMore);
+    setCurrentPage(1);
+    setDisplayTotal(totalEpisodes);
+    pageRef.current = 1;
+    loadingRef.current = false;
+  }, [initialEpisodes, initialHasMore, totalEpisodes]);
+
+  const fetchNextPage = async () => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    setLoadingMore(true);
+    const nextPage = pageRef.current + 1;
+    const params = new URLSearchParams({ page: String(nextPage), sort: activeSort });
+    if (activeType !== "all") params.set("type", activeType);
+    if (searchQuery) params.set("q", searchQuery);
+    try {
+      const res = await fetch(`/api/podcasts?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAllEpisodes((prev) => [...prev, ...data.episodes]);
+        setHasMore(data.hasMore);
+        setCurrentPage(nextPage);
+        setDisplayTotal(data.total);
+        pageRef.current = nextPage;
+      }
+    } catch { /* silently fail, user can scroll again */ }
+    loadingRef.current = false;
+    setLoadingMore(false);
+  };
 
   useEffect(() => {
     if (!hasMore) return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
+    const handler = fetchNextPage;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, episodes.length));
-        }
+        if (entries[0]?.isIntersecting) handler();
       },
-      { rootMargin: "300px" }
+      { rootMargin: "400px" }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [episodes.length, hasMore]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMore, currentPage]);
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai").replace(/\/$/, "");
   const canonicalUrl = `${siteUrl}${canonicalPath}`;
@@ -160,8 +201,8 @@ export default function Podcasts({
     "@type": "ItemList",
     name: "Colaberry AI podcast catalog",
     itemListOrder: activeSort === "trending" ? "https://schema.org/ItemListOrderDescending" : "https://schema.org/ItemListOrderAscending",
-    numberOfItems: episodes.length,
-    itemListElement: episodes.map((episode, index) => ({
+    numberOfItems: displayTotal,
+    itemListElement: allEpisodes.map((episode, index) => ({
       "@type": "ListItem",
       position: index + 1,
       url: `${siteUrl}/resources/podcasts/${episode.slug}`,
@@ -256,7 +297,7 @@ export default function Podcasts({
       <section className="reveal section-shell px-4 pt-4 pb-6 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8 lg:items-start">
         {/* Left column */}
         <div>
-          {episodes.length === 0 ? (
+          {allEpisodes.length === 0 ? (
             <div className="mt-4">
               <StatePanel
                 variant="empty"
@@ -268,7 +309,7 @@ export default function Podcasts({
             <>
               {/* ── Featured hero episode ── */}
               {(() => {
-                const hero = displayedEpisodes[0];
+                const hero = allEpisodes[0];
                 const heroCanPlay = Boolean(hero.audioUrl);
                 const heroIsPlaying = playingSlug === hero.slug;
                 const heroType = (hero.podcastType || "internal").toLowerCase();
@@ -410,7 +451,7 @@ export default function Podcasts({
 
               {/* ── Episode list (remaining episodes) ── */}
               <div className="mt-4 flex flex-col gap-4">
-                {displayedEpisodes.slice(1).map((episode) => {
+                {allEpisodes.slice(1).map((episode) => {
                   const canPlay = Boolean(episode.audioUrl);
                   const isPlaying = playingSlug === episode.slug;
                   const shortDate = formatShortDate(episode.publishedDate);
@@ -554,9 +595,9 @@ export default function Podcasts({
                 <div ref={sentinelRef} className="mt-6 flex justify-center">
                   <span className="text-sm text-zinc-500">Loading more episodes...</span>
                 </div>
-              ) : episodes.length > 0 ? (
+              ) : allEpisodes.length > 0 ? (
                 <div className="mt-6 text-center text-sm text-zinc-500">
-                  Showing all {episodes.length} episodes
+                  Showing all {displayTotal} episodes
                 </div>
               ) : null}
             </>
@@ -581,7 +622,7 @@ export default function Podcasts({
                   Colaberry AI Podcast
                 </h3>
                 <p className="text-sm text-[#71717A] dark:text-[#A1A1AA]">
-                  {episodes.length} episodes
+                  {displayTotal} episodes
                 </p>
               </div>
             </div>
@@ -800,11 +841,12 @@ export const getServerSideProps: GetServerSideProps<PodcastsPageProps> = async (
   const canonicalPath = canonicalQs ? `/resources/podcasts?${canonicalQs}` : "/resources/podcasts";
 
   try {
-    const allEpisodes = await fetchPodcastEpisodes();
+    // Fetch only the first page for fast initial render
+    const firstPageEpisodes = await fetchPodcastEpisodes({ maxRecords: PAGE_SIZE + 1 });
     const now = Date.now();
 
     const companyMap = new Map<string, PodcastCompanyFacet>();
-    allEpisodes.forEach((episode) => {
+    firstPageEpisodes.forEach((episode) => {
       (episode.companies || []).forEach((company) => {
         if (!company.slug) return;
         const existing = companyMap.get(company.slug);
@@ -820,14 +862,14 @@ export const getServerSideProps: GetServerSideProps<PodcastsPageProps> = async (
       });
     });
 
-    const sourceFiltered = allEpisodes.filter((episode) => {
+    const sourceFiltered = firstPageEpisodes.filter((episode) => {
       if (activeType === "all") return true;
       const episodeType = (episode.podcastType || "internal").toLowerCase();
       return episodeType === activeType;
     });
 
     const searchedEpisodes = sourceFiltered.filter((episode) => matchesEpisodeSearch(episode, searchQuery));
-    const episodes =
+    const sorted =
       activeSort === "trending"
         ? [...searchedEpisodes].sort((a, b) => {
             const scoreDiff = getPodcastTrendingScore(b, now) - getPodcastTrendingScore(a, now);
@@ -837,6 +879,9 @@ export const getServerSideProps: GetServerSideProps<PodcastsPageProps> = async (
             return bDate - aDate;
           })
         : searchedEpisodes;
+
+    const episodes = sorted.slice(0, PAGE_SIZE);
+    const initialHasMore = sorted.length > PAGE_SIZE;
 
     const companies = Array.from(companyMap.values()).sort((a, b) => {
       if (b.count !== a.count) return b.count - a.count;
@@ -852,6 +897,8 @@ export const getServerSideProps: GetServerSideProps<PodcastsPageProps> = async (
         activeType,
         searchQuery,
         canonicalPath,
+        totalEpisodes: sorted.length,
+        initialHasMore,
       },
     };
   } catch {
@@ -864,6 +911,8 @@ export const getServerSideProps: GetServerSideProps<PodcastsPageProps> = async (
         activeType,
         searchQuery,
         canonicalPath,
+        totalEpisodes: 0,
+        initialHasMore: false,
       },
     };
   }
