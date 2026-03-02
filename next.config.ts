@@ -77,6 +77,7 @@ const nextConfig: NextConfig = {
                     "font-src 'self' https://fonts.gstatic.com data:",
                     `img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com ${cmsUrl ? new URL(cmsUrl).origin : ""}`.trim(),
                     `connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com ${cmsUrl || ""}`.trim(),
+                    "media-src 'self' https://www.buzzsprout.com https://*.buzzsprout.com",
                     "frame-src 'self' https://www.buzzsprout.com",
                     "frame-ancestors 'self'",
                     "base-uri 'self'",
