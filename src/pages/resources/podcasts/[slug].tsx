@@ -289,7 +289,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
         </div>
       </header>
 
-      <div className="section-shell px-4 pt-4 pb-8 sm:px-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="section-shell px-4 pt-4 pb-8 sm:px-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <div className="flex flex-col gap-6">
           <div id="player" ref={playerRef}>
             <div className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
@@ -464,7 +464,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
           </div>
         </div>
 
-        <aside className="flex flex-col gap-4">
+        <aside className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start">
           {/* Podcast identity panel */}
           <div className="detail-section flex flex-col items-center text-center">
             <Image
