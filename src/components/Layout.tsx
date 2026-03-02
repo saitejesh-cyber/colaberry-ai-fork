@@ -471,15 +471,10 @@ function buildWorkspaceSections(nav: GlobalNavigation): WorkspaceSection[] {
 }
 
 function isCatalogWorkspacePath(path: string) {
-  return (
-    path === "/assistant" ||
-    path.startsWith("/assistant/") ||
-    path === "/aixcelerator" ||
-    path.startsWith("/aixcelerator/") ||
-    path === "/use-cases" ||
-    path.startsWith("/use-cases/") ||
-    path === "/search"
-  );
+  // Show sidebar on all inner pages except homepage and static legal pages
+  const noSidebarPaths = ["/", "/cookie-policy", "/privacy-policy", "/unsubscribe"];
+  if (noSidebarPaths.includes(path)) return false;
+  return true;
 }
 
 function getSignalBannerConfig(path: string) {
