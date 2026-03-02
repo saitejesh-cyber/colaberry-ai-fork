@@ -7,7 +7,7 @@ import SectionHeader from "../../components/SectionHeader";
 import EnterprisePageHero from "../../components/EnterprisePageHero";
 import StatePanel from "../../components/StatePanel";
 import { fetchUseCaseBySlug, UseCase } from "../../lib/cms";
-import { heroImage } from "../../lib/media";
+
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
 
 type UseCaseDetailProps = {
@@ -153,13 +153,6 @@ export default function UseCaseDetailPage({ useCase, allowPrivate }: UseCaseDeta
           kicker="Use case profile"
           title={useCase.title}
           description={metaDescription}
-          image={heroImage("hero-solutions-cinematic.webp")}
-          alt={`${useCase.title} use case preview`}
-          imageKicker="Use case lane"
-          imageTitle="Workflow orchestration context"
-          imageDescription={`${useCase.industry || "General"}${useCase.category ? ` • ${useCase.category}` : ""} • ${
-            status.charAt(0).toUpperCase() + status.slice(1)
-          }`}
           chips={[
             useCase.industry || "General",
             ...(useCase.category ? [useCase.category] : []),

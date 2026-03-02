@@ -115,11 +115,6 @@ export default function IndustriesIndex({ industryCounts }: IndustriesProps) {
         kicker="Industry expertise"
         title="Industries"
         description="Domain-led delivery surfaces for sector-specific agents, MCP patterns, use cases, and outcomes."
-        image={heroImage("hero-industries-cinematic.webp")}
-        alt="Industry landscape overview"
-        imageKicker="Coverage"
-        imageTitle="Service line coverage map"
-        imageDescription="Industry-aligned AI delivery contexts with playbooks and measurable outcomes."
         chips={["Agriculture", "Energy", "Utilities", "Healthcare", "Manufacturing", "Supply chain"]}
         primaryAction={{ label: "Explore solutions", href: "/solutions" }}
         secondaryAction={{ label: "Browse case studies", href: "/resources/case-studies", variant: "secondary" }}

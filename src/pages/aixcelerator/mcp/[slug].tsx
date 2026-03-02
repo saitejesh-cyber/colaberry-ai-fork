@@ -7,7 +7,7 @@ import SectionHeader from "../../../components/SectionHeader";
 import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import MCPCard from "../../../components/MCPCard";
 import { fetchMCPServerBySlug, fetchRelatedMCPServers, MCPServer } from "../../../lib/cms";
-import { heroImage } from "../../../lib/media";
+
 import type { ReactNode } from "react";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 
@@ -179,11 +179,6 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
           kicker="MCP profile"
           title={mcp.name}
           description={mcp.description || "Structured MCP server profile for enterprise catalog discovery."}
-          image={heroImage("hero-mcp-cinematic.webp")}
-          alt={mcp.coverImageAlt || `${mcp.name} MCP profile preview`}
-          imageKicker="MCP surface"
-          imageTitle="Integration profile"
-          imageDescription={`${mcp.industry || "General"}${mcp.category ? ` • ${mcp.category}` : ""} • ${status}`}
           chips={[
             mcp.industry || "General",
             ...(mcp.category ? [mcp.category] : []),

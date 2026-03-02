@@ -3,7 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import EnterprisePageHero from "../../components/EnterprisePageHero";
 import EnterpriseCtaBand from "../../components/EnterpriseCtaBand";
-import { heroImage } from "../../lib/media";
+
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
 import type { GetStaticProps } from "next";
 import { fetchAgents, fetchUseCases } from "../../lib/cms";
@@ -94,8 +94,6 @@ export default function Solutions({ agentCount, useCaseCount }: SolutionsProps) 
         kicker="Solutions"
         title="Packaged offerings & playbooks"
         description="Repeatable solution patterns aligned to industries and delivery playbooks. Enterprise-grade governance, agent operations, and MCP integration."
-        image={heroImage("hero-solutions-cinematic.webp")}
-        alt="Solutions overview"
       />
 
       <div className="reveal section-spacing grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

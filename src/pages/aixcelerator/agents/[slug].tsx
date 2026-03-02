@@ -7,7 +7,7 @@ import SectionHeader from "../../../components/SectionHeader";
 import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import AgentCard from "../../../components/AgentCard";
 import { Agent, fetchAgentBySlug, fetchRelatedAgents } from "../../../lib/cms";
-import { heroImage } from "../../../lib/media";
+
 import type { ReactNode } from "react";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 
@@ -183,11 +183,6 @@ export default function AgentDetail({ agent, allowPrivate, relatedAgents }: Agen
           kicker="Agent profile"
           title={agent.name}
           description={agent.description || "Structured agent profile for enterprise catalog discovery."}
-          image={heroImage("hero-agents-cinematic.webp")}
-          alt={agent.coverImageAlt || `${agent.name} profile preview`}
-          imageKicker="Agent surface"
-          imageTitle="Operational profile"
-          imageDescription={`${agent.industry || "General"} • ${status} • ${sourceDisplay}`}
           chips={[
             agent.industry || "General",
             status.charAt(0).toUpperCase() + status.slice(1),

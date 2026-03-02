@@ -7,7 +7,7 @@ import Layout from "../../../components/Layout";
 import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import StatePanel from "../../../components/StatePanel";
 import { Article, ArticleMedia, fetchArticleBySlug } from "../../../lib/cms";
-import { heroImage } from "../../../lib/media";
+
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 
 type ArticleDetailProps = {
@@ -97,11 +97,6 @@ export default function ArticleDetailPage({ article }: ArticleDetailProps) {
             article.description ||
             "Structured CMS article for discoverability, indexing, and enterprise AI delivery."
           }
-          image={heroImage("hero-updates-cinematic.webp")}
-          alt="Editorial analysis surface"
-          imageKicker="Editorial"
-          imageTitle="Article narrative"
-          imageDescription="Long-form analysis with structured blocks and LLM-ready context."
           chips={[
             article.category?.name || "Article",
             article.author?.name ? `By ${article.author.name}` : "Colaberry editorial",

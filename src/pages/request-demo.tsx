@@ -2,7 +2,7 @@ import Head from "next/head";
 import Layout from "../components/Layout";
 import Link from "next/link";
 import SectionHeader from "../components/SectionHeader";
-import MediaPanel from "../components/MediaPanel";
+
 import DemoRequestForm from "../components/DemoRequestForm";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../lib/seo";
 
@@ -79,16 +79,6 @@ export default function RequestDemo() {
         </div>
 
         <div className="reveal lg:col-span-5">
-          <MediaPanel
-            kicker="Demo preview"
-            title="Walkthrough highlights"
-            description="See how agents, MCP, and modular layers connect end to end."
-            image="/media/hero/hero-platform-cinematic.webp"
-            alt="Enterprise platform walkthrough preview"
-            aspect="wide"
-            fit="cover"
-            className="mb-6"
-          />
           <div className="detail-section">
             <div className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Suggested demo flow</div>
             <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">A clean, consistent walkthrough for stakeholders.</div>

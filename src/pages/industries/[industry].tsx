@@ -4,7 +4,7 @@ import Head from "next/head";
 import { getIndustryCaseStudies, getIndustryDisplayName } from "../../data/caseStudies";
 import Link from "next/link";
 import SectionHeader from "../../components/SectionHeader";
-import MediaPanel from "../../components/MediaPanel";
+
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
 import { fetchAgents, fetchUseCases } from "../../lib/cms";
 
@@ -117,16 +117,6 @@ export default function Industry({ industrySlug, industryName, agentCount, useCa
         </div>
 
         <div className="lg:col-span-5">
-          <MediaPanel
-            kicker="Workspace preview"
-            title={`${industryName} signals`}
-            description="Domain coverage mapped to governed AI delivery."
-            image="/media/visuals/panel-industry.svg"
-            alt="Industry workspace illustration"
-            aspect="wide"
-            fit="contain"
-            className="mb-6"
-          />
           <div className="detail-section">
             <div className="text-base font-semibold text-zinc-900">Workspace summary</div>
             <div className="mt-1 text-sm text-zinc-600">

@@ -126,11 +126,6 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
         kicker="Modular layer"
         title="News & product"
         description="Announcements, releases, and curated AI ecosystem signals in one enterprise feed."
-        image={heroImage("hero-updates-cinematic.webp")}
-        alt="City skyline highlighting update signals"
-        imageKicker="Signal feed"
-        imageTitle="Updates and announcements"
-        imageDescription="Product shipping notes, curated headlines, and briefing-level intelligence."
         chips={["Product releases", "Daily briefings", "Top-rated AI news", "Research drops"]}
         primaryAction={{ label: "Open updates feed", href: "/updates" }}
         secondaryAction={{ label: "View GAI Insights", href: "https://gaiinsights.com/ratings", external: true, variant: "secondary" }}
