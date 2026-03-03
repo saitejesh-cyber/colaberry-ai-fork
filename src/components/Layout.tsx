@@ -1587,7 +1587,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <Image
             src="/brand/colaberry-ai-watermark.svg"
             alt=""
-            width={2254}
+            width={2259}
             height={476}
             className="brand-logo-light mx-auto h-auto w-full max-w-5xl"
             priority={false}
@@ -1595,7 +1595,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <Image
             src="/brand/colaberry-ai-watermark-dark.svg"
             alt=""
-            width={2254}
+            width={2259}
             height={476}
             className="brand-logo-dark mx-auto h-auto w-full max-w-5xl"
             priority={false}
