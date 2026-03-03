@@ -1480,7 +1480,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <footer role="contentinfo" className="footer-surface mt-6">
         {/* ── Top section: Logo + Newsletter (left) + Link columns (right) ── */}
         <div className="mx-auto max-w-7xl px-6 pt-12 pb-8 lg:pt-16 lg:pb-10">
-          <div className="flex flex-col gap-10 lg:flex-row lg:gap-16">
+          <div className="flex flex-col gap-10 lg:flex-row lg:justify-between lg:gap-16">
             {/* LEFT — Logo + Newsletter */}
             <div className="max-w-sm flex-shrink-0">
               {/* Logo */}
@@ -1562,44 +1562,46 @@ export default function Layout({ children }: { children: ReactNode }) {
               </form>
             </div>
 
-            {/* RIGHT — Link columns */}
-            <nav aria-label="Footer navigation" className="grid flex-1 grid-cols-2 gap-x-10 gap-y-8 sm:grid-cols-3">
-              {FOOTER_COLUMNS.map((col) => (
-                <div key={col.title}>
-                  <h3 className="footer-column-heading">{col.title}</h3>
-                  <ul className="mt-3 space-y-2">
-                    {col.links.map((link) => (
-                      <li key={link.href}>
-                        <FooterLink href={link.href} className="text-sm font-normal">
-                          {link.label}
-                        </FooterLink>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </nav>
-          </div>
-        </div>
+            {/* RIGHT — Link columns + Watermark */}
+            <div className="flex flex-1 flex-col lg:items-end">
+              <nav aria-label="Footer navigation" className="grid w-full grid-cols-2 gap-x-10 gap-y-8 sm:grid-cols-3 lg:max-w-2xl">
+                {FOOTER_COLUMNS.map((col) => (
+                  <div key={col.title}>
+                    <h3 className="footer-column-heading">{col.title}</h3>
+                    <ul className="mt-3 space-y-2">
+                      {col.links.map((link) => (
+                        <li key={link.href}>
+                          <FooterLink href={link.href} className="text-sm font-normal">
+                            {link.label}
+                          </FooterLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </nav>
 
-        {/* ── Watermark logo ── */}
-        <div className="footer-watermark mx-auto max-w-7xl" aria-hidden="true">
-          <Image
-            src="/brand/colaberry-ai-watermark.svg"
-            alt=""
-            width={2259}
-            height={476}
-            className="brand-logo-light mx-auto h-auto w-full max-w-5xl"
-            priority={false}
-          />
-          <Image
-            src="/brand/colaberry-ai-watermark-dark.svg"
-            alt=""
-            width={2259}
-            height={476}
-            className="brand-logo-dark mx-auto h-auto w-full max-w-5xl"
-            priority={false}
-          />
+              {/* ── Watermark logo — right-aligned ── */}
+              <div className="footer-watermark mt-8 w-full max-w-sm lg:max-w-md" aria-hidden="true">
+                <Image
+                  src="/brand/colaberry-ai-watermark.svg"
+                  alt=""
+                  width={2259}
+                  height={476}
+                  className="brand-logo-light h-auto w-full lg:ml-auto"
+                  priority={false}
+                />
+                <Image
+                  src="/brand/colaberry-ai-watermark-dark.svg"
+                  alt=""
+                  width={2259}
+                  height={476}
+                  className="brand-logo-dark h-auto w-full lg:ml-auto"
+                  priority={false}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── Bottom bar ── */}

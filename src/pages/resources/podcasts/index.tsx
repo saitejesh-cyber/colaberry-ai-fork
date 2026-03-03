@@ -309,6 +309,21 @@ export default function Podcasts({
             {activeSort !== "latest" ? <input type="hidden" name="sort" value={activeSort} /> : null}
           </form>
         ) : null}
+
+        {/* Example search tags — visible when search is closed */}
+        {!searchOpen && companies.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {companies.slice(0, 5).map((c) => (
+              <Link
+                key={c.slug}
+                href={`/resources/podcasts?q=${encodeURIComponent(c.name)}`}
+                className="rounded-full border border-zinc-200/80 px-2.5 py-1 text-xs font-medium text-zinc-500 transition-colors hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-200"
+              >
+                {c.name}
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       {/* ── Content area: hero + list | sidebar ── */}
@@ -686,7 +701,7 @@ export default function Podcasts({
                   </button>
                 </div>
                 <p className="mt-3 text-xs leading-relaxed text-[#71717A] dark:text-[#A1A1AA]">
-                  By subscribing you agree to receive communications from Colaberry AI.
+                  By subscribing you agree to receive podcast notifications from Colaberry AI.
                 </p>
                 {sidebarSubMessage ? (
                   <p className={`mt-2 text-xs ${sidebarSubState === "error" ? "text-red-600" : "text-emerald-600"}`}>
@@ -698,7 +713,7 @@ export default function Podcasts({
 
             {/* Company tags */}
             {companies.length > 0 ? (
-              <div className="mt-6">
+              <div className="mt-6 border-t border-[#D4D1CA] pt-6 dark:border-[#4A473F]">
                 <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#71717A] dark:text-[#A1A1AA]">
                   Browse by company
                 </h4>

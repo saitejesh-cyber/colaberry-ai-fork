@@ -1396,9 +1396,9 @@ footer .footer-link:focus-visible {
 .footer-watermark {
   user-select: none;
   pointer-events: none;
-  text-align: center;
+  text-align: right;
   overflow: hidden;
-  padding: 2rem 1.5rem 0;
+  padding: 1rem 0 0;
 }
 
 .skip-link {

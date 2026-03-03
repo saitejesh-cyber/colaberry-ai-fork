@@ -17,7 +17,7 @@ import {
   type PlatformLink,
 } from "../../../lib/cms";
 import sanitizeHtml from "sanitize-html";
-import { useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 const PODCAST_BRAND_IMAGE = "/media/podcast/colaberry-ai-podcast-brand.svg";
 import { logPodcastEvent } from "../../../lib/podcastTelemetry";
@@ -105,6 +105,40 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+
+  /* ── Sidebar subscribe state ── */
+  const [sidebarEmail, setSidebarEmail] = useState("");
+  const [sidebarHoneypot, setSidebarHoneypot] = useState("");
+  const [sidebarSubState, setSidebarSubState] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [sidebarSubMessage, setSidebarSubMessage] = useState("");
+
+  const handleSidebarSubscribe = async (e: FormEvent) => {
+    e.preventDefault();
+    if (sidebarHoneypot) return;
+    setSidebarSubState("submitting");
+    setSidebarSubMessage("");
+    try {
+      const res = await fetch("/api/newsletter-subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: sidebarEmail,
+          website: sidebarHoneypot,
+          consent: true,
+          sourcePath: `/resources/podcasts/${episode.slug}`,
+          sourcePage: "podcast-detail-sidebar",
+        }),
+      });
+      if (!res.ok) throw new Error("Subscribe failed");
+      setSidebarSubState("success");
+      setSidebarSubMessage("You\u2019re subscribed!");
+      setSidebarEmail("");
+      logPodcastEvent("subscribe", undefined, { slug: episode.slug, title: episode.title });
+    } catch {
+      setSidebarSubState("error");
+      setSidebarSubMessage("Something went wrong. Please try again.");
+    }
+  };
 
   useEffect(() => {
     if (!hasLoggedView.current) {
@@ -552,10 +586,59 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
           </div>
           </div>{/* end left column */}
 
-          {/* RIGHT: Playing Next sidebar (desktop only) */}
-          {relatedEpisodes.length > 0 && (
+          {/* RIGHT: Subscribe + Playing Next sidebar (desktop only) */}
             <aside className="hidden lg:block">
               <div className="sticky top-32">
+                {/* Subscribe form */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold text-[#18181B] dark:text-[#FAFAFA]">Subscribe</h4>
+                  <p className="mt-1 text-xs text-[#71717A] dark:text-[#A1A1AA]">Get notified when new episodes drop.</p>
+                  <form onSubmit={handleSidebarSubscribe} className="mt-3">
+                    <input
+                      type="text"
+                      name="website"
+                      value={sidebarHoneypot}
+                      onChange={(e) => setSidebarHoneypot(e.target.value)}
+                      autoComplete="off"
+                      tabIndex={-1}
+                      className="absolute -left-[9999px] h-0 w-0 opacity-0"
+                      aria-hidden="true"
+                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="email"
+                        required
+                        placeholder="Email address"
+                        value={sidebarEmail}
+                        onChange={(e) => setSidebarEmail(e.target.value)}
+                        disabled={sidebarSubState === "submitting"}
+                        className="footer-input-underline flex-1 text-sm"
+                      />
+                      <button
+                        type="submit"
+                        disabled={sidebarSubState === "submitting"}
+                        aria-label="Subscribe"
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#18181B] text-white transition-transform hover:scale-105 disabled:opacity-40 dark:bg-[#FAFAFA] dark:text-[#18181B]"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                    <p className="mt-3 text-xs leading-relaxed text-[#71717A] dark:text-[#A1A1AA]">
+                      By subscribing you agree to receive podcast notifications from Colaberry AI.
+                    </p>
+                    {sidebarSubMessage ? (
+                      <p className={`mt-2 text-xs ${sidebarSubState === "error" ? "text-red-600" : "text-emerald-600"}`}>
+                        {sidebarSubMessage}
+                      </p>
+                    ) : null}
+                  </form>
+                </div>
+
+                {/* Playing Next */}
+          {relatedEpisodes.length > 0 && (
+              <div className="border-t border-[#D4D1CA] pt-6 dark:border-[#4A473F]">
                 <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
                   Playing Next
                 </h3>
@@ -594,8 +677,9 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                   })}
                 </ul>
               </div>
-            </aside>
           )}
+              </div>
+            </aside>
           </div>{/* end grid */}
         </div>
 
