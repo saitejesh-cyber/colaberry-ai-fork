@@ -257,6 +257,22 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
 
       {/* ── Compact episode header ── */}
       <header className="section-shell overflow-hidden px-4 pt-4 pb-2 sm:px-6">
+        <div className="mb-4 flex items-center gap-4">
+          <Image
+            src={episode.coverImageUrl || PODCAST_BRAND_IMAGE}
+            alt={episode.coverImageAlt || episode.title}
+            width={80}
+            height={80}
+            className="h-16 w-16 rounded-xl shadow-sm sm:h-20 sm:w-20"
+            sizes="80px"
+          />
+          <div>
+            <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Colaberry AI Podcast</h3>
+            {episode.episodeNumber ? (
+              <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">Episode {episode.episodeNumber}</p>
+            ) : null}
+          </div>
+        </div>
         <Link
           href="/resources/podcasts"
           className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
@@ -267,7 +283,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
           </svg>
           All Episodes
         </Link>
-        <h1 className="font-display text-2xl font-bold text-zinc-900 break-words dark:text-zinc-100 sm:text-display-lg lg:text-display-2xl">
+        <h1 className="font-display text-xl font-bold text-zinc-900 break-words dark:text-zinc-100 sm:text-2xl lg:text-display-sm">
           {episode.title}
         </h1>
         <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
@@ -465,22 +481,6 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
         </div>
 
         <aside className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start">
-          {/* Podcast identity panel */}
-          <div className="detail-section flex flex-col items-center text-center">
-            <Image
-              src={episode.coverImageUrl || PODCAST_BRAND_IMAGE}
-              alt={episode.coverImageAlt || episode.title}
-              width={200}
-              height={200}
-              className="h-48 w-48 rounded-2xl shadow-md"
-              sizes="192px"
-            />
-            <h3 className="mt-4 text-sm font-bold text-zinc-900 dark:text-zinc-100">Colaberry AI Podcast</h3>
-            {episode.episodeNumber ? (
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Episode {episode.episodeNumber}</p>
-            ) : null}
-          </div>
-
           {subscribeLinks.length > 0 ? (
             <div className="detail-section">
               <div className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
