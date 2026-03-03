@@ -67,7 +67,7 @@ export default function Podcasts({
   // Sidebar newsletter state
   const [sidebarEmail, setSidebarEmail] = useState("");
   const [sidebarHoneypot, setSidebarHoneypot] = useState("");
-  const [sidebarConsent, setSidebarConsent] = useState(false);
+
   const [sidebarSubState, setSidebarSubState] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [sidebarSubMessage, setSidebarSubMessage] = useState<string | null>(null);
   const sidebarTracking = useMemo(() => getTrackingContext(), []);
@@ -84,7 +84,7 @@ export default function Podcasts({
         body: JSON.stringify({
           email: sidebarEmail,
           website: sidebarHoneypot,
-          consent: sidebarConsent,
+          consent: true,
           sourcePath: canonicalPath,
           sourcePage: "podcast-listing-sidebar",
           utmSource: sidebarTracking.utmSource,
@@ -105,7 +105,6 @@ export default function Podcasts({
       setSidebarSubMessage(payload?.message || "Subscription confirmed.");
       setSidebarEmail("");
       setSidebarHoneypot("");
-      setSidebarConsent(false);
     } catch {
       setSidebarSubState("error");
       setSidebarSubMessage("Unable to subscribe right now.");
@@ -686,15 +685,9 @@ export default function Podcasts({
                     </svg>
                   </button>
                 </div>
-                <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-[#71717A] dark:text-[#A1A1AA]">
-                  <input
-                    type="checkbox"
-                    checked={sidebarConsent}
-                    onChange={(e) => setSidebarConsent(e.target.checked)}
-                    className="mt-0.5 h-3.5 w-3.5 rounded border-[#A1A1AA] accent-[#DC2626] dark:border-[#71717A]"
-                  />
-                  <span>I agree to receive marketing communications from Colaberry AI</span>
-                </label>
+                <p className="mt-3 text-xs leading-relaxed text-[#71717A] dark:text-[#A1A1AA]">
+                  By subscribing you agree to receive communications from Colaberry AI.
+                </p>
                 {sidebarSubMessage ? (
                   <p className={`mt-2 text-xs ${sidebarSubState === "error" ? "text-red-600" : "text-emerald-600"}`}>
                     {sidebarSubMessage}
