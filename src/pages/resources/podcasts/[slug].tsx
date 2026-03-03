@@ -317,22 +317,12 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
           </div>
 
           <div>
-            {hasTimedTranscript ? (
-              <p className="text-xs text-zinc-500">
-                Transcript is synchronized with the audio player.
-              </p>
-            ) : null}
-
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <span className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
-                Share
-              </span>
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
                 <a
                   href={shareLinks.linkedin}
                   target="_blank"
                   rel="noreferrer"
-                  className="btn btn-ghost btn-icon"
+                  className="btn btn-secondary btn-icon"
                   aria-label="Share on LinkedIn"
                   onClick={() => logPodcastEvent("share", "linkedin", { slug: episode.slug, title: episode.title })}
                 >
@@ -349,7 +339,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                   href={shareLinks.x}
                   target="_blank"
                   rel="noreferrer"
-                  className="btn btn-ghost btn-icon"
+                  className="btn btn-secondary btn-icon"
                   aria-label="Share on X"
                   onClick={() => logPodcastEvent("share", "x", { slug: episode.slug, title: episode.title })}
                 >
@@ -364,7 +354,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                   href={shareLinks.facebook}
                   target="_blank"
                   rel="noreferrer"
-                  className="btn btn-ghost btn-icon"
+                  className="btn btn-secondary btn-icon"
                   aria-label="Share on Facebook"
                   onClick={() => logPodcastEvent("share", "facebook", { slug: episode.slug, title: episode.title })}
                 >
@@ -385,7 +375,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                       logPodcastEvent("share", "copy", { slug: episode.slug, title: episode.title });
                     }
                   }}
-                  className={`btn btn-compact ${copiedLink ? "text-emerald-600 dark:text-emerald-400" : "btn-ghost"}`}
+                  className={`btn btn-compact ${copiedLink ? "text-emerald-600 dark:text-emerald-400" : "btn-secondary"}`}
                 >
                   {copiedLink ? (
                     <>
@@ -402,13 +392,12 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                   <button
                     type="button"
                     onClick={() => setContentTab("transcript")}
-                    className="btn btn-ghost btn-compact"
+                    className="btn btn-secondary btn-compact"
                   >
                     Transcript
                   </button>
                 )}
               </div>
-            </div>
 
             {subscribeLinks.length > 0 && (
               <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -634,7 +623,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                 <button
                   type="button"
                   onClick={handleStopPlayback}
-                  className="btn btn-ghost btn-icon"
+                  className="btn btn-secondary btn-icon"
                   aria-label="Stop audio"
                 >
                   <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
