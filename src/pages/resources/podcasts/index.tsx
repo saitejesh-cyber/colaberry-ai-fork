@@ -74,7 +74,7 @@ export default function Podcasts({
 
   async function handleSidebarSubscribe(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (sidebarSubState === "submitting" || !sidebarConsent) return;
+    if (sidebarSubState === "submitting") return;
     setSidebarSubState("submitting");
     setSidebarSubMessage(null);
     try {
@@ -112,13 +112,33 @@ export default function Podcasts({
     }
   }
 
-  // Handle audio ended → reset icon
+  // Handle audio ended → reset icon + persist playback position for resume
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onEnded = () => setPlayingSlug(null);
+    const onEnded = () => {
+      setPlayingSlug(null);
+      localStorage.removeItem("podcast-playing-slug");
+    };
+    const onPause = () => {
+      localStorage.removeItem("podcast-playing-slug");
+    };
+    let lastSaved = 0;
+    const onTimeUpdate = () => {
+      const now = audio.currentTime;
+      if (now - lastSaved >= 2) {
+        lastSaved = now;
+        localStorage.setItem("podcast-playing-time", String(now));
+      }
+    };
     audio.addEventListener("ended", onEnded);
-    return () => audio.removeEventListener("ended", onEnded);
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    return () => {
+      audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+    };
   }, []);
 
   const handlePlay = (episode: PodcastEpisode, source: string) => {
@@ -136,6 +156,8 @@ export default function Podcasts({
     audio.src = episode.audioUrl;
     audio.play();
     setPlayingSlug(episode.slug);
+    localStorage.setItem("podcast-playing-slug", episode.slug);
+    localStorage.setItem("podcast-playing-time", "0");
     logPodcastEvent("play", source, { slug: episode.slug, title: episode.title });
   };
 
@@ -655,7 +677,7 @@ export default function Podcasts({
                   />
                   <button
                     type="submit"
-                    disabled={sidebarSubState === "submitting" || !sidebarConsent}
+                    disabled={sidebarSubState === "submitting"}
                     aria-label="Subscribe"
                     className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#18181B] text-white transition-transform hover:scale-105 disabled:opacity-40 dark:bg-[#FAFAFA] dark:text-[#18181B]"
                   >
@@ -679,16 +701,6 @@ export default function Podcasts({
                   </p>
                 ) : null}
               </form>
-            </div>
-
-            {/* CTA */}
-            <div className="mt-6">
-              <Link
-                href="/request-demo"
-                className="flex h-11 w-full items-center justify-center rounded-full bg-[#18181B] text-sm font-semibold text-white transition-transform hover:scale-[1.02] dark:bg-[#FAFAFA] dark:text-[#18181B]"
-              >
-                Let&apos;s Talk
-              </Link>
             </div>
 
             {/* Company tags */}

@@ -1218,14 +1218,14 @@ export default function Layout({ children }: { children: ReactNode }) {
         >
           <aside
             data-mobile-menu
-            className="absolute right-0 top-0 flex h-full w-[min(92vw,380px)] flex-col border-l border-zinc-200/70 bg-white/95 p-4 shadow-2xl dark:border-[#3F3F46] dark:bg-[#18181B]/95 animate-slide-in-right"
+            className="absolute left-0 top-0 flex h-full w-[min(92vw,380px)] flex-col border-r border-zinc-200/70 bg-white/95 p-4 shadow-2xl dark:border-[#3F3F46] dark:bg-[#18181B]/95 animate-slide-in-left"
             onClick={(event) => event.stopPropagation()}
             onTouchStart={(e) => {
               const startX = e.touches[0].clientX;
               const aside = e.currentTarget;
               const onMove = (ev: TouchEvent) => {
                 const dx = ev.touches[0].clientX - startX;
-                if (dx > 80) {
+                if (dx < -80) {
                   closeMobileMenu();
                   aside.removeEventListener("touchmove", onMove);
                 }

@@ -130,6 +130,25 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
     syncDuration();
     setIsPlaying(!audio.paused);
 
+    // Resume playback from listing page if this episode was playing
+    const savedSlug = localStorage.getItem("podcast-playing-slug");
+    const savedTime = parseFloat(localStorage.getItem("podcast-playing-time") || "0");
+    if (savedSlug === episode.slug && savedTime > 0) {
+      const resumeOnReady = () => {
+        audio.currentTime = savedTime;
+        audio.play().catch(() => undefined);
+        audio.removeEventListener("loadedmetadata", resumeOnReady);
+      };
+      if (audio.readyState >= 1) {
+        audio.currentTime = savedTime;
+        audio.play().catch(() => undefined);
+      } else {
+        audio.addEventListener("loadedmetadata", resumeOnReady);
+      }
+      localStorage.removeItem("podcast-playing-slug");
+      localStorage.removeItem("podcast-playing-time");
+    }
+
     audio.addEventListener("play", handlePlay);
     audio.addEventListener("pause", handlePause);
     audio.addEventListener("ended", handleEnded);
@@ -145,7 +164,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
       audio.removeEventListener("loadedmetadata", syncDuration);
       audio.removeEventListener("durationchange", syncDuration);
     };
-  }, [audioUrl]);
+  }, [audioUrl, episode.slug]);
 
   const jsonLd = {
     "@context": "https://schema.org",
