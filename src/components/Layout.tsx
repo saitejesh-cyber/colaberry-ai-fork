@@ -1555,6 +1555,11 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
 
+        {/* ── Watermark logo ── */}
+        <div className="footer-watermark mx-auto max-w-7xl" aria-hidden="true">
+          ColaberryAI
+        </div>
+
         {/* ── Bottom bar ── */}
         <div className="border-t border-[#D4D1CA] dark:border-[#4A473F]">
           <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-6 py-6 sm:flex-row sm:justify-between">
