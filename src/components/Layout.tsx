@@ -1584,8 +1584,22 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         {/* ── Watermark logo ── */}
         <div className="footer-watermark mx-auto max-w-7xl" aria-hidden="true">
-          ColaberryAI
-          <span className="ml-2 inline-block h-3 w-3 rounded-full bg-[#DC2626] align-middle dark:bg-[#F87171]" />
+          <Image
+            src="/brand/colaberry-ai-watermark.svg"
+            alt=""
+            width={2284}
+            height={476}
+            className="brand-logo-light mx-auto h-auto w-full max-w-5xl"
+            priority={false}
+          />
+          <Image
+            src="/brand/colaberry-ai-watermark-dark.svg"
+            alt=""
+            width={2284}
+            height={476}
+            className="brand-logo-dark mx-auto h-auto w-full max-w-5xl"
+            priority={false}
+          />
         </div>
 
         {/* ── Bottom bar ── */}
