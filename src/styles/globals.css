@@ -1364,6 +1364,26 @@ footer .footer-link:focus-visible {
   text-decoration: underline;
 }
 
+/* Footer watermark logo */
+.footer-watermark {
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 800;
+  font-size: clamp(5rem, 12vw, 10rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #D4D1CA;
+  user-select: none;
+  pointer-events: none;
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 2rem 0 0;
+}
+
+.dark .footer-watermark {
+  color: #3A3730;
+}
+
 .skip-link {
   position: absolute;
   left: 1rem;
