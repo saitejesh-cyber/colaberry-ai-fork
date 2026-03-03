@@ -53,7 +53,7 @@ export default function CaseStudiesHub() {
           <Link
             key={item.slug}
             href={`/industries/${item.slug}`}
-            className="surface-panel surface-hover surface-interactive group border border-zinc-200/80 bg-white/90 p-5"
+            className="surface-panel surface-hover surface-interactive group border border-zinc-200/80 bg-white/90 p-5 dark:border-zinc-700/80 dark:bg-zinc-900/90"
             aria-label={`View ${item.name} case studies`}
           >
             <div className="flex items-start justify-between gap-4">

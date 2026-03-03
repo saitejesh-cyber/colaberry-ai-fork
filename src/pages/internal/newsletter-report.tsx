@@ -286,7 +286,7 @@ export default function InternalNewsletterReportPage() {
         />
       </div>
 
-      <section className="surface-panel mt-6 border border-zinc-200/80 bg-white/90 p-6">
+      <section className="surface-panel mt-6 border border-zinc-200/80 bg-white/90 p-6 dark:border-zinc-700/80 dark:bg-zinc-900/90">
         <SectionHeader
           as="h2"
           size="md"
@@ -395,7 +395,7 @@ export default function InternalNewsletterReportPage() {
         ) : null}
       </section>
 
-      <section className="surface-panel mt-6 border border-zinc-200/80 bg-white/90 p-6">
+      <section className="surface-panel mt-6 border border-zinc-200/80 bg-white/90 p-6 dark:border-zinc-700/80 dark:bg-zinc-900/90">
         <SectionHeader
           as="h2"
           size="md"
@@ -447,7 +447,7 @@ export default function InternalNewsletterReportPage() {
         ) : null}
       </section>
 
-      <section className="surface-panel mt-6 border border-zinc-200/80 bg-white/90 p-6">
+      <section className="surface-panel mt-6 border border-zinc-200/80 bg-white/90 p-6 dark:border-zinc-700/80 dark:bg-zinc-900/90">
         <SectionHeader
           as="h2"
           size="md"

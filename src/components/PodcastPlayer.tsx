@@ -138,7 +138,7 @@ export default function PodcastPlayer({
         ref={audioRef}
         controls
         onPlay={onPlay}
-        className="w-full rounded-lg border border-zinc-200/80 bg-white/90 p-3 shadow-sm"
+        className="w-full rounded-lg border border-zinc-200/80 bg-white/90 p-3 shadow-sm dark:border-zinc-700/80 dark:bg-zinc-900/90"
       >
         <source src={audioUrl} />
         Your browser does not support the audio element.

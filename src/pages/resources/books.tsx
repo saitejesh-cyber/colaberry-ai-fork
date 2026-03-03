@@ -53,7 +53,7 @@ export default function Books() {
           ].map((item) => (
             <div
               key={item}
-              className="rounded-2xl border border-zinc-200/80 bg-white/90 p-4 text-sm text-zinc-700 shadow-sm"
+              className="rounded-2xl border border-zinc-200/80 bg-white/90 p-4 text-sm text-zinc-700 shadow-sm dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-zinc-300"
             >
               {item}
             </div>
@@ -111,13 +111,13 @@ export default function Books() {
 
 function Card({ title, description, badge }: { title: string; description: string; badge: string }) {
   return (
-    <div className="surface-panel border border-zinc-200/80 bg-white/90 p-6">
+    <div className="surface-panel border border-zinc-200/80 bg-white/90 p-6 dark:border-zinc-700/80 dark:bg-zinc-900/90">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-base font-semibold text-zinc-900">{title}</div>
-          <div className="mt-1 text-sm text-zinc-600">{description}</div>
+          <div className="text-base font-semibold text-zinc-900 dark:text-zinc-100">{title}</div>
+          <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{description}</div>
         </div>
-        <span className="chip chip-muted rounded-full border border-zinc-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700">
+        <span className="chip chip-muted rounded-full border border-zinc-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:border-zinc-700/80 dark:bg-zinc-800 dark:text-zinc-300">
           {badge}
         </span>
       </div>

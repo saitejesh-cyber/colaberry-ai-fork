@@ -36,7 +36,7 @@ export default function MediaPanel({
       <div className="flex items-start justify-between gap-3">
         <div>
           {kicker ? (
-            <div className="inline-flex items-center gap-2 rounded-md border border-brand-purple-600/20 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-deep dark:border-brand-purple-400/30 dark:text-brand-teal-100">
+            <div className="inline-flex items-center gap-2 rounded-md border border-brand-purple-600/20 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-brand-deep dark:border-brand-purple-400/30 dark:bg-zinc-900/90 dark:text-brand-teal-100">
               <span className="h-1.5 w-1.5 rounded-full bg-brand-aqua" />
               {kicker}
             </div>
@@ -44,7 +44,7 @@ export default function MediaPanel({
           <div className="mt-2 text-lg font-semibold leading-tight text-zinc-900 dark:text-zinc-100">{title}</div>
           {description ? <div className="mt-1.5 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">{description}</div> : null}
         </div>
-        <span className="rounded-md border border-zinc-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600 dark:border-zinc-700/80 dark:text-zinc-300">
+        <span className="rounded-md border border-zinc-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600 dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-zinc-300">
           Preview
         </span>
       </div>
