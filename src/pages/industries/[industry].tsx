@@ -38,12 +38,12 @@ export const getStaticProps: GetStaticProps<IndustryPageProps> = async ({ params
     ]);
     const agents = agentsResult.status === "fulfilled" ? agentsResult.value : [];
     const useCases = useCasesResult.status === "fulfilled" ? useCasesResult.value : [];
-    const matchSlug = (ind: any) => {
+    const matchSlug = (ind: string | null | undefined) => {
       const s = typeof ind === "string" ? ind.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and") : "";
       return s === industrySlug;
     };
-    agentCount = agents.filter((a: any) => matchSlug((a as any).industry || (a as any).industries?.[0])).length;
-    useCaseCount = useCases.filter((u: any) => matchSlug((u as any).industry || (u as any).industries?.[0])).length;
+    agentCount = agents.filter((a) => matchSlug(a.industry)).length;
+    useCaseCount = useCases.filter((u) => matchSlug(u.industry)).length;
   } catch {}
   return { props: { industrySlug, industryName, agentCount, useCaseCount }, revalidate: 600 };
 };

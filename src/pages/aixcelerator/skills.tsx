@@ -126,8 +126,8 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
     () => sortSkills(filteredSkills, sortMode),
     [filteredSkills, sortMode]
   );
-  const latestSkills = useMemo(() => sortSkills(scopedSkills, "latest").slice(0, 6), [scopedSkills]);
-  const trendingSkills = useMemo(() => sortSkills(scopedSkills, "trending").slice(0, 6), [scopedSkills]);
+  const _latestSkills = useMemo(() => sortSkills(scopedSkills, "latest").slice(0, 6), [scopedSkills]);
+  const _trendingSkills = useMemo(() => sortSkills(scopedSkills, "trending").slice(0, 6), [scopedSkills]);
   const shownCount = Math.min(visibleCount, sortedSkills.length);
   const visibleSkills = useMemo(() => sortedSkills.slice(0, shownCount), [shownCount, sortedSkills]);
   const hasMore = shownCount < sortedSkills.length;
@@ -379,7 +379,7 @@ function SkillCard({ skill }: { skill: Skill }) {
   );
 }
 
-function SkillSignalRail({
+function _SkillSignalRail({
   title,
   description,
   items,

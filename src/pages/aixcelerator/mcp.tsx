@@ -205,7 +205,6 @@ export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, total
     if (prevFilterKey.current !== filterKey) {
       prevFilterKey.current = filterKey;
       loadingRef.current = true;
-      setLoadingMore(true);
       const params = buildParams(1);
       fetch(`/api/mcps?${params}`)
         .then((res) => (res.ok ? res.json() : null))
@@ -274,11 +273,11 @@ export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, total
     () => filterByVisibility(allMCPs, allowPrivate, visibility),
     [allowPrivate, allMCPs, visibility]
   );
-  const latestMCPs = useMemo(
+  const _latestMCPs = useMemo(
     () => sortMCPsLocal(scopedMCPs, "latest").slice(0, 6),
     [scopedMCPs]
   );
-  const trendingMCPs = useMemo(
+  const _trendingMCPs = useMemo(
     () => sortMCPsLocal(scopedMCPs, "trending").slice(0, 6),
     [scopedMCPs]
   );
@@ -664,7 +663,7 @@ function formatShortDate(value?: string | null) {
   });
 }
 
-function SignalRail({
+function _SignalRail({
   title,
   description,
   items,

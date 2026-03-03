@@ -118,11 +118,11 @@ export default function UseCasesPage({ useCases, allowPrivate, fetchError }: Use
     () => sortUseCases(filteredUseCases, sortMode),
     [filteredUseCases, sortMode]
   );
-  const latestUseCases = useMemo(
+  const _latestUseCases = useMemo(
     () => sortUseCases(scopedUseCases, "latest").slice(0, 6),
     [scopedUseCases]
   );
-  const trendingUseCases = useMemo(
+  const _trendingUseCases = useMemo(
     () => sortUseCases(scopedUseCases, "trending").slice(0, 6),
     [scopedUseCases]
   );
@@ -471,7 +471,7 @@ function scoreTrendingUseCase(item: UseCase) {
   return linkageScore + verifiedScore + completenessScore + freshnessScore;
 }
 
-function SignalRail({
+function _SignalRail({
   title,
   description,
   items,

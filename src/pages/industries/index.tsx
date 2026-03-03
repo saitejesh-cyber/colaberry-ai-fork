@@ -22,7 +22,7 @@ export const getStaticProps: GetStaticProps<IndustriesProps> = async () => {
     const useCases = useCasesResult.status === "fulfilled" ? useCasesResult.value : [];
     // Count agents per industry (agents have an "industry" or "industries" field)
     for (const agent of agents) {
-      const ind = (agent as any).industry || (agent as any).industries?.[0] || "";
+      const ind = agent.industry || "";
       const slug = typeof ind === "string" ? ind.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and") : "";
       if (slug) {
         if (!industryCounts[slug]) industryCounts[slug] = { agents: 0, useCases: 0 };
@@ -31,7 +31,7 @@ export const getStaticProps: GetStaticProps<IndustriesProps> = async () => {
     }
     // Count use cases per industry
     for (const uc of useCases) {
-      const ind = (uc as any).industry || (uc as any).industries?.[0] || "";
+      const ind = uc.industry || "";
       const slug = typeof ind === "string" ? ind.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and") : "";
       if (slug) {
         if (!industryCounts[slug]) industryCounts[slug] = { agents: 0, useCases: 0 };

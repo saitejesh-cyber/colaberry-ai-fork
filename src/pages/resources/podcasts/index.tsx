@@ -55,7 +55,6 @@ export default function Podcasts({
   const [searchOpen, setSearchOpen] = useState(Boolean(searchQuery.trim()));
   const [allEpisodes, setAllEpisodes] = useState<PodcastEpisode[]>(initialEpisodes);
   const [hasMore, setHasMore] = useState(initialHasMore);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [displayTotal, setDisplayTotal] = useState(totalEpisodes);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
@@ -153,7 +152,6 @@ export default function Podcasts({
   const fetchNextPage = async () => {
     if (loadingRef.current) return;
     loadingRef.current = true;
-    setLoadingMore(true);
     const nextPage = pageRef.current + 1;
     const params = new URLSearchParams({ page: String(nextPage), sort: activeSort });
     if (activeType !== "all") params.set("type", activeType);
@@ -170,7 +168,6 @@ export default function Podcasts({
       }
     } catch { /* silently fail, user can scroll again */ }
     loadingRef.current = false;
-    setLoadingMore(false);
   };
 
   useEffect(() => {
@@ -784,14 +781,15 @@ function formatShortDate(value?: string | null) {
 }
 
 /** Extract plain text from Strapi rich-text (block array or string). */
-function extractPlainText(description: any, maxLen = 140): string {
+type RichTextBlock = { type?: string; children?: { text?: string }[] };
+function extractPlainText(description: string | RichTextBlock[] | null | undefined, maxLen = 140): string {
   if (!description) return "";
   if (typeof description === "string") return description.slice(0, maxLen);
   if (Array.isArray(description)) {
     const text = description
-      .filter((block: any) => block?.type === "paragraph")
-      .flatMap((block: any) =>
-        (block.children || []).map((child: any) => child?.text || "")
+      .filter((block: RichTextBlock) => block?.type === "paragraph")
+      .flatMap((block: RichTextBlock) =>
+        (block.children || []).map((child) => child?.text || "")
       )
       .join(" ")
       .trim();

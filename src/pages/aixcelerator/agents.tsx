@@ -132,11 +132,11 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
     () => filterByVisibility(agents, allowPrivate, visibility),
     [agents, allowPrivate, visibility]
   );
-  const latestAgents = useMemo(
+  const _latestAgents = useMemo(
     () => sortAgents(scopedAgents, "latest").slice(0, 6),
     [scopedAgents]
   );
-  const trendingAgents = useMemo(
+  const _trendingAgents = useMemo(
     () => sortAgents(scopedAgents, "trending").slice(0, 6),
     [scopedAgents]
   );
@@ -604,7 +604,7 @@ function formatShortDate(value?: string | null) {
   });
 }
 
-function SignalRail({
+function _SignalRail({
   title,
   description,
   items,
