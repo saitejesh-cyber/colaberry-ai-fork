@@ -143,18 +143,33 @@ const fallbackNavigation: GlobalNavigation = {
   ],
 };
 
-const FOOTER_NAV_LINKS = [
-  { label: "Platform", href: "/aixcelerator" },
-  { label: "Agents", href: "/aixcelerator/agents" },
-  { label: "MCP Servers", href: "/aixcelerator/mcp" },
-  { label: "Skills", href: "/aixcelerator/skills" },
-  { label: "Solutions", href: "/solutions" },
-  { label: "Use Cases", href: "/use-cases" },
-  { label: "Industries", href: "/industries" },
-  { label: "Resources", href: "/resources" },
-  { label: "Podcasts", href: "/resources/podcasts" },
-  { label: "Updates", href: "/updates" },
-  { label: "Contact", href: "/request-demo" },
+const FOOTER_COLUMNS = [
+  {
+    title: "Platform",
+    links: [
+      { label: "Agents", href: "/aixcelerator/agents" },
+      { label: "MCP Servers", href: "/aixcelerator/mcp" },
+      { label: "Skills", href: "/aixcelerator/skills" },
+      { label: "Solutions", href: "/solutions" },
+      { label: "Use Cases", href: "/use-cases" },
+      { label: "Industries", href: "/industries" },
+    ],
+  },
+  {
+    title: "Catalog",
+    links: [
+      { label: "Podcasts", href: "/resources/podcasts" },
+      { label: "Articles", href: "/resources/articles" },
+      { label: "Case Studies", href: "/resources/case-studies" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { label: "Updates", href: "/updates" },
+      { label: "Contact", href: "/request-demo" },
+    ],
+  },
 ] as const;
 
 const SOCIAL_ICON_PATHS: Record<string, ReactNode> = {
@@ -1463,124 +1478,124 @@ export default function Layout({ children }: { children: ReactNode }) {
       ) : null}
 
       <footer role="contentinfo" className="footer-surface mt-6">
-        {/* ── Main 3-column grid ── */}
-        <div className="mx-auto grid max-w-7xl gap-8 px-6 pt-12 pb-8 lg:grid-cols-[1fr_auto_auto] lg:gap-10 lg:pt-16 lg:pb-10">
-          {/* LEFT — Newsletter */}
-          <div className="max-w-md">
-            <h2 className="text-xl font-semibold text-[#18181B] dark:text-[#FAFAFA]">
-              Subscribe to newsletter
-            </h2>
-            <form onSubmit={handleFooterNewsletterSubmit} className="mt-6">
-              {/* Honeypot */}
-              <input
-                type="text"
-                name="website"
-                value={footerHoneypot}
-                onChange={(e) => setFooterHoneypot(e.target.value)}
-                autoComplete="off"
-                tabIndex={-1}
-                className="absolute -left-[9999px] h-0 w-0 opacity-0"
-                aria-hidden="true"
-              />
-              <div className="flex items-center gap-3">
-                <input
-                  type="email"
-                  required
-                  placeholder="Email address"
-                  value={footerEmail}
-                  onChange={(e) => setFooterEmail(e.target.value)}
-                  disabled={footerSubState === "submitting"}
-                  className="footer-input-underline flex-1 text-sm"
+        {/* ── Top section: Logo + Newsletter (left) + Link columns (right) ── */}
+        <div className="mx-auto max-w-7xl px-6 pt-12 pb-8 lg:pt-16 lg:pb-10">
+          <div className="flex flex-col gap-10 lg:flex-row lg:gap-16">
+            {/* LEFT — Logo + Newsletter */}
+            <div className="max-w-sm flex-shrink-0">
+              {/* Logo */}
+              <span className="flex items-center">
+                <Image
+                  src="/brand/colaberry-ai-logo.svg"
+                  alt="Colaberry AI"
+                  width={130}
+                  height={28}
+                  priority
+                  className="brand-logo-light h-7 w-auto"
                 />
-                <button
-                  type="submit"
-                  disabled={footerSubState === "submitting" || !footerConsent}
-                  aria-label="Subscribe"
-                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#18181B] text-white transition-transform hover:scale-105 disabled:opacity-40 dark:bg-[#FAFAFA] dark:text-[#18181B]"
-                >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-              <label className="mt-4 flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-[#71717A] dark:text-[#A1A1AA]">
-                <input
-                  type="checkbox"
-                  checked={footerConsent}
-                  onChange={(e) => setFooterConsent(e.target.checked)}
-                  className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-300 accent-[#DC2626] dark:border-zinc-600"
+                <Image
+                  src="/brand/colaberry-ai-logo-dark.svg"
+                  alt="Colaberry AI"
+                  width={130}
+                  height={28}
+                  priority
+                  className="brand-logo-dark h-7 w-auto"
                 />
-                <span>
-                  By subscribing you agree to with our{" "}
-                  <Link href="/privacy-policy" className="underline hover:text-[#18181B] dark:hover:text-white">
-                    Privacy Policy
-                  </Link>
-                </span>
-              </label>
-              {footerSubMessage ? (
-                <p className={`mt-3 text-xs ${footerSubState === "error" ? "text-red-600" : "text-emerald-600"}`}>
-                  {footerSubMessage}
-                </p>
-              ) : null}
-            </form>
-          </div>
+              </span>
 
-          {/* MIDDLE — Nav links */}
-          <nav aria-label="Footer navigation" className="lg:border-r lg:border-[#D4D1CA] lg:pr-12 dark:lg:border-[#4A473F]">
-            <ul className="grid grid-cols-2 gap-x-10 gap-y-2.5 sm:grid-cols-3 lg:grid-cols-1 lg:gap-y-2">
-              {FOOTER_NAV_LINKS.map((link) => (
-                <li key={link.href}>
-                  <FooterLink href={link.href}>{link.label}</FooterLink>
-                </li>
+              {/* Newsletter */}
+              <h2 className="mt-8 text-sm font-semibold text-[#18181B] dark:text-[#FAFAFA]">
+                Subscribe to newsletter
+              </h2>
+              <form onSubmit={handleFooterNewsletterSubmit} className="mt-4">
+                {/* Honeypot */}
+                <input
+                  type="text"
+                  name="website"
+                  value={footerHoneypot}
+                  onChange={(e) => setFooterHoneypot(e.target.value)}
+                  autoComplete="off"
+                  tabIndex={-1}
+                  className="absolute -left-[9999px] h-0 w-0 opacity-0"
+                  aria-hidden="true"
+                />
+                <div className="flex items-center gap-3">
+                  <input
+                    type="email"
+                    required
+                    placeholder="Email address"
+                    value={footerEmail}
+                    onChange={(e) => setFooterEmail(e.target.value)}
+                    disabled={footerSubState === "submitting"}
+                    className="footer-input-underline flex-1 text-sm"
+                  />
+                  <button
+                    type="submit"
+                    disabled={footerSubState === "submitting" || !footerConsent}
+                    aria-label="Subscribe"
+                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#18181B] text-white transition-transform hover:scale-105 disabled:opacity-40 dark:bg-[#FAFAFA] dark:text-[#18181B]"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+                <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-[#71717A] dark:text-[#A1A1AA]">
+                  <input
+                    type="checkbox"
+                    checked={footerConsent}
+                    onChange={(e) => setFooterConsent(e.target.checked)}
+                    className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-300 accent-[#DC2626] dark:border-zinc-600"
+                  />
+                  <span>
+                    By subscribing you agree to with our{" "}
+                    <Link href="/privacy-policy" className="underline hover:text-[#18181B] dark:hover:text-white">
+                      Privacy Policy
+                    </Link>
+                  </span>
+                </label>
+                {footerSubMessage ? (
+                  <p className={`mt-3 text-xs ${footerSubState === "error" ? "text-red-600" : "text-emerald-600"}`}>
+                    {footerSubMessage}
+                  </p>
+                ) : null}
+              </form>
+            </div>
+
+            {/* RIGHT — Link columns */}
+            <nav aria-label="Footer navigation" className="grid flex-1 grid-cols-2 gap-x-10 gap-y-8 sm:grid-cols-3">
+              {FOOTER_COLUMNS.map((col) => (
+                <div key={col.title}>
+                  <h3 className="footer-column-heading">{col.title}</h3>
+                  <ul className="mt-3 space-y-2">
+                    {col.links.map((link) => (
+                      <li key={link.href}>
+                        <FooterLink href={link.href} className="text-sm font-normal">
+                          {link.label}
+                        </FooterLink>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
-          </nav>
-
-          {/* RIGHT — Social icons */}
-          <div className="flex flex-row flex-wrap gap-3 lg:flex-col">
-            {globalNav.socialLinks.map((link) => (
-              <a
-                key={`footer-social-${link.label}`}
-                href={link.href}
-                target={link.target ?? "_blank"}
-                rel="noopener noreferrer"
-                aria-label={link.label}
-                className="social-icon-circle"
-              >
-                <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-                  {resolveSocialIcon(link.icon, link.label)}
-                </svg>
-              </a>
-            ))}
+            </nav>
           </div>
         </div>
 
         {/* ── Watermark logo ── */}
         <div className="footer-watermark mx-auto max-w-7xl" aria-hidden="true">
           ColaberryAI
+          <span className="ml-2 inline-block h-3 w-3 rounded-full bg-[#DC2626] align-middle dark:bg-[#F87171]" />
         </div>
 
         {/* ── Bottom bar ── */}
         <div className="border-t border-[#D4D1CA] dark:border-[#4A473F]">
           <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-6 py-6 sm:flex-row sm:justify-between">
-            {/* Logo */}
-            <span className="flex items-center">
-              <Image
-                src="/brand/colaberry-ai-logo.svg"
-                alt="Colaberry AI"
-                width={130}
-                height={28}
-                priority
-                className="brand-logo-light h-7 w-auto"
-              />
-              <Image
-                src="/brand/colaberry-ai-logo-dark.svg"
-                alt="Colaberry AI"
-                width={130}
-                height={28}
-                priority
-                className="brand-logo-dark h-7 w-auto"
-              />
+            {/* Copyright */}
+            <span className="footer-copyright">
+              &copy; {new Date().getFullYear()} Colaberry, Inc.
+              <br />
+              All rights reserved.
             </span>
 
             {/* Legal links */}
@@ -1597,10 +1612,23 @@ export default function Layout({ children }: { children: ReactNode }) {
               ))}
             </div>
 
-            {/* Copyright */}
-            <span className="text-xs text-[#71717A] dark:text-[#A1A1AA]">
-              &copy; {new Date().getFullYear()} Colaberry, Inc.
-            </span>
+            {/* Social icons — small inline */}
+            <div className="flex items-center gap-4">
+              {globalNav.socialLinks.map((link) => (
+                <a
+                  key={`footer-social-${link.label}`}
+                  href={link.href}
+                  target={link.target ?? "_blank"}
+                  rel="noopener noreferrer"
+                  aria-label={link.label}
+                  className="text-[#71717A] transition-colors hover:text-[#18181B] dark:text-[#A1A1AA] dark:hover:text-white"
+                >
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+                    {resolveSocialIcon(link.icon, link.label)}
+                  </svg>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </footer>

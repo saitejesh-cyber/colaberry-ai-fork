@@ -1364,6 +1364,34 @@ footer .footer-link:focus-visible {
   text-decoration: underline;
 }
 
+/* Footer column heading — uppercase, small, tracked */
+.footer-column-heading {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #71717A;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #D4D1CA;
+}
+.dark .footer-column-heading {
+  color: #A1A1AA;
+  border-bottom-color: #4A473F;
+}
+
+/* Footer copyright — small, uppercase */
+.footer-copyright {
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #71717A;
+  line-height: 1.5;
+}
+.dark .footer-copyright {
+  color: #A1A1AA;
+}
+
 /* Footer watermark logo */
 .footer-watermark {
   font-family: var(--font-inter), sans-serif;
