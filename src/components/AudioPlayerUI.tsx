@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type AudioPlayerUIProps = {
   src: string;
@@ -64,7 +64,7 @@ export default function AudioPlayerUI({
     };
   }, [resolvedRef]);
 
-  const togglePlay = useCallback(() => {
+  const togglePlay = () => {
     const audio = resolvedRef.current;
     if (!audio) return;
     if (audio.paused) {
@@ -78,42 +78,39 @@ export default function AudioPlayerUI({
       audio.pause();
       setPlaying(false);
     }
-  }, [onPlay, resolvedRef]);
+  };
 
-  const skip = useCallback((delta: number) => {
+  const skip = (delta: number) => {
     const audio = resolvedRef.current;
     if (!audio) return;
     audio.currentTime = Math.max(0, Math.min(audio.currentTime + delta, audio.duration || 0));
-  }, [resolvedRef]);
+  };
 
-  const seek = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      const audio = resolvedRef.current;
-      const bar = progressRef.current;
-      if (!audio || !bar || !duration) return;
-      const rect = bar.getBoundingClientRect();
-      const ratio = Math.max(0, Math.min((e.clientX - rect.left) / rect.width, 1));
-      audio.currentTime = ratio * duration;
-    },
-    [duration, resolvedRef]
-  );
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = resolvedRef.current;
+    const bar = progressRef.current;
+    if (!audio || !bar || !duration) return;
+    const rect = bar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min((e.clientX - rect.left) / rect.width, 1));
+    audio.currentTime = ratio * duration;
+  };
 
-  const cycleSpeed = useCallback(() => {
+  const cycleSpeed = () => {
     const audio = resolvedRef.current;
     if (!audio) return;
     const idx = SPEEDS.indexOf(speed as (typeof SPEEDS)[number]);
     const next = SPEEDS[(idx + 1) % SPEEDS.length];
     audio.playbackRate = next;
     setSpeed(next);
-  }, [speed, resolvedRef]);
+  };
 
-  const changeVolume = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const changeVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
     const audio = resolvedRef.current;
     if (!audio) return;
     const v = parseFloat(e.target.value);
     audio.volume = v;
     setVolume(v);
-  }, [resolvedRef]);
+  };
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
