@@ -255,75 +255,73 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
         { label: episode.title },
       ]} />
 
-      {/* ── Compact episode header ── */}
-      <header className="section-shell overflow-hidden px-4 pt-4 pb-2 sm:px-6">
-        <div className="mb-4 flex items-center gap-4">
-          <Image
-            src={episode.coverImageUrl || PODCAST_BRAND_IMAGE}
-            alt={episode.coverImageAlt || episode.title}
-            width={80}
-            height={80}
-            className="h-16 w-16 rounded-xl shadow-sm sm:h-20 sm:w-20"
-            sizes="80px"
-          />
-          <div>
-            <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Colaberry AI Podcast</h3>
-            {episode.episodeNumber ? (
-              <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">Episode {episode.episodeNumber}</p>
-            ) : null}
+      {/* ── Apple Podcasts–style episode header ── */}
+      <header className="section-shell overflow-hidden px-4 pt-4 pb-4 sm:px-6">
+        <div className="flex gap-5 sm:gap-6">
+          {/* Left: Cover art */}
+          <div className="shrink-0">
+            <Image
+              src={episode.coverImageUrl || PODCAST_BRAND_IMAGE}
+              alt={episode.coverImageAlt || episode.title}
+              width={180}
+              height={180}
+              className="h-32 w-32 rounded-2xl shadow-md sm:h-44 sm:w-44"
+              sizes="(min-width:640px) 176px, 128px"
+            />
           </div>
-        </div>
-        <Link
-          href="/resources/podcasts"
-          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M19 12H5" />
-            <path d="M12 19l-7-7 7-7" />
-          </svg>
-          All Episodes
-        </Link>
-        <h1 className="font-display text-xl font-bold text-zinc-900 break-words dark:text-zinc-100 sm:text-2xl lg:text-display-sm">
-          {episode.title}
-        </h1>
-        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
-          {publishedLabel ? <span>{publishedLabel}</span> : null}
-          {episode.duration ? <><span aria-hidden="true">&middot;</span><span>{episode.duration}</span></> : null}
-          {episode.episodeNumber ? <><span aria-hidden="true">&middot;</span><span>Episode {episode.episodeNumber}</span></> : null}
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {(episode.tags || []).slice(0, 5).map((tag) => (
-            <Link key={tag.slug} href={`/resources/podcasts/tag/${tag.slug}`} className="chip chip-muted rounded-md px-2.5 py-1 text-xs font-semibold">
-              #{tag.name}
+
+          {/* Right: Metadata + Title + Show name */}
+          <div className="flex min-w-0 flex-col justify-center">
+            <p className="flex flex-wrap items-center gap-x-2 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              {publishedLabel ? <span>{publishedLabel}</span> : null}
+              {episode.duration ? <><span aria-hidden="true">·</span><span>{episode.duration}</span></> : null}
+              {episode.episodeNumber ? <><span aria-hidden="true">·</span><span>Ep {episode.episodeNumber}</span></> : null}
+            </p>
+
+            <h1 className="mt-1.5 font-display text-lg font-bold leading-snug text-zinc-900 break-words dark:text-zinc-100 sm:text-xl lg:text-2xl">
+              {episode.title}
+            </h1>
+
+            <Link
+              href="/resources/podcasts"
+              className="mt-1.5 text-sm font-semibold text-[#DC2626] hover:underline dark:text-[#F87171]"
+            >
+              Colaberry AI Podcast
             </Link>
-          ))}
-          {hasTranscriptContent ? (
-            <span className="inline-flex items-center gap-1 rounded-md bg-[var(--trusted-surface)] px-2.5 py-1 text-xs font-semibold text-[var(--trusted-text)] ring-1 ring-inset ring-[var(--trusted-stroke)]">
-              Transcript
-            </span>
-          ) : null}
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(episode.tags || []).slice(0, 5).map((tag) => (
+                <Link key={tag.slug} href={`/resources/podcasts/tag/${tag.slug}`} className="chip chip-muted rounded-md px-2.5 py-1 text-xs font-semibold">
+                  #{tag.name}
+                </Link>
+              ))}
+              {hasTranscriptContent ? (
+                <span className="inline-flex items-center gap-1 rounded-md bg-[var(--trusted-surface)] px-2.5 py-1 text-xs font-semibold text-[var(--trusted-text)] ring-1 ring-inset ring-[var(--trusted-stroke)]">
+                  Transcript
+                </span>
+              ) : null}
+            </div>
+          </div>
         </div>
       </header>
 
-      <div className="section-shell overflow-hidden px-4 pt-4 pb-8 sm:px-6">
+      <div className="section-shell px-4 pt-4 pb-8 sm:px-6">
         <div className="flex flex-col gap-6">
-          <div id="player" ref={playerRef}>
-            <div className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
-              Player
-            </div>
-            <div className="mt-3">
-              <PodcastPlayer
-                embedCode={shouldForceNative ? null : embedCode}
-                audioUrl={audioUrl}
-                audioRef={audioRef}
-                onPlay={() => logPodcastEvent("play", undefined, { slug: episode.slug, title: episode.title })}
-              />
-              {hasTimedTranscript ? (
-                <p className="mt-2 text-xs text-zinc-500">
-                  Transcript is synchronized with the audio player.
-                </p>
-              ) : null}
-            </div>
+          <div id="player" ref={playerRef} className="sticky top-16 z-30 -mx-4 border-b border-zinc-200/60 bg-white/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-zinc-800/60 dark:bg-zinc-950/95 dark:supports-[backdrop-filter]:bg-zinc-950/80 sm:-mx-6 sm:px-6">
+            <PodcastPlayer
+              embedCode={shouldForceNative ? null : embedCode}
+              audioUrl={audioUrl}
+              audioRef={audioRef}
+              onPlay={() => logPodcastEvent("play", undefined, { slug: episode.slug, title: episode.title })}
+            />
+          </div>
+
+          <div>
+            {hasTimedTranscript ? (
+              <p className="text-xs text-zinc-500">
+                Transcript is synchronized with the audio player.
+              </p>
+            ) : null}
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <span className="text-label font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
