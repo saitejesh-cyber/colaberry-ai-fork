@@ -228,6 +228,7 @@ body {
 body {
   margin: 0;
   position: relative;
+  overflow-x: hidden;
   color: var(--text-primary);
   background: var(--bg);
   font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
@@ -611,6 +612,7 @@ h6 {
   inset: 0;
   pointer-events: none;
   z-index: 1;
+  overflow: hidden;
 }
 
 .hero-orb {
@@ -694,6 +696,7 @@ h6 {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .hero-ring {
@@ -721,6 +724,16 @@ h6 {
   width: 1000px;
   height: 1000px;
   border-color: rgba(255, 255, 255, 0.03);
+}
+
+@media (max-width: 639px) {
+  .hero-ring-1 { width: 280px; height: 280px; }
+  .hero-ring-2 { width: 480px; height: 480px; }
+  .hero-ring-3 { width: 680px; height: 680px; }
+  .hero-orb-1 { width: 400px; height: 400px; }
+  .hero-orb-2 { width: 350px; height: 350px; }
+  .hero-orb-3 { width: 300px; height: 300px; }
+  .hero-orb-center { width: 500px; height: 500px; }
 }
 
 @media (min-width: 1024px) {
