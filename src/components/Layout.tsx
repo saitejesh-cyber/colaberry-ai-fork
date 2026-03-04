@@ -1059,7 +1059,19 @@ export default function Layout({ children }: { children: ReactNode }) {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-brand-deep focus:shadow-lg focus:ring-2 focus:ring-[#DC2626]/40">Skip to content</a>
       <header role="banner" className={`site-header sticky top-0 z-40 border-b transition-[background-color,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${headerCompact ? "site-header--compact border-[var(--stroke)]/60 bg-white/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-xl dark:bg-[#18181B]/80" : "border-[var(--stroke)] bg-white shadow-sm dark:bg-[#18181B]"}`}>
         <div className={`flex w-full items-center justify-between gap-3 px-4 transition-[padding] duration-200 sm:px-6 lg:px-8 ${headerCompact ? "py-1.5" : "py-3"}`}>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 lg:gap-3">
+            {/* ── Mobile hamburger (left-aligned, Gmail/YouTube pattern) ── */}
+            <button
+              type="button"
+              onClick={openMobileMenu}
+              className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg text-zinc-700 hover:bg-zinc-100 hover:text-[#18181B] lg:hidden dark:text-zinc-100 dark:hover:bg-zinc-800"
+              aria-expanded={mobileMenuOpen}
+              aria-label="Open navigation menu"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </button>
             <Link href="/" className="flex min-w-0 items-center gap-2">
               <span className="inline-flex items-center justify-center px-1">
                 <Image
@@ -1210,18 +1222,6 @@ export default function Layout({ children }: { children: ReactNode }) {
             >
               <span className="sr-only">{themeToggleLabel}</span>
               <ThemeIcon isDark={isDarkMode} />
-            </button>
-            <button
-              type="button"
-              onClick={openMobileMenu}
-              className="focus-ring inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200/70 bg-white/85 px-3 text-sm font-semibold text-zinc-700 hover:border-[#DC2626]/35 hover:text-[#18181B] dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
-              aria-expanded={mobileMenuOpen}
-              aria-label="Open navigation menu"
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
-                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-              <span className="hidden min-[420px]:inline">Menu</span>
             </button>
           </div>
         </div>
