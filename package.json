@@ -8,6 +8,7 @@
     "start": "next start -p $PORT",
     "lint": "eslint",
     "import:podcasts:csv": "node scripts/import-podcasts-csv.mjs",
+    "sync:buzzsprout": "node scripts/sync-buzzsprout.mjs",
     "audit:data": "node scripts/audit-data-readiness.mjs"
   },
   "dependencies": {
