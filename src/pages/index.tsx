@@ -268,7 +268,7 @@ export default function Home({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
       {/* ---- Hero (together.ai-inspired dark animated hero) ---- */}
-      <section className="relative overflow-hidden rounded-2xl" style={{ background: "var(--gradient-hero)" }}>
+      <section className="-mx-4 sm:mx-0 relative overflow-hidden rounded-none sm:rounded-2xl" style={{ background: "var(--gradient-hero)" }}>
         {/* Animated gradient mesh background */}
         <div className="hero-gradient-mesh" aria-hidden="true">
           <div className="hero-orb hero-orb-1" />
@@ -589,7 +589,7 @@ function SignalDashboard({
       </div>
 
       {/* Tab panels */}
-      <div className="mt-5">
+      <div className="mt-5 overflow-hidden">
         {activeTab === "Agents" && (
           <div role="tabpanel" id="signal-panel-Agents" aria-labelledby="signal-tab-Agents" className="grid gap-4 lg:grid-cols-2">
             <AgentRail title="Latest agents" description="Most recently updated." items={latestAgents} detailType="latest" />
@@ -1513,7 +1513,7 @@ function PlatformTabsSection({ tabs }: { tabs: PlatformTab[] }) {
         key={active.id}
         role="tabpanel"
         id={`platform-panel-${active.id}`}
-        className="mt-6 grid gap-6 lg:grid-cols-2"
+        className="mt-6 grid gap-6 lg:grid-cols-2 overflow-hidden"
       >
         <div className="flex flex-col justify-center">
           <h3 className="text-display-xs font-bold text-[var(--text-primary)] sm:text-display-sm">

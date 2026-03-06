@@ -1,5 +1,6 @@
 import type { AppProps } from "next/app";
 import { Inter } from "next/font/google";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -38,6 +39,9 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <div className={inter.variable}>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
       <div
         style={{
           opacity: transitioning ? 0 : 1,
