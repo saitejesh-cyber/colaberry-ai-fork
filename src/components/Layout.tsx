@@ -1100,7 +1100,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   onClick={() => setWorkspaceRailCollapsed((current) => !current)}
-                  className="btn btn-secondary btn-sm"
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                   aria-expanded={!workspaceRailCollapsed}
                   aria-label={workspaceRailCollapsed ? "Expand catalog menu" : "Collapse catalog menu"}
                 >
@@ -1116,7 +1116,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     {workspaceRailCollapsed ? "Expand menu" : "Collapse menu"}
                   </span>
                 </button>
-                <span className="hidden rounded-md border border-zinc-200/80 bg-white/80 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 min-[1560px]:inline-flex dark:border-zinc-700/80 dark:bg-zinc-900/70 dark:text-zinc-300">
+                <span className="hidden rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400 min-[1560px]:inline-flex dark:text-zinc-500">
                   Catalog workspace
                 </span>
                 <div className="hidden h-6 w-px bg-zinc-200/80 min-[1560px]:block dark:bg-zinc-700/80" />
