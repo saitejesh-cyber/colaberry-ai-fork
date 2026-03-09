@@ -12,6 +12,16 @@ import TourTooltip from "./TourTooltip";
 import { HOMEPAGE_TOUR_STEPS, TOUR_STORAGE_KEY, TOUR_VERSION } from "./tourSteps";
 import type { TourContextValue } from "./types";
 
+/* Detect bots, crawlers, and headless browsers so we don't show the tour */
+function isBot(): boolean {
+  if (typeof navigator === "undefined") return true; // SSR
+  const ua = navigator.userAgent;
+  if (/bot|crawl|spider|slurp|googlebot|bingbot|yandex|baidu|duckduck|facebookexternalhit|twitterbot|linkedinbot|semrush|ahref|mj12bot|dotbot|petalbot|bytespider/i.test(ua)) return true;
+  if (/headless|puppeteer|playwright|selenium|webdriver|phantomjs/i.test(ua)) return true;
+  if ("webdriver" in navigator && (navigator as unknown as Record<string, unknown>).webdriver) return true;
+  return false;
+}
+
 const noop = () => {};
 
 export const GuidedTourContext = createContext<TourContextValue>({
@@ -33,9 +43,14 @@ export default function GuidedTourProvider({ children }: { children: ReactNode }
   const rafRef = useRef(0);
   const steps = HOMEPAGE_TOUR_STEPS;
 
-  // Auto-start on homepage for first-time visitors
+  // Auto-start on homepage for first-time human visitors
   useEffect(() => {
     if (router.pathname !== "/") return;
+    // Skip for bots, crawlers, and headless browsers
+    if (isBot()) return;
+    // Allow ?notour=1 query param to suppress (useful for LLM agents & testing)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("notour") === "1") return;
     try {
       const stored = localStorage.getItem(TOUR_STORAGE_KEY);
       if (stored) {
@@ -144,6 +159,25 @@ export default function GuidedTourProvider({ children }: { children: ReactNode }
     setIsActive(false);
     markComplete();
   }, [markComplete]);
+
+  // Expose global dismiss API for LLM agents: window.__colaberry_skip_tour?.()
+  useEffect(() => {
+    if (!isActive) return;
+    const w = window as unknown as Record<string, unknown>;
+    w.__colaberry_skip_tour = skipTour;
+    return () => {
+      delete w.__colaberry_skip_tour;
+    };
+  }, [isActive, skipTour]);
+
+  // Signal tour state via data attribute on <html> for agent detection
+  useEffect(() => {
+    if (isActive) {
+      document.documentElement.dataset.tourActive = "true";
+    } else {
+      delete document.documentElement.dataset.tourActive;
+    }
+  }, [isActive]);
 
   const ctx: TourContextValue = {
     isActive,
