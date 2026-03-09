@@ -1,14 +1,27 @@
 import type { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import Head from "next/head";
-import sanitizeHtml from "sanitize-html";
 import Layout from "../../../components/Layout";
 import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import EnterpriseCtaBand from "../../../components/EnterpriseCtaBand";
 import MCPCard from "../../../components/MCPCard";
-import { fetchMCPServerBySlug, fetchRelatedMCPServers, MCPServer } from "../../../lib/cms";
+import StickyTabBar, { type TabItem } from "../../../components/StickyTabBar";
+import { fetchMCPServerBySlug, fetchRelatedMCPServers, type MCPServer } from "../../../lib/cms";
+import { parseList, parseToolsStructured, parseToolsJson, renderRichText, renderParagraphs } from "../../../lib/mcp-utils";
 
-import { useState, useEffect, useCallback, type ReactNode } from "react";
+import SectionHeading from "../../../components/mcp/SectionHeading";
+import BulletList from "../../../components/mcp/BulletList";
+import SpecCard from "../../../components/mcp/SpecCard";
+import GitHubStats from "../../../components/mcp/GitHubStats";
+import CodeBlock from "../../../components/mcp/CodeBlock";
+import CopyButton from "../../../components/mcp/CopyButton";
+import EnrichedToolCard from "../../../components/mcp/EnrichedToolCard";
+import MCPToolCard from "../../../components/mcp/ToolCard";
+import ConnectSidebar from "../../../components/mcp/ConnectSidebar";
+import PerformanceTab from "../../../components/mcp/PerformanceTab";
+import UsageTab from "../../../components/mcp/UsageTab";
+
+import { useState, type ReactNode } from "react";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 
 type MCPDetailProps = {
@@ -55,155 +68,30 @@ export const getStaticProps: GetStaticProps<MCPDetailProps> = async ({ params })
   }
 };
 
-/* ---------- Helper components (must be before default export for Turbopack) ---------- */
+/* ---------- Inline helpers ---------- */
 
-type GitHubStatsData = {
-  stars: number;
-  forks: number;
-  lastCommit: string | null;
-};
+type CodeTab = { label: string; code: string; language: string };
 
-function GitHubStats({ sourceUrl }: { sourceUrl?: string | null }) {
-  const [stats, setStats] = useState<GitHubStatsData | null>(null);
-  const match = sourceUrl?.match(/github\.com\/([^/]+)\/([^/]+)/);
-
-  useEffect(() => {
-    if (!match) return;
-    const [, owner, repo] = match;
-    const cleanRepo = repo.replace(/\.git$/, "");
-    fetch(`/api/github-stats?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(cleanRepo)}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) setStats(data);
-      })
-      .catch(() => {});
-  }, [sourceUrl]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (!stats) return null;
-
+function NumberedStep({ step, title, children }: { step: number; title: string; children: ReactNode }) {
   return (
-    <>
-      <span className="flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
-        <svg className="h-4 w-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38l-.01-1.49c-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 8 .2Z" /></svg>
-        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{stats.stars.toLocaleString()}</span>
-        <span>stars</span>
-      </span>
-      <span className="flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
-        <svg className="h-4 w-4" viewBox="0 0 16 16" fill="currentColor"><path d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 0-1.5 0v.878H6.75v-.878a2.25 2.25 0 1 0-1.5 0ZM8 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm0 1.5a3 3 0 1 0 0-6v-3h.75a2.25 2.25 0 0 0 2.25-2.25V3a.75.75 0 0 0-1.5 0v.75a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75V3a.75.75 0 0 0-1.5 0v.75A2.25 2.25 0 0 0 7.25 6H8v3a3 3 0 0 0 0 6Z" /></svg>
-        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{stats.forks.toLocaleString()}</span>
-        <span>forks</span>
-      </span>
-    </>
-  );
-}
-
-function CodeBlock({ label, code, language }: { label: string; code: string; language: string }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(code).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [code]);
-
-  return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
-      <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-2.5 dark:border-zinc-700 dark:bg-zinc-800/60">
-        <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{label}</span>
-        <div className="flex items-center gap-2">
-          <span className="rounded bg-zinc-200/60 px-2 py-0.5 text-[0.625rem] font-medium text-zinc-500 dark:bg-zinc-700/60 dark:text-zinc-400">{language}</span>
-          <button
-            onClick={handleCopy}
-            className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
-            aria-label="Copy to clipboard"
-          >
-            {copied ? (
-              <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m4 8.5 3 3 5-6.5" /></svg>
-            ) : (
-              <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="5" width="9" height="9" rx="1.5" /><path d="M5 11H3.5A1.5 1.5 0 0 1 2 9.5v-7A1.5 1.5 0 0 1 3.5 1h7A1.5 1.5 0 0 1 12 2.5V5" /></svg>
-            )}
-          </button>
-        </div>
+    <div className="flex gap-4">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 text-sm font-bold text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
+        {step}
       </div>
-      <pre className="overflow-x-auto p-4 text-sm leading-relaxed text-zinc-800 dark:text-zinc-200">
-        <code>{code}</code>
-      </pre>
+      <div className="flex-1 min-w-0">
+        <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</h4>
+        <div className="mt-2">{children}</div>
+      </div>
     </div>
   );
-}
-
-function SectionHeading({ title }: { title: string }) {
-  return (
-    <h2 className="border-l-4 border-[#DC2626] pl-4 text-xl font-bold text-zinc-900 dark:border-red-400 dark:text-zinc-100">
-      {title}
-    </h2>
-  );
-}
-
-function BulletList({ items }: { items: string[] }) {
-  return (
-    <ul className="space-y-3 text-[0.9375rem] leading-relaxed text-zinc-700 dark:text-zinc-300">
-      {items.map((item, i) => (
-        <li key={i} className="flex gap-3">
-          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#DC2626] dark:bg-red-400" />
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function SpecCard({ label, value, note }: { label: string; value: string; note?: string }) {
-  return (
-    <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
-      <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{label}</div>
-      <div className="mt-1.5 text-base font-semibold text-zinc-900 dark:text-zinc-100">{value}</div>
-      {note && <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{note}</div>}
-    </div>
-  );
-}
-
-function parseList(value?: string | null): string[] {
-  if (!value) return [];
-  const parts = value
-    .split(/\r?\n|•|\u2022/)
-    .map((item) => item.replace(/^[-•\u2022]\s*/, "").trim())
-    .filter(Boolean);
-  if (parts.length > 1) return parts;
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function renderRichText(value?: string | null): ReactNode {
-  if (!value) return null;
-  const clean = sanitizeHtml(value, {
-    allowedTags: ["p", "br", "strong", "em", "b", "i", "u", "ul", "ol", "li", "a"],
-    allowedAttributes: {
-      a: ["href", "target", "rel"],
-    },
-  });
-  if (!clean.trim()) return null;
-  return (
-    <div
-      className="text-[0.9375rem] leading-relaxed text-zinc-700 dark:text-zinc-300 [&_p]:mt-4 first:[&_p]:mt-0 [&_ul]:mt-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:mt-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-[#DC2626] [&_a]:underline dark:[&_a]:text-red-400"
-      dangerouslySetInnerHTML={{ __html: clean }}
-    />
-  );
-}
-
-function renderParagraphs(value: string): ReactNode[] {
-  return value
-    .split(/\r?\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line, index) => <p key={index}>{line}</p>);
 }
 
 /* ---------- Main component ---------- */
 
 export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDetailProps) {
+  const [apiMethod, setApiMethod] = useState<"cli" | "sdk" | "typescript">("cli");
+  const [showOptional, setShowOptional] = useState(false);
+
   const isPrivate = (mcp.visibility || "public").toLowerCase() === "private";
   const status = mcp.status || "Unknown";
   const source = mcp.source || "internal";
@@ -242,6 +130,7 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
 
   const capabilities = parseList(mcp.capabilities);
   const tools = parseList(mcp.tools);
+  const structuredTools = parseToolsStructured(mcp.tools);
   const authMethods = parseList(mcp.authMethods);
   const hostingOptions = parseList(mcp.hostingOptions);
   const pricingNotes = parseList(mcp.pricing);
@@ -251,43 +140,92 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
   const requirements = parseList(mcp.requirements);
   const compatibilityItems = parseList(mcp.compatibility);
 
+  const enrichedTools = parseToolsJson(mcp.toolsJson);
+  const hasEnrichedTools = enrichedTools.length > 0;
+
   const hasAboutSection = Boolean(mcp.primaryFunction || mcp.description || mcp.longDescription || capabilities.length);
   const hasUseCases = useCases.length > 0;
-  const hasHowItWorks = tools.length > 0 || Boolean(mcp.exampleWorkflow);
+  const hasHowItWorks = hasEnrichedTools || tools.length > 0 || Boolean(mcp.exampleWorkflow);
   const hasBenefits = keyBenefits.length > 0;
   const hasLimitations = limitations.length > 0;
-  const hasInstallSection = Boolean(mcp.installCommand || mcp.configSnippet);
+  const hasInstallSection = Boolean(mcp.installCommand || mcp.configSnippet || mcp.installCli || mcp.installSdk || mcp.configSnippetClaude || mcp.installAiSdk || mcp.installTypescript);
   const hasTechSpecs = authMethods.length > 0 || hostingOptions.length > 0 || compatibilityItems.length > 0 || pricingNotes.length > 0 || requirements.length > 0 || typeof mcp.usageCount === "number" || typeof mcp.rating === "number";
-  const hasResources = Boolean(mcp.docsUrl || mcp.sourceUrl || mcp.tryItNowUrl);
+
+  // Collect required and optional config parameters from enriched tools
+  const requiredParams = enrichedTools.flatMap((t) =>
+    t.parameters.filter((p) => p.required).map((p) => ({ ...p, toolName: t.name }))
+  );
+  const optionalParams = enrichedTools.flatMap((t) =>
+    t.parameters.filter((p) => !p.required).map((p) => ({ ...p, toolName: t.name }))
+  );
+
+  // Build sticky tabs — Smithery-style: Overview | API | Performance | Usage
+  const stickyTabs: TabItem[] = [];
+  stickyTabs.push({ id: "overview", label: "Overview" });
+  if (hasInstallSection || hasEnrichedTools) stickyTabs.push({ id: "api", label: "API" });
+  stickyTabs.push({ id: "performance", label: "Performance" });
+  stickyTabs.push({ id: "usage", label: "Usage" });
 
   const publisherName = mcp.sourceName || (mcp.companies?.length ? mcp.companies[0].name : null);
   const isGitHub = Boolean(mcp.sourceUrl?.match(/github\.com\/([^/]+)\/([^/]+)/));
 
-  const visibilityModeNote = allowPrivate
-    ? "Private preview mode enabled for this environment."
-    : "Public-only mode in this environment.";
-
   const keywords = [mcp.industry, mcp.category, ...tagNames, ...companyNames].filter(Boolean).join(", ");
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
+  const softwareApp = {
+    "@type": "SoftwareApplication" as const,
     name: mcp.name,
     description: metaDescription,
     applicationCategory: "MCP Server",
+    applicationSubCategory: mcp.category || undefined,
     operatingSystem: "Web",
     url: canonicalUrl,
-    publisher: { "@type": "Organization", name: "Colaberry AI", url: siteUrl },
+    dateModified: mcp.lastUpdated || undefined,
+    isAccessibleForFree: typeof mcp.openSource === "boolean" ? mcp.openSource : undefined,
+    publisher: publisherName
+      ? { "@type": "Organization" as const, name: publisherName }
+      : { "@type": "Organization" as const, name: "Colaberry AI", url: siteUrl },
     sameAs: mcp.sourceUrl ? [mcp.sourceUrl] : undefined,
     keywords: keywords || undefined,
+    featureList: tools.length > 0 ? tools : undefined,
+    softwareRequirements: requirements.length > 0 ? requirements.join(", ") : undefined,
+    offers: mcp.pricing ? { "@type": "Offer" as const, description: mcp.pricing } : undefined,
     additionalProperty: [
-      { "@type": "PropertyValue", name: "Industry", value: mcp.industry || "General" },
-      { "@type": "PropertyValue", name: "Category", value: mcp.category || "General" },
-      { "@type": "PropertyValue", name: "Status", value: status },
-      { "@type": "PropertyValue", name: "Visibility", value: isPrivate ? "Private" : "Public" },
-      { "@type": "PropertyValue", name: "Source", value: sourceDisplay },
-      { "@type": "PropertyValue", name: "Verified", value: mcp.verified ? "Yes" : "No" },
+      { "@type": "PropertyValue" as const, name: "Industry", value: mcp.industry || "General" },
+      { "@type": "PropertyValue" as const, name: "Category", value: mcp.category || "General" },
+      { "@type": "PropertyValue" as const, name: "Status", value: status },
+      { "@type": "PropertyValue" as const, name: "Server Type", value: mcp.serverType || "Unknown" },
+      { "@type": "PropertyValue" as const, name: "Language", value: mcp.language || "Unknown" },
+      { "@type": "PropertyValue" as const, name: "Visibility", value: isPrivate ? "Private" : "Public" },
+      { "@type": "PropertyValue" as const, name: "Source", value: sourceDisplay },
+      { "@type": "PropertyValue" as const, name: "Verified", value: mcp.verified ? "Yes" : "No" },
+      ...tools.map((t) => ({ "@type": "PropertyValue" as const, name: "MCP Tool", value: t })),
+      ...enrichedTools.map((t) => ({
+        "@type": "PropertyValue" as const,
+        name: `Tool: ${t.name}`,
+        value: t.parameters.map((p) => `${p.name}:${p.type}${p.required ? "*" : ""}`).join(", "),
+      })),
+      ...(mcp.linkedTools || []).map((t) => ({ "@type": "PropertyValue" as const, name: "Connected Tool", value: t.name })),
     ],
   };
+
+  const howToSteps: { "@type": "HowToStep"; name: string; text: string }[] = [];
+  if (mcp.installCommand) howToSteps.push({ "@type": "HowToStep", name: "Install via CLI", text: mcp.installCommand });
+  if (mcp.installAiSdk || mcp.installSdk) howToSteps.push({ "@type": "HowToStep", name: "Install via AI SDK", text: (mcp.installAiSdk || mcp.installSdk)! });
+  if (mcp.installTypescript) howToSteps.push({ "@type": "HowToStep", name: "Install via TypeScript", text: mcp.installTypescript });
+  if (mcp.configSnippet) howToSteps.push({ "@type": "HowToStep", name: "Configure", text: mcp.configSnippet });
+
+  const jsonLd = howToSteps.length > 0
+    ? {
+        "@context": "https://schema.org",
+        "@graph": [
+          softwareApp,
+          {
+            "@type": "HowTo" as const,
+            name: `How to install ${mcp.name}`,
+            step: howToSteps,
+          },
+        ],
+      }
+    : { "@context": "https://schema.org", ...softwareApp };
 
   return (
     <Layout>
@@ -315,41 +253,39 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
       </nav>
 
       {/* Hero */}
-      <div className="mt-4">
+      <div className="reveal mt-6">
         <EnterprisePageHero
           kicker="MCP profile"
           title={mcp.name}
-          description={mcp.description || "Structured MCP server profile for enterprise catalog discovery."}
+          description={mcp.description || "MCP server profile with structured metadata for discoverability and deployment readiness."}
           chips={[
-            mcp.industry || "General",
-            ...(mcp.category ? [mcp.category] : []),
-            ...(mcp.serverType ? [mcp.serverType] : []),
-            ...(mcp.language ? [mcp.language] : []),
-            ...(typeof mcp.openSource === "boolean" ? [mcp.openSource ? "Open source" : "Commercial"] : []),
-            sourceDisplay,
-            isPrivate ? "Private" : "Public",
-          ]}
-          primaryAction={
-            mcp.tryItNowUrl
-              ? { label: "Try it now", href: mcp.tryItNowUrl, external: true }
-              : mcp.docsUrl
-                ? { label: "View documentation", href: mcp.docsUrl, external: true }
-                : { label: "Book a demo", href: "/request-demo" }
-          }
-          secondaryAction={
-            mcp.sourceUrl
-              ? { label: "View source", href: mcp.sourceUrl, external: true, variant: "secondary" }
-              : { label: "View all MCP servers", href: "/aixcelerator/mcp", variant: "secondary" }
-          }
+            mcp.industry,
+            mcp.category,
+            mcp.serverType,
+            mcp.language,
+            typeof mcp.openSource === "boolean" ? (mcp.openSource ? "Open Source" : "Commercial") : null,
+            sourceLabel,
+            isPrivate ? "Private" : null,
+          ].filter(Boolean) as string[]}
+          primaryAction={{
+            href: mcp.tryItNowUrl || "/request-demo",
+            label: mcp.tryItNowUrl ? "Try it now" : "Book a demo",
+            external: Boolean(mcp.tryItNowUrl),
+          }}
+          secondaryAction={{
+            href: mcp.sourceUrl || "/aixcelerator/mcp",
+            label: mcp.sourceUrl ? "View source" : "View all MCPs",
+            variant: "secondary",
+            external: Boolean(mcp.sourceUrl),
+          }}
           metrics={[
-            { label: "Last updated", value: lastUpdatedLabel || "Pending", note: "Latest metadata refresh." },
-            { label: "Signals", value: `${tagNames.length} tags`, note: `${companyNames.length} linked companies.` },
-            {
-              label: "Visibility",
-              value: isPrivate ? "Private" : "Public",
-              note: isPrivate ? "Restricted access listing." : `Available for catalog discovery. ${visibilityModeNote}`,
+            lastUpdatedLabel && { label: "Last updated", value: lastUpdatedLabel },
+            (tagNames.length + companyNames.length) > 0 && {
+              label: "Signals",
+              value: `${tagNames.length + companyNames.length} connected`,
             },
-          ]}
+            { label: "Visibility", value: isPrivate ? "Private" : "Public" },
+          ].filter(Boolean) as { label: string; value: string }[]}
         />
       </div>
 
@@ -373,245 +309,462 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
         </div>
       )}
 
-      {/* Single-column content */}
-      <div className="mt-10 space-y-14">
+      {/* Sticky tab navigation */}
+      <StickyTabBar tabs={stickyTabs} />
 
-        {/* ── About This MCP Server ── */}
-        {hasAboutSection && (
-          <section className="reveal">
-            <SectionHeading title="About This MCP Server" />
-            <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
-            <div className="mt-6 space-y-4 text-[0.9375rem] leading-relaxed text-zinc-700 dark:text-zinc-300">
-              {mcp.primaryFunction && <p className="font-medium text-zinc-900 dark:text-zinc-100">{mcp.primaryFunction}</p>}
-              {mcp.description && !mcp.longDescription && <p>{mcp.description}</p>}
-              {mcp.longDescription && renderRichText(mcp.longDescription)}
-            </div>
-            {capabilities.length > 0 && (
-              <div className="mt-6">
-                <div className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Capabilities</div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {capabilities.map((cap) => (
-                    <span key={cap} className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
-                      {cap}
-                    </span>
-                  ))}
+      {/* Two-column layout: main content + sidebar */}
+      <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+
+        {/* ════════════ LEFT COLUMN: Main content ════════════ */}
+        <div className="space-y-14">
+
+          {/* ── OVERVIEW TAB ── */}
+          <section id="overview" className="reveal scroll-mt-[128px]">
+            {/* About */}
+            {hasAboutSection && (
+              <div>
+                <SectionHeading title="About This MCP Server" />
+                <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
+                <div className="mt-6 space-y-4 text-[0.9375rem] leading-relaxed text-zinc-700 dark:text-zinc-300">
+                  {mcp.primaryFunction && <p className="font-medium text-zinc-900 dark:text-zinc-100">{mcp.primaryFunction}</p>}
+                  {mcp.description && !mcp.longDescription && <p>{mcp.description}</p>}
+                  {mcp.longDescription && renderRichText(mcp.longDescription)}
                 </div>
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* ── What Problems It Solves ── */}
-        {hasUseCases && (
-          <section className="reveal">
-            <SectionHeading title="What Problems It Solves" />
-            <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
-            <div className="mt-6">
-              <BulletList items={useCases} />
-            </div>
-          </section>
-        )}
-
-        {/* ── How It Works ── */}
-        {hasHowItWorks && (
-          <section className="reveal">
-            <SectionHeading title="How It Works" />
-            <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
-
-            {tools.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Tools & Endpoints</h3>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {tools.map((tool, i) => (
-                    <div key={i} className="flex items-start gap-3 rounded-lg border border-zinc-200 p-3.5 dark:border-zinc-700">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-xs font-bold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                        {i + 1}
-                      </span>
-                      <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{tool}</span>
+                {capabilities.length > 0 && (
+                  <div className="mt-6">
+                    <div className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Capabilities</div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {capabilities.map((cap) => (
+                        <span key={cap} className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
+                          {cap}
+                        </span>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {mcp.exampleWorkflow && (
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Example Workflow</h3>
-                <div className="mt-4 space-y-3 text-[0.9375rem] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                  {renderParagraphs(mcp.exampleWorkflow)}
-                </div>
-              </div>
-            )}
-
-            {companyNames.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Integrations</h3>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {companyNames.map((name) => (
-                    <span key={name} className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
-                      {name}
+            {/* Tools & Endpoints */}
+            {hasHowItWorks && (
+              <div className="mt-10">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  Tools & Endpoints
+                  {(hasEnrichedTools || structuredTools.length > 0) && (
+                    <span className="ml-2 inline-flex items-center justify-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                      {hasEnrichedTools ? enrichedTools.length : structuredTools.length}
                     </span>
+                  )}
+                </h3>
+
+                {hasEnrichedTools ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {enrichedTools.map((tool, i) => (
+                      <EnrichedToolCard key={i} tool={tool} index={i} />
+                    ))}
+                  </div>
+                ) : structuredTools.length > 0 ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {structuredTools.map((tool, i) => (
+                      <MCPToolCard key={i} tool={tool} index={i} />
+                    ))}
+                  </div>
+                ) : null}
+
+                {mcp.exampleWorkflow && (
+                  <div className="mt-6">
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Example Workflow</h3>
+                    <div className="mt-4 space-y-3 text-[0.9375rem] leading-relaxed text-zinc-700 dark:text-zinc-300">
+                      {renderParagraphs(mcp.exampleWorkflow)}
+                    </div>
+                  </div>
+                )}
+
+                {companyNames.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Integrations</h3>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {companyNames.map((name) => (
+                        <span key={name} className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* What Problems It Solves */}
+            {hasUseCases && (
+              <div className="mt-10">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">What Problems It Solves</h3>
+                <div className="mt-4">
+                  <BulletList items={useCases} />
+                </div>
+              </div>
+            )}
+
+            {/* Connected Tools */}
+            {mcp.linkedTools && mcp.linkedTools.length > 0 && (
+              <div className="mt-10">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Connected Tools</h3>
+                <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                  End tools this MCP server connects to.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {mcp.linkedTools.map((tool) => (
+                    <Link
+                      key={tool.slug}
+                      href={`/aixcelerator/tools/${tool.slug}`}
+                      className="rounded-full border border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-zinc-100"
+                    >
+                      {tool.name}
+                    </Link>
                   ))}
                 </div>
               </div>
             )}
-          </section>
-        )}
 
-        {/* ── Key Benefits ── */}
-        {hasBenefits && (
-          <section className="reveal">
-            <SectionHeading title={`Why Use ${mcp.name}?`} />
-            <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
-            <div className="mt-6">
-              <BulletList items={keyBenefits} />
-            </div>
-            {hasLimitations && (
-              <div className="mt-8">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Limitations</h3>
-                <ul className="mt-4 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-                  {limitations.map((item, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-500" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
+            {/* Benefits / Limitations */}
+            {hasBenefits && (
+              <div className="mt-10">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Why Use {mcp.name}?</h3>
+                <div className="mt-4">
+                  <BulletList items={keyBenefits} />
+                </div>
+                {hasLimitations && (
+                  <div className="mt-6">
+                    <h4 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Limitations</h4>
+                    <ul className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+                      {limitations.map((item, i) => (
+                        <li key={i} className="flex gap-2">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-500" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+            {!hasBenefits && hasLimitations && (
+              <div className="mt-10">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Known Limitations</h3>
+                <div className="mt-4">
+                  <BulletList items={limitations} />
+                </div>
+              </div>
+            )}
+
+            {/* Technical Specifications (moved into Overview) */}
+            {hasTechSpecs && (
+              <div className="mt-10">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Technical Specifications</h3>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <SpecCard label="Status" value={status} />
+                  <SpecCard label="Industry" value={mcp.industry || "General"} />
+                  <SpecCard label="Category" value={mcp.category || "General"} />
+                  {mcp.serverType && <SpecCard label="Server type" value={mcp.serverType} />}
+                  {mcp.language && <SpecCard label="Language" value={mcp.language} />}
+                  {typeof mcp.openSource === "boolean" && (
+                    <SpecCard label="License" value={mcp.openSource ? "Open Source" : "Commercial"} />
+                  )}
+                  <SpecCard label="Verified" value={mcp.verified ? "Yes" : "Pending"} />
+                  {typeof mcp.usageCount === "number" && (
+                    <SpecCard label="Usage" value={mcp.usageCount.toLocaleString()} note="Recorded runs or deployments" />
+                  )}
+                  {typeof mcp.rating === "number" && (
+                    <SpecCard label="Rating" value={`${mcp.rating.toFixed(1)} / 5`} />
+                  )}
+                </div>
+
+                {(authMethods.length > 0 || hostingOptions.length > 0 || compatibilityItems.length > 0 || pricingNotes.length > 0) && (
+                  <div className="mt-6 grid gap-6 sm:grid-cols-2">
+                    {authMethods.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Auth Methods</h4>
+                        <div className="mt-3"><BulletList items={authMethods} /></div>
+                      </div>
+                    )}
+                    {hostingOptions.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Hosting Options</h4>
+                        <div className="mt-3"><BulletList items={hostingOptions} /></div>
+                      </div>
+                    )}
+                    {compatibilityItems.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Compatibility</h4>
+                        <div className="mt-3"><BulletList items={compatibilityItems} /></div>
+                      </div>
+                    )}
+                    {pricingNotes.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Pricing</h4>
+                        <div className="mt-3"><BulletList items={pricingNotes} /></div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {requirements.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Requirements</h4>
+                    <div className="mt-3"><BulletList items={requirements} /></div>
+                  </div>
+                )}
               </div>
             )}
           </section>
-        )}
 
-        {/* Show limitations standalone if no benefits */}
-        {!hasBenefits && hasLimitations && (
-          <section className="reveal">
-            <SectionHeading title="Known Limitations" />
+          {/* ── API TAB ── */}
+          {(hasInstallSection || hasEnrichedTools) && (
+            <section id="api" className="reveal scroll-mt-[128px]">
+              <SectionHeading title="API" />
+              <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
+              <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+                Integrate this server into your application. Choose a connection method below.
+              </p>
+
+              {/* CLI / AI SDK / TypeScript sub-tabs */}
+              {hasInstallSection && (
+                <div className="mt-6">
+                  <div className="flex gap-0 border-b border-zinc-200 dark:border-zinc-700">
+                    {(["cli", "sdk", "typescript"] as const).map((tab) => (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setApiMethod(tab)}
+                        className={`px-4 py-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] transition-colors ${
+                          apiMethod === tab
+                            ? "border-b-2 border-[#DC2626] text-zinc-900 dark:border-red-400 dark:text-zinc-100"
+                            : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                        }`}
+                      >
+                        {tab === "cli" ? "CLI" : tab === "sdk" ? "AI SDK" : "TypeScript"}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-6">
+                    {/* CLI tab */}
+                    {apiMethod === "cli" && (
+                      <div className="space-y-6">
+                        {mcp.installCommand && (
+                          <NumberedStep step={1} title="Install">
+                            <CodeBlock label="Install command" code={mcp.installCommand} language={mcp.language || "bash"} />
+                          </NumberedStep>
+                        )}
+                        {mcp.configSnippet && (
+                          <NumberedStep step={mcp.installCommand ? 2 : 1} title="Configure">
+                            <CodeBlock label="Configuration" code={mcp.configSnippet} language="json" />
+                          </NumberedStep>
+                        )}
+                        {mcp.configSnippetClaude && (
+                          <NumberedStep step={(mcp.installCommand ? 1 : 0) + (mcp.configSnippet ? 1 : 0) + 1} title="Claude Desktop">
+                            <CodeBlock label="Claude Desktop config" code={mcp.configSnippetClaude} language="json" />
+                          </NumberedStep>
+                        )}
+                        {mcp.installCli && !mcp.installCommand && !mcp.configSnippet && (
+                          <NumberedStep step={1} title="Install via CLI">
+                            <CodeBlock label="CLI" code={mcp.installCli} language="bash" />
+                          </NumberedStep>
+                        )}
+                        {!mcp.installCommand && !mcp.configSnippet && !mcp.installCli && !mcp.configSnippetClaude && (
+                          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6 text-center dark:border-zinc-700 dark:bg-zinc-800/40">
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400">CLI installation instructions not yet available for this server.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* AI SDK tab */}
+                    {apiMethod === "sdk" && (
+                      <div>
+                        {(mcp.installAiSdk || mcp.installSdk) ? (
+                          <CodeBlock label="AI SDK" code={(mcp.installAiSdk || mcp.installSdk)!} language="typescript" />
+                        ) : (
+                          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6 text-center dark:border-zinc-700 dark:bg-zinc-800/40">
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400">AI SDK integration code not yet available for this server.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* TypeScript tab */}
+                    {apiMethod === "typescript" && (
+                      <div>
+                        {mcp.installTypescript ? (
+                          <CodeBlock label="TypeScript" code={mcp.installTypescript} language="typescript" />
+                        ) : (
+                          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6 text-center dark:border-zinc-700 dark:bg-zinc-800/40">
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400">TypeScript integration code not yet available for this server.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Configuration Parameters */}
+              {(requiredParams.length > 0 || optionalParams.length > 0) && (
+                <div className="mt-8">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                    Configuration for {mcp.registryName || mcp.name.toLowerCase().replace(/\s+/g, "-")}
+                  </h3>
+
+                  {requiredParams.length > 0 && (
+                    <div className="mt-4">
+                      <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-3">Required parameters</div>
+                      <div className="space-y-3">
+                        {requiredParams.map((param) => (
+                          <div key={`${param.toolName}-${param.name}`} className="flex items-start gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+                            <code className="shrink-0 rounded bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">{param.name}</code>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[0.625rem] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">{param.type}</span>
+                                <span className="text-[0.625rem] font-bold text-[#DC2626] dark:text-red-400">REQUIRED</span>
+                              </div>
+                              {param.description && <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{param.description}</p>}
+                            </div>
+                            <CopyButton text={param.name} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {optionalParams.length > 0 && (
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowOptional(!showOptional)}
+                        className="flex items-center gap-2 text-xs font-semibold text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
+                      >
+                        <svg
+                          className={`h-3.5 w-3.5 transition-transform ${showOptional ? "rotate-180" : ""}`}
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="m4 6 4 4 4-4" />
+                        </svg>
+                        Optional parameters ({optionalParams.length})
+                      </button>
+                      {showOptional && (
+                        <div className="mt-3 space-y-3">
+                          {optionalParams.map((param) => (
+                            <div key={`${param.toolName}-${param.name}`} className="flex items-start gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+                              <code className="shrink-0 rounded bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">{param.name}</code>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[0.625rem] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">{param.type}</span>
+                                  <span className="text-[0.625rem] font-medium text-zinc-400 dark:text-zinc-500">OPTIONAL</span>
+                                </div>
+                                {param.description && <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{param.description}</p>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* ── PERFORMANCE TAB ── */}
+          <section id="performance" className="reveal scroll-mt-[128px]">
+            <SectionHeading title="Performance" />
             <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
-            <div className="mt-6">
-              <BulletList items={limitations} />
+            <div className="mt-8">
+              <PerformanceTab slug={mcp.slug} />
             </div>
           </section>
-        )}
 
-        {/* ── Installation / Quick Start ── */}
-        {hasInstallSection && (
-          <section className="reveal">
-            <SectionHeading title="Installation" />
+          {/* ── USAGE TAB ── */}
+          <section id="usage" className="reveal scroll-mt-[128px]">
+            <SectionHeading title="Usage" />
             <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
-            <div className={`mt-6 grid gap-6 ${mcp.installCommand && mcp.configSnippet ? "lg:grid-cols-2" : ""}`}>
+            <div className="mt-8">
+              <UsageTab slug={mcp.slug} />
+            </div>
+          </section>
+
+          {/* ── Quick Reference ── */}
+          <section className="reveal rounded-lg border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900">
+            <SectionHeading title="Quick Reference" />
+            <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
+            <dl className="mt-6 grid gap-4 sm:grid-cols-2 text-sm">
+              <div>
+                <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Name</dt>
+                <dd className="mt-1 text-zinc-900 dark:text-zinc-100">{mcp.name}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Function</dt>
+                <dd className="mt-1 text-zinc-700 dark:text-zinc-300">{mcp.primaryFunction || mcp.description || "MCP server"}</dd>
+              </div>
+              {tools.length > 0 && (
+                <div className="sm:col-span-2">
+                  <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Available Tools</dt>
+                  <dd className="mt-1 text-zinc-700 dark:text-zinc-300">{tools.join(", ")}</dd>
+                </div>
+              )}
+              {mcp.serverType && (
+                <div>
+                  <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Transport</dt>
+                  <dd className="mt-1 text-zinc-700 dark:text-zinc-300">{mcp.serverType}</dd>
+                </div>
+              )}
+              {mcp.language && (
+                <div>
+                  <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Language</dt>
+                  <dd className="mt-1 text-zinc-700 dark:text-zinc-300">{mcp.language}</dd>
+                </div>
+              )}
               {mcp.installCommand && (
-                <CodeBlock label="Install" code={mcp.installCommand} language={mcp.language || "bash"} />
+                <div className="sm:col-span-2">
+                  <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Install</dt>
+                  <dd className="mt-1 font-mono text-xs text-zinc-700 dark:text-zinc-300 break-all">{mcp.installCommand}</dd>
+                </div>
               )}
-              {mcp.configSnippet && (
-                <CodeBlock label="Configuration" code={mcp.configSnippet} language="json" />
-              )}
-            </div>
-          </section>
-        )}
-
-        {/* ── Technical Specifications ── */}
-        {hasTechSpecs && (
-          <section className="reveal">
-            <SectionHeading title="Technical Specifications" />
-            <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <SpecCard label="Status" value={status} />
-              <SpecCard label="Industry" value={mcp.industry || "General"} />
-              <SpecCard label="Category" value={mcp.category || "General"} />
-              {mcp.serverType && <SpecCard label="Server type" value={mcp.serverType} />}
-              {mcp.language && <SpecCard label="Language" value={mcp.language} />}
-              {typeof mcp.openSource === "boolean" && (
-                <SpecCard label="License" value={mcp.openSource ? "Open Source" : "Commercial"} />
-              )}
-              <SpecCard label="Verified" value={mcp.verified ? "Yes" : "Pending"} />
-              {typeof mcp.usageCount === "number" && (
-                <SpecCard label="Usage" value={mcp.usageCount.toLocaleString()} note="Recorded runs or deployments" />
-              )}
-              {typeof mcp.rating === "number" && (
-                <SpecCard label="Rating" value={`${mcp.rating.toFixed(1)} / 5`} />
-              )}
-            </div>
-
-            {(authMethods.length > 0 || hostingOptions.length > 0 || compatibilityItems.length > 0 || pricingNotes.length > 0) && (
-              <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                {authMethods.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Auth Methods</h3>
-                    <div className="mt-3"><BulletList items={authMethods} /></div>
-                  </div>
-                )}
-                {hostingOptions.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Hosting Options</h3>
-                    <div className="mt-3"><BulletList items={hostingOptions} /></div>
-                  </div>
-                )}
-                {compatibilityItems.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Compatibility</h3>
-                    <div className="mt-3"><BulletList items={compatibilityItems} /></div>
-                  </div>
-                )}
-                {pricingNotes.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Pricing</h3>
-                    <div className="mt-3"><BulletList items={pricingNotes} /></div>
-                  </div>
-                )}
+              <div>
+                <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Source</dt>
+                <dd className="mt-1 text-zinc-700 dark:text-zinc-300">{sourceDisplay}</dd>
               </div>
-            )}
-
-            {requirements.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Requirements</h3>
-                <div className="mt-3"><BulletList items={requirements} /></div>
+              <div>
+                <dt className="font-semibold text-zinc-500 dark:text-zinc-400">License</dt>
+                <dd className="mt-1 text-zinc-700 dark:text-zinc-300">{typeof mcp.openSource === "boolean" ? (mcp.openSource ? "Open Source" : "Commercial") : "Unknown"}</dd>
               </div>
-            )}
+            </dl>
           </section>
-        )}
 
-        {/* ── Resources & Links ── */}
-        {hasResources && (
-          <section className="reveal">
-            <SectionHeading title="Resources" />
-            <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
-            <div className="mt-6 flex flex-wrap gap-3">
-              {mcp.docsUrl && (
-                <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary">
-                  View documentation
-                </a>
-              )}
-              {mcp.sourceUrl && (
-                <a href={mcp.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-ghost">
-                  View source
-                </a>
-              )}
-              {mcp.tryItNowUrl && (
-                <a href={mcp.tryItNowUrl} target="_blank" rel="noreferrer" className="btn btn-cta">
-                  Try it now
-                </a>
-              )}
-            </div>
-          </section>
-        )}
+          {/* ── Tags ── */}
+          {tagNames.length > 0 && (
+            <section className="reveal">
+              <div className="flex flex-wrap gap-2">
+                {(mcp.tags || []).filter((t) => t.name || t.slug).map((tag) => (
+                  <Link
+                    key={tag.slug || tag.name}
+                    href={`/aixcelerator/mcp?tag=${encodeURIComponent(tag.slug || tag.name || "")}`}
+                    className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
+                  >
+                    {tag.name || tag.slug}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
 
-        {/* ── Tags ── */}
-        {tagNames.length > 0 && (
-          <section className="reveal">
-            <div className="flex flex-wrap gap-2">
-              {(mcp.tags || []).filter((t) => t.name || t.slug).map((tag) => (
-                <Link
-                  key={tag.slug || tag.name}
-                  href={`/aixcelerator/mcp?tag=${encodeURIComponent(tag.slug || tag.name || "")}`}
-                  className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
-                >
-                  {tag.name || tag.slug}
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* ════════════ RIGHT COLUMN: Persistent sidebar ════════════ */}
+        <ConnectSidebar mcp={mcp} />
       </div>
 
       {/* ── CTA Band ── */}
@@ -645,11 +798,9 @@ export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDeta
       {/* Floating Book a Demo button */}
       <a
         href={mcp.tryItNowUrl || "/request-demo"}
-        {...(mcp.tryItNowUrl ? { target: "_blank", rel: "noreferrer" } : {})}
-        className="fixed bottom-6 right-6 z-50 hidden items-center gap-2 rounded-full bg-[#DC2626] px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105 lg:flex"
+        className="fixed bottom-8 right-8 z-40 hidden lg:flex items-center gap-2 btn btn-cta shadow-lg"
       >
         {mcp.tryItNowUrl ? "Try it now" : "Book a demo"}
-        <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
       </a>
     </Layout>
   );

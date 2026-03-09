@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import "../styles/globals.css";
+import GuidedTourProvider from "../components/GuidedTour/GuidedTourProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -49,7 +50,9 @@ export default function App({ Component, pageProps }: AppProps) {
           willChange: transitioning ? "opacity" : "auto",
         }}
       >
-        <Component {...pageProps} />
+        <GuidedTourProvider>
+          <Component {...pageProps} />
+        </GuidedTourProvider>
       </div>
     </div>
   );

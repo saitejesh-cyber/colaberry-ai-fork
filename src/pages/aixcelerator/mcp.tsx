@@ -28,6 +28,7 @@ type Facets = {
   statuses: string[];
   sources: string[];
   tags: { value: string; label: string }[];
+  tools: { value: string; label: string }[];
 };
 
 export const getStaticProps: GetStaticProps<MCPPageProps> = async () => {
@@ -62,6 +63,7 @@ export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, total
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
+  const [toolFilter, setToolFilter] = useState("all");
   const querySearch = useMemo(() => {
     const raw = Array.isArray(router.query.q) ? router.query.q[0] : router.query.q;
     return typeof raw === "string" ? raw : "";
@@ -119,6 +121,7 @@ export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, total
   const statuses = facets?.statuses ?? ssrStatuses;
   const sources = facets?.sources ?? ssrSources;
   const tagOptions = facets?.tags ?? ssrTags;
+  const toolOptions = facets?.tools ?? [];
 
   const visibilityCounts = useMemo(() => {
     return allMCPs.reduce<Record<string, number>>((acc, m) => {
@@ -167,14 +170,15 @@ export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, total
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (sourceFilter !== "all") params.set("source", sourceFilter);
       if (tagFilter !== "all") params.set("tag", tagFilter);
+      if (toolFilter !== "all") params.set("tool", toolFilter);
       if (visibility !== "all") params.set("visibility", visibility);
       return params;
     },
-    [sortMode, debouncedSearch, industryFilter, statusFilter, sourceFilter, tagFilter, visibility]
+    [sortMode, debouncedSearch, industryFilter, statusFilter, sourceFilter, tagFilter, toolFilter, visibility]
   );
 
   // When any filter/sort changes, reset and fetch page 1 from API
-  const filterKey = `${sortMode}|${debouncedSearch}|${industryFilter}|${statusFilter}|${sourceFilter}|${tagFilter}|${visibility}`;
+  const filterKey = `${sortMode}|${debouncedSearch}|${industryFilter}|${statusFilter}|${sourceFilter}|${tagFilter}|${toolFilter}|${visibility}`;
   const prevFilterKey = useRef(filterKey);
   const initialMount = useRef(true);
 
@@ -466,6 +470,28 @@ export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, total
                 {tagOptions.map((tag) => (
                   <option key={tag.value} value={tag.value}>
                     {tag.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {toolOptions.length > 0 && (
+            <div className="lg:col-span-2">
+              <label htmlFor="mcp-tool" className="sr-only">
+                Filter by tool
+              </label>
+              <select
+                id="mcp-tool"
+                value={toolFilter}
+                onChange={(event) => {
+                  setToolFilter(event.target.value);
+                }}
+                className="w-full rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:border-zinc-500 dark:focus:ring-zinc-100/10 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
+              >
+                <option value="all">All tools</option>
+                {toolOptions.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
                   </option>
                 ))}
               </select>
