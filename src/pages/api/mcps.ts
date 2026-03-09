@@ -23,7 +23,8 @@ function matchesFilters(
   source: string,
   tag: string,
   visibility: string,
-  allowPrivate: boolean
+  allowPrivate: boolean,
+  tool: string = "all"
 ): boolean {
   // Visibility gate
   if (!allowPrivate && (mcp.visibility || "public").toLowerCase() !== "public") return false;
@@ -35,6 +36,11 @@ function matchesFilters(
   if (
     tag !== "all" &&
     !(mcp.tags || []).some((t) => (t.slug || t.name || "").toLowerCase() === tag)
+  )
+    return false;
+  if (
+    tool !== "all" &&
+    !(mcp.linkedTools || []).some((t) => (t.slug || t.name || "").toLowerCase() === tool)
   )
     return false;
 
@@ -100,6 +106,7 @@ type Facets = {
   statuses: string[];
   sources: string[];
   tags: { value: string; label: string }[];
+  tools: { value: string; label: string }[];
 };
 
 function buildFacets(mcps: MCPServer[]): Facets {
@@ -107,6 +114,7 @@ function buildFacets(mcps: MCPServer[]): Facets {
   const statusSet = new Set<string>();
   const sourceSet = new Set<string>();
   const tagMap = new Map<string, string>();
+  const toolMap = new Map<string, string>();
   for (const mcp of mcps) {
     if (mcp.industry) industrySet.add(mcp.industry);
     statusSet.add((mcp.status || "unknown").toLowerCase());
@@ -115,12 +123,19 @@ function buildFacets(mcps: MCPServer[]): Facets {
       const key = (tag.slug || tag.name || "").toLowerCase();
       if (key && !tagMap.has(key)) tagMap.set(key, tag.name || tag.slug || key);
     }
+    for (const tool of mcp.linkedTools || []) {
+      const key = (tool.slug || tool.name || "").toLowerCase();
+      if (key && !toolMap.has(key)) toolMap.set(key, tool.name || tool.slug || key);
+    }
   }
   return {
     industries: Array.from(industrySet).filter(Boolean).sort(),
     statuses: Array.from(statusSet).sort(),
     sources: Array.from(sourceSet).sort(),
     tags: Array.from(tagMap.entries())
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
+    tools: Array.from(toolMap.entries())
       .map(([value, label]) => ({ value, label }))
       .sort((a, b) => a.label.localeCompare(b.label)),
   };
@@ -194,6 +209,7 @@ export default async function handler(
     const status = String(req.query.status || "all").toLowerCase();
     const source = String(req.query.source || "all").toLowerCase();
     const tag = String(req.query.tag || "all").toLowerCase();
+    const tool = String(req.query.tool || "all").toLowerCase();
     const visibility = String(req.query.visibility || "all").toLowerCase();
     const allowPrivate = process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
 
@@ -208,7 +224,7 @@ export default async function handler(
 
     // Apply all filters
     const filtered = allMCPs.filter((mcp) =>
-      matchesFilters(mcp, searchQuery, industry, status, source, tag, visibility, allowPrivate)
+      matchesFilters(mcp, searchQuery, industry, status, source, tag, visibility, allowPrivate, tool)
     );
 
     // Sort

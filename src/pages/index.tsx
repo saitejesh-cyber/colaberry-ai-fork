@@ -310,7 +310,7 @@ export default function Home({
           </p>
 
           <div className="rise-in mt-8 flex flex-wrap justify-center gap-4" style={{ animationDelay: "0.32s" }}>
-            <Link href="/request-demo" className="btn btn-cta">
+            <Link href="/request-demo" className="btn btn-cta" data-tour="hero-cta">
               Book a demo
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -345,7 +345,7 @@ export default function Home({
           title="A structured destination for agents, MCPs, podcasts, and research"
           description="Give teams and LLMs a single place to discover, compare, and deploy intelligence."
         />
-        <div className="stagger-grid revealed mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="stagger-grid revealed mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-tour="catalog-grid">
           {catalogs.map((catalog) => (
             <CatalogCard key={catalog.title} {...catalog} />
           ))}

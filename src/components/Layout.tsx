@@ -36,7 +36,8 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Agents", href: "/aixcelerator/agents", order: 1 },
         { label: "MCP Servers", href: "/aixcelerator/mcp", order: 2 },
         { label: "Skills", href: "/aixcelerator/skills", order: 3 },
-        { label: "Use Cases", href: "/use-cases", order: 4 },
+        { label: "Tools", href: "/aixcelerator/tools", order: 4 },
+        { label: "Use Cases", href: "/use-cases", order: 5 },
       ],
     },
     {
@@ -77,10 +78,11 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Agents", href: "/aixcelerator/agents", order: 2, group: "Product" },
         { label: "MCP servers", href: "/aixcelerator/mcp", order: 3, group: "Product" },
         { label: "Skills", href: "/aixcelerator/skills", order: 4, group: "Product" },
-        { label: "Discovery assistant", href: "/assistant", order: 5, group: "Product" },
-        { label: "Solutions", href: "/solutions", order: 6, group: "Product" },
-        { label: "Use cases", href: "/use-cases", order: 7, group: "Product" },
-        { label: "Industries", href: "/industries", order: 8, group: "Product" },
+        { label: "Tools", href: "/aixcelerator/tools", order: 5, group: "Product" },
+        { label: "Discovery assistant", href: "/assistant", order: 6, group: "Product" },
+        { label: "Solutions", href: "/solutions", order: 7, group: "Product" },
+        { label: "Use cases", href: "/use-cases", order: 8, group: "Product" },
+        { label: "Industries", href: "/industries", order: 9, group: "Product" },
       ],
     },
     {
@@ -274,6 +276,7 @@ const PLATFORM_CHILD_BLUEPRINT = [
   { label: "Agents", href: "/aixcelerator/agents" },
   { label: "MCP servers", href: "/aixcelerator/mcp" },
   { label: "Skills", href: "/aixcelerator/skills" },
+  { label: "Tools", href: "/aixcelerator/tools" },
   { label: "Use cases", href: "/use-cases" },
   { label: "Discovery assistant", href: "/assistant" },
 ];
@@ -285,6 +288,8 @@ const PLATFORM_CHILD_ALIASES: Record<string, string> = {
   "mcp server": "/aixcelerator/mcp",
   skills: "/aixcelerator/skills",
   skill: "/aixcelerator/skills",
+  tools: "/aixcelerator/tools",
+  tool: "/aixcelerator/tools",
   "use cases": "/use-cases",
   "use case": "/use-cases",
   "discovery assistant": "/assistant",
@@ -1176,6 +1181,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 onClick={toggleTheme}
                 className="btn btn-ghost btn-icon"
                 aria-label={themeToggleLabel}
+                data-tour="theme-toggle"
               >
                 <span className="sr-only">{themeToggleLabel}</span>
                 <ThemeIcon isDark={isDarkMode} />
