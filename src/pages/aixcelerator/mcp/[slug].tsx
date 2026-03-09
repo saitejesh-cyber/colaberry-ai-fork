@@ -70,8 +70,6 @@ export const getStaticProps: GetStaticProps<MCPDetailProps> = async ({ params })
 
 /* ---------- Inline helpers ---------- */
 
-type CodeTab = { label: string; code: string; language: string };
-
 function NumberedStep({ step, title, children }: { step: number; title: string; children: ReactNode }) {
   return (
     <div className="flex gap-4">
@@ -88,7 +86,7 @@ function NumberedStep({ step, title, children }: { step: number; title: string; 
 
 /* ---------- Main component ---------- */
 
-export default function MCPDetail({ mcp, allowPrivate, relatedServers }: MCPDetailProps) {
+export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
   const [apiMethod, setApiMethod] = useState<"cli" | "sdk" | "typescript">("cli");
   const [showOptional, setShowOptional] = useState(false);
 

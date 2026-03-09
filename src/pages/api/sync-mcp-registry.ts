@@ -203,7 +203,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ...results,
       syncedAt: new Date().toISOString(),
     });
-  } catch (err: any) {
-    return res.status(500).json({ error: err.message || "Sync failed" });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Sync failed";
+    return res.status(500).json({ error: message });
   }
 }

@@ -38,9 +38,9 @@ export default function StickyTabBar({ tabs }: StickyTabBarProps) {
   return (
     <nav
       aria-label="Page sections"
-      className="sticky top-[64px] z-30 -mx-4 border-b border-zinc-200 bg-white/95 backdrop-blur sm:-mx-6 lg:-mx-8 dark:border-zinc-700 dark:bg-zinc-950/95"
+      className="sticky top-[64px] z-30 border-b border-zinc-200 bg-white/95 backdrop-blur dark:border-zinc-700 dark:bg-zinc-950/95"
     >
-      <div className="flex overflow-x-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex overflow-x-auto">
         {tabs.map((tab) => {
           const isActive = activeId === tab.id;
           return (

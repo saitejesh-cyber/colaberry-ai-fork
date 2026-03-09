@@ -80,10 +80,8 @@ export default function TourTooltip({
   onSkip,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
+  const [mounted] = useState(() => typeof document !== "undefined");
   const [pos, setPos] = useState<ResolvedPosition | null>(null);
-
-  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!mounted || !targetRect || !ref.current) return;

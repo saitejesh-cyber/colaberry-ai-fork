@@ -1,7 +1,7 @@
 import sanitizeHtml from "sanitize-html";
 import type { ReactNode } from "react";
 import { createElement } from "react";
-import type { MCPToolSchema, MCPToolParameter } from "./cms";
+import type { MCPToolSchema } from "./cms";
 
 export type ParsedTool = { name: string; description: string | null };
 
@@ -33,22 +33,25 @@ export function parseToolsStructured(value?: string | null): ParsedTool[] {
   });
 }
 
+type RawTool = Record<string, unknown> & { name?: unknown; description?: unknown; parameters?: unknown[] };
+type RawParam = Record<string, unknown>;
+
 export function parseToolsJson(value?: string | null): MCPToolSchema[] {
   if (!value) return [];
   try {
-    const parsed = JSON.parse(value);
+    const parsed: unknown = JSON.parse(value);
     if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((t: any) => t && typeof t.name === "string")
-      .map((t: any) => ({
-        name: t.name,
-        description: t.description ?? null,
+    return (parsed as RawTool[])
+      .filter((t) => t && typeof t.name === "string")
+      .map((t) => ({
+        name: t.name as string,
+        description: (t.description as string) ?? null,
         parameters: Array.isArray(t.parameters)
-          ? t.parameters.map((p: any) => ({
+          ? (t.parameters as RawParam[]).map((p) => ({
               name: String(p.name ?? ""),
               type: String(p.type ?? "string"),
               required: Boolean(p.required),
-              description: p.description ?? null,
+              description: (p.description as string) ?? null,
             }))
           : [],
       }));

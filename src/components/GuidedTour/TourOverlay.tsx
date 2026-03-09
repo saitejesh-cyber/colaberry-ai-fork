@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 
 type Props = {
@@ -7,8 +7,7 @@ type Props = {
 };
 
 export default function TourOverlay({ targetRect, onClickBackdrop }: Props) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [mounted] = useState(() => typeof document !== "undefined");
   if (!mounted) return null;
 
   const pad = 8;

@@ -28,6 +28,9 @@
 .tmp_case_studies/
 .enrich-progress.json
 
+# claude code worktrees
+.claude/worktrees/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

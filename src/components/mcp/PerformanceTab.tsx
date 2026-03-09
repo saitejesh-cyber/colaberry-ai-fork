@@ -8,7 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import SectionHeading from "./SectionHeading";
+
 
 type ToolMetric = {
   name: string;
