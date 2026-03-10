@@ -2469,3 +2469,31 @@ export async function fetchToolBySlug(slug: string): Promise<Tool | null> {
   }).catch(() => null);
   return previewJson?.data?.[0] ? mapTool(previewJson.data[0]) : null;
 }
+
+/** Lightweight count-only queries — fetches pageSize=1 just to read meta.pagination.total. */
+export async function fetchCatalogCounts(
+  visibility?: "public" | "private"
+): Promise<{ agents: number; mcpServers: number; skills: number }> {
+  const vis = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
+  const endpoints = [
+    { key: "agents", path: "/api/agents" },
+    { key: "mcpServers", path: "/api/mcp-servers" },
+    { key: "skills", path: "/api/skills" },
+  ] as const;
+
+  const results = await Promise.all(
+    endpoints.map(async ({ key, path }) => {
+      try {
+        const json = await fetchCMSJson<CMSCollectionResponse>(
+          `${CMS_URL}${path}?pagination[pageSize]=1${vis}`,
+          { allowStaleOnError: true }
+        );
+        return [key, json?.meta?.pagination?.total ?? 0] as const;
+      } catch {
+        return [key, 0] as const;
+      }
+    })
+  );
+
+  return Object.fromEntries(results) as { agents: number; mcpServers: number; skills: number };
+}
