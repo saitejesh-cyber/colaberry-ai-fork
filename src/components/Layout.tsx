@@ -660,11 +660,10 @@ export default function Layout({ children }: { children: ReactNode }) {
         const diff = y - lastScrollY.current;
         if (y > 100 && diff > DELTA) {
           setHeaderCompact(true);
-          lastScrollY.current = y;
         } else if (diff < -DELTA) {
           setHeaderCompact(false);
-          lastScrollY.current = y;
         }
+        lastScrollY.current = y;
         ticking = false;
       });
     };
@@ -1085,7 +1084,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </Head>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-brand-deep focus:shadow-lg focus:ring-2 focus:ring-[#DC2626]/40">Skip to content</a>
       <header role="banner" className={`site-header sticky top-0 z-40 border-b transition-[background-color,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${headerCompact ? "site-header--compact border-[var(--stroke)]/60 bg-white/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-xl dark:bg-[#18181B]/80" : "border-[var(--stroke)] bg-white shadow-sm dark:bg-[#18181B]"}`}>
-        <div className={`flex w-full items-center justify-between gap-3 px-4 transition-[padding] duration-200 sm:px-6 lg:px-8 ${headerCompact ? "py-1.5" : "py-3"}`}>
+        <div className="flex w-full items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 lg:gap-3">
             {/* ── Mobile hamburger (left-aligned, Gmail/YouTube pattern) ── */}
             <button

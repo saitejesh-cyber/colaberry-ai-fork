@@ -225,6 +225,10 @@ body {
   height: 100%;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   position: relative;
@@ -1235,7 +1239,7 @@ button:focus-visible {
 }
 
 .dark .nav-link {
-  color: #A1A1AA;
+  color: #D4D4D8;
 }
 
 .dark .nav-link:hover,
@@ -1388,7 +1392,7 @@ footer .footer-link:focus-visible {
   border-bottom: 1px solid #D4D1CA;
 }
 .dark .footer-column-heading {
-  color: #A1A1AA;
+  color: #D4D4D8;
   border-bottom-color: #4A473F;
 }
 
@@ -1402,7 +1406,7 @@ footer .footer-link:focus-visible {
   line-height: 1.5;
 }
 .dark .footer-copyright {
-  color: #A1A1AA;
+  color: #D4D4D8;
 }
 
 /* Footer watermark logo */
@@ -2342,8 +2346,22 @@ footer .footer-link:focus-visible {
   opacity: 0;
   transform: translateY(12px);
   transition: opacity var(--duration-normal) ease,
-              transform var(--duration-normal) ease;
+              transform var(--duration-normal) ease,
+              color 200ms var(--ease-expo-out);
   pointer-events: none;
+  background: transparent;
+  color: #71717A;
+  border: none;
+  box-shadow: none;
+}
+.back-to-top:hover {
+  color: #18181B;
+}
+.dark .back-to-top {
+  color: #A1A1AA;
+}
+.dark .back-to-top:hover {
+  color: #FAFAFA;
 }
 .back-to-top.visible {
   opacity: 1;
