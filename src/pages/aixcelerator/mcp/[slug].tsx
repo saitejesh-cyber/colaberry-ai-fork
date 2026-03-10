@@ -796,7 +796,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
       {/* Floating Book a Demo button */}
       <a
         href={mcp.tryItNowUrl || "/request-demo"}
-        className="fixed bottom-8 right-8 z-40 hidden lg:flex items-center gap-2 btn btn-cta shadow-lg"
+        className="fixed bottom-24 right-8 z-40 hidden lg:flex items-center gap-2 btn btn-cta shadow-lg"
       >
         {mcp.tryItNowUrl ? "Try it now" : "Book a demo"}
       </a>

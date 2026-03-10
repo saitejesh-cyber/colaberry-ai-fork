@@ -11,6 +11,7 @@ import {
   fetchMCPServers,
   fetchPodcastEpisodes,
   fetchUseCases,
+  fetchCatalogCounts,
   type Agent,
   type Skill,
   type MCPServer,
@@ -79,6 +80,7 @@ type HomeProps = {
   trendingUseCases: HomeUseCaseSignal[];
   latestMCPs: HomeMcpSignal[];
   trendingMCPs: HomeMcpSignal[];
+  catalogCounts: { agents: number; mcpServers: number; skills: number };
 };
 
 export default function Home({
@@ -92,7 +94,10 @@ export default function Home({
   trendingSkills,
   trendingUseCases,
   trendingMCPs,
+  catalogCounts,
 }: HomeProps) {
+  const fmt = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k+` : `${n}+`;
+
   const industries = [
     { name: "Agriculture", slug: "agriculture", icon: "leaf" as const },
     { name: "Energy", slug: "energy", icon: "droplet" as const },
@@ -161,9 +166,9 @@ export default function Home({
       description: "Adopt agents with clear ownership, status, and workflow alignment — ready for rollout. Browse by industry, deployment stage, and readiness level.",
       href: "/aixcelerator/agents",
       metrics: [
-        { value: "100+", label: "Agent profiles" },
+        { value: fmt(catalogCounts.agents), label: "Agent profiles" },
         { value: "14", label: "Industries" },
-        { value: "33", label: "Public agents" },
+        { value: fmt(catalogCounts.agents), label: "Public agents" },
       ],
     },
     {
@@ -173,7 +178,7 @@ export default function Home({
       description: "Standardize tool access via MCP with integration-ready server patterns and endpoints. Connect your existing stack with governed, tested connectors.",
       href: "/aixcelerator/mcp",
       metrics: [
-        { value: "50+", label: "MCP servers" },
+        { value: fmt(catalogCounts.mcpServers), label: "MCP servers" },
         { value: "12", label: "Tool categories" },
         { value: "100%", label: "Tested connectors" },
       ],
@@ -331,9 +336,9 @@ export default function Home({
       <section className="reveal section-spacing">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <AnimatedMetric value="8+" label="Industries served" note="Agriculture to fintech" delay={0} />
-          <AnimatedMetric value="100+" label="Agent profiles" note="Cataloged and governed" delay={150} />
-          <AnimatedMetric value="50+" label="MCP servers" note="Integration-ready connectors" delay={300} />
-          <AnimatedMetric value="200+" label="Skills indexed" note="Reusable capability units" delay={450} />
+          <AnimatedMetric value={fmt(catalogCounts.agents)} label="Agent profiles" note="Cataloged and governed" delay={150} />
+          <AnimatedMetric value={fmt(catalogCounts.mcpServers)} label="MCP servers" note="Integration-ready connectors" delay={300} />
+          <AnimatedMetric value={fmt(catalogCounts.skills)} label="Skills indexed" note="Reusable capability units" delay={450} />
         </div>
       </section>
 
@@ -496,6 +501,12 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
     [] as MCPServer[]
   );
 
+  const catalogCounts = await fetchOrEmpty(
+    "catalogCounts",
+    () => fetchCatalogCounts(visibilityFilter),
+    { agents: 0, mcpServers: 0, skills: 0 }
+  );
+
   const latestAgents = sortAgentsByDate(latestAgentsRaw).slice(0, 6).map(toHomeAgentSignal);
   const trendingAgents = sortAgentsByTrending(trendingAgentsRaw).slice(0, 6).map(toHomeAgentSignal);
   const latestSkills = sortSkillsByDate(latestSkillsRaw).slice(0, 6).map(toHomeSkillSignal);
@@ -517,6 +528,7 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
       trendingUseCases,
       latestMCPs,
       trendingMCPs,
+      catalogCounts,
     },
     revalidate: 600,
   };
