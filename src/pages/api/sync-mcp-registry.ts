@@ -102,7 +102,8 @@ function deriveLanguage(packages?: RegistryServer["server"]["packages"]): string
 function mapRegistryToStrapi(entry: RegistryServer) {
   const srv = entry.server;
   const meta = entry._meta?.["io.modelcontextprotocol.registry/official"];
-  const slug = deriveSlug(srv.name);
+  const displayName = deriveDisplayName(srv);
+  const slug = deriveSlug(displayName);
 
   return {
     registryName: srv.name,

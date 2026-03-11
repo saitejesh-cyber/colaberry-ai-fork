@@ -213,10 +213,16 @@ async function main() {
   for (const server of batch) {
     const updates = {};
 
-    // Fix slug
+    // Fix slug — prefer clean display name over raw registryName for readable slugs
     if (server.needsSlugFix) {
-      const baseName = server.registryName || server.name;
-      let newSlug = deriveSlug(baseName);
+      const displayName = server.name.includes("/") ? cleanDisplayName(server.name) : server.name;
+      let newSlug = deriveSlug(displayName);
+
+      // Truncate overly long slugs at a word boundary (max ~50 chars)
+      if (newSlug.length > 50) {
+        const truncated = newSlug.slice(0, 50).replace(/-[^-]*$/, "");
+        newSlug = truncated || newSlug.slice(0, 50);
+      }
 
       // Deduplicate
       let candidate = newSlug;
