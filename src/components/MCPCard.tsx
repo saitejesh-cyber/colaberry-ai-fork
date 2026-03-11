@@ -5,6 +5,7 @@ import {
   getStatusTone,
   capitalizeFirst,
 } from "@/src/lib/catalogFormatters";
+import { cleanDisplayName } from "@/src/lib/mcp-utils";
 
 type MCP = {
   name: string;
@@ -38,7 +39,7 @@ export default function MCPCard({ mcp }: { mcp: MCP }) {
   if (mcp.source) metaParts.push(capitalizeFirst(mcp.source));
 
   return (
-    <Link href={href} className="group block" aria-label={`View MCP server ${mcp.name} details`}>
+    <Link href={href} className="group block" aria-label={`View MCP server ${cleanDisplayName(mcp.name)} details`}>
       <div className="catalog-card p-6">
         <div className="flex items-center justify-between gap-3">
           <span className="chip chip-neutral rounded-full px-2.5 py-1 text-label font-semibold uppercase tracking-[0.12em]">
@@ -51,7 +52,7 @@ export default function MCPCard({ mcp }: { mcp: MCP }) {
         </div>
 
         <div className="mt-3">
-          <h3 className="truncate text-caption font-semibold text-zinc-900 dark:text-zinc-50">{mcp.name}</h3>
+          <h3 className="truncate text-caption font-semibold text-zinc-900 dark:text-zinc-50">{cleanDisplayName(mcp.name)}</h3>
           <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{summary}</p>
         </div>
 

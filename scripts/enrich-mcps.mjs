@@ -357,6 +357,10 @@ function parseReadmeContent(name, readme) {
     tools: "",
     capabilities: "",
     requirements: "",
+    installCommand: "",
+    configSnippet: "",
+    configSnippetClaude: "",
+    connectionUrl: "",
   };
 
   for (const [field, keywords] of Object.entries(fieldKeywords)) {
@@ -384,6 +388,112 @@ function parseReadmeContent(name, readme) {
   // --- Fallback: derive capabilities from features if available ---
   if (!result.capabilities && result.keyBenefits) {
     result.capabilities = result.keyBenefits;
+  }
+
+  // --- Extract install command from code blocks ---
+  const installKeywords = ["installation", "install", "setup", "getting started", "quick start", "quickstart", "usage"];
+  const installPatterns = /^\s*(npm\s+install|npm\s+i\s|npx\s|pip\s+install|pip3\s+install|pipx\s+install|docker\s+(?:run|pull)|brew\s+install|cargo\s+install|go\s+install|uv\s+(?:pip|tool)|uvx\s)/;
+  for (const kw of installKeywords) {
+    if (result.installCommand) break;
+    for (const s of sections) {
+      if (s.title === "__intro__") continue;
+      if (!s.title.toLowerCase().includes(kw)) continue;
+      // Extract code blocks from the section body
+      const codeBlockRegex = /```(?:bash|sh|shell|zsh|console|terminal|text)?\s*\n([\s\S]*?)```/g;
+      let cbMatch;
+      while ((cbMatch = codeBlockRegex.exec(s.body)) !== null) {
+        const lines = cbMatch[1].split("\n").map((l) => l.replace(/^\$\s*/, "").trim()).filter(Boolean);
+        for (const line of lines) {
+          if (installPatterns.test(line) && line.length < 200) {
+            result.installCommand = line;
+            break;
+          }
+        }
+        if (result.installCommand) break;
+      }
+    }
+  }
+  // Fallback: search entire README for install-looking code blocks
+  if (!result.installCommand) {
+    const globalCodeBlocks = /```(?:bash|sh|shell|zsh|console|terminal|text)?\s*\n([\s\S]*?)```/g;
+    let gcbMatch;
+    while ((gcbMatch = globalCodeBlocks.exec(cleaned)) !== null) {
+      const lines = gcbMatch[1].split("\n").map((l) => l.replace(/^\$\s*/, "").trim()).filter(Boolean);
+      for (const line of lines) {
+        if (installPatterns.test(line) && line.length < 200) {
+          result.installCommand = line;
+          break;
+        }
+      }
+      if (result.installCommand) break;
+    }
+  }
+
+  // --- Extract config snippet (MCP client JSON config) ---
+  const configKeywords = ["configuration", "config", "setup", "claude", "usage", "getting started", "quick start"];
+  const jsonBlockRegex = /```(?:json|jsonc)?\s*\n([\s\S]*?)```/g;
+  for (const kw of configKeywords) {
+    if (result.configSnippet) break;
+    for (const s of sections) {
+      if (s.title === "__intro__") continue;
+      if (!s.title.toLowerCase().includes(kw)) continue;
+      let jMatch;
+      jsonBlockRegex.lastIndex = 0;
+      while ((jMatch = jsonBlockRegex.exec(s.body)) !== null) {
+        const block = jMatch[1].trim();
+        // Look for MCP config patterns
+        if (block.includes("mcpServers") || block.includes("mcp-server") || block.includes('"command"') || block.includes('"args"')) {
+          // Check if it's specifically a Claude Desktop config
+          const isClaude = s.title.toLowerCase().includes("claude") || block.includes("claude_desktop_config") || block.includes("Claude");
+          if (isClaude && !result.configSnippetClaude) {
+            result.configSnippetClaude = block;
+          }
+          if (!result.configSnippet) {
+            result.configSnippet = block;
+          }
+        }
+      }
+    }
+  }
+  // Fallback: search entire README for JSON blocks with MCP config
+  if (!result.configSnippet) {
+    let gjMatch;
+    jsonBlockRegex.lastIndex = 0;
+    while ((gjMatch = jsonBlockRegex.exec(cleaned)) !== null) {
+      const block = gjMatch[1].trim();
+      if (block.includes("mcpServers") || (block.includes('"command"') && block.includes('"args"'))) {
+        const isClaude = block.includes("claude_desktop_config") || block.includes("Claude");
+        if (isClaude && !result.configSnippetClaude) {
+          result.configSnippetClaude = block;
+        }
+        if (!result.configSnippet) {
+          result.configSnippet = block;
+        }
+        break;
+      }
+    }
+  }
+
+  // --- Extract connection URL ---
+  // Look for sse://, ws://, wss:// URLs, or https:// URLs with mcp/server in path
+  const urlPatterns = /(?:sse|wss?):\/\/[^\s"'<>)]+|https?:\/\/[^\s"'<>)]*(?:mcp|\/sse)[^\s"'<>)]*/gi;
+  const urlMatch = cleaned.match(urlPatterns);
+  if (urlMatch) {
+    // Filter out common non-connection URLs (docs, badges, github, images)
+    const connectionUrl = urlMatch.find((u) =>
+      !u.includes("github.com") &&
+      !u.includes("badge") &&
+      !u.includes("shields.io") &&
+      !u.includes("img.") &&
+      !u.includes(".md") &&
+      !u.includes("npmjs.com") &&
+      !u.includes("pypi.org") &&
+      (u.startsWith("sse://") || u.startsWith("ws://") || u.startsWith("wss://") || u.includes("/sse") || u.includes("/mcp"))
+    );
+    if (connectionUrl) {
+      // Clean trailing markdown artifacts (backticks, brackets, periods)
+      result.connectionUrl = connectionUrl.replace(/[`\]).,;]+$/, "");
+    }
   }
 
   return result;
@@ -425,13 +535,17 @@ async function main() {
   const candidates = [];
 
   while (true) {
+    // Fetch servers that have a GitHub sourceUrl but are missing content OR
+    // install/config fields needed for the API tab and ConnectSidebar.
     const params = new URLSearchParams({
       "sort": "updatedAt:desc",
       "pagination[page]": String(page),
       "pagination[pageSize]": String(pageSize),
       "filters[sourceUrl][$notNull]": "true",
       "filters[sourceUrl][$ne]": "",
-      "filters[longDescription][$null]": "true",
+      // Match servers missing longDescription OR installCommand
+      "filters[$or][0][longDescription][$null]": "true",
+      "filters[$or][1][installCommand][$null]": "true",
     });
 
     const json = await fetchCMS(`/api/mcp-servers?${params}`);
@@ -506,6 +620,10 @@ async function main() {
           ...(content.tools ? { tools: content.tools } : {}),
           ...(content.capabilities ? { capabilities: content.capabilities } : {}),
           ...(content.requirements ? { requirements: content.requirements } : {}),
+          ...(content.installCommand ? { installCommand: content.installCommand } : {}),
+          ...(content.configSnippet ? { configSnippet: content.configSnippet } : {}),
+          ...(content.configSnippetClaude ? { configSnippetClaude: content.configSnippetClaude } : {}),
+          ...(content.connectionUrl ? { connectionUrl: content.connectionUrl } : {}),
         },
       };
 

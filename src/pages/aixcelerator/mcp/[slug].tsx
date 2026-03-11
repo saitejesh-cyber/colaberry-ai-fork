@@ -7,7 +7,7 @@ import EnterpriseCtaBand from "../../../components/EnterpriseCtaBand";
 import MCPCard from "../../../components/MCPCard";
 import StickyTabBar, { type TabItem } from "../../../components/StickyTabBar";
 import { fetchMCPServerBySlug, fetchRelatedMCPServers, type MCPServer } from "../../../lib/cms";
-import { parseList, parseToolsStructured, parseToolsJson, renderRichText, renderParagraphs } from "../../../lib/mcp-utils";
+import { parseList, parseToolsStructured, parseToolsJson, renderRichText, renderParagraphs, cleanDisplayName } from "../../../lib/mcp-utils";
 
 import SectionHeading from "../../../components/mcp/SectionHeading";
 import BulletList from "../../../components/mcp/BulletList";
@@ -100,7 +100,8 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
     : source === "internal"
       ? `${sourceLabel} (Colaberry)`
       : sourceLabel;
-  const metaTitle = `${mcp.name} | MCP Servers | Colaberry AI`;
+  const displayName = cleanDisplayName(mcp.name);
+  const metaTitle = `${displayName} | MCP Servers | Colaberry AI`;
   const metaDescription =
     mcp.description ||
     "MCP server profile with structured metadata for discoverability and deployment readiness.";
@@ -112,7 +113,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
     canonical: buildCanonical(`/aixcelerator/mcp/${mcp.slug || mcp.id}`),
     ogType: "article",
     ogImage: mcp.coverImageUrl || null,
-    ogImageAlt: mcp.coverImageAlt || `${mcp.name} MCP profile`,
+    ogImageAlt: mcp.coverImageAlt || `${displayName} MCP profile`,
   };
   const tagNames = (mcp.tags || []).map((tag) => tag.name || tag.slug).filter(Boolean);
   const companyNames = (mcp.companies || []).map((company) => company.name || company.slug).filter(Boolean);
@@ -141,13 +142,15 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
   const enrichedTools = parseToolsJson(mcp.toolsJson);
   const hasEnrichedTools = enrichedTools.length > 0;
 
-  const hasAboutSection = Boolean(mcp.primaryFunction || mcp.description || mcp.longDescription || capabilities.length);
+  const primaryFunctionUnique = mcp.primaryFunction && mcp.primaryFunction !== mcp.description;
+  const hasAboutSection = Boolean(primaryFunctionUnique || mcp.longDescription || capabilities.length);
   const hasUseCases = useCases.length > 0;
   const hasHowItWorks = hasEnrichedTools || tools.length > 0 || Boolean(mcp.exampleWorkflow);
   const hasBenefits = keyBenefits.length > 0;
   const hasLimitations = limitations.length > 0;
   const hasInstallSection = Boolean(mcp.installCommand || mcp.configSnippet || mcp.installCli || mcp.installSdk || mcp.configSnippetClaude || mcp.installAiSdk || mcp.installTypescript);
-  const hasTechSpecs = authMethods.length > 0 || hostingOptions.length > 0 || compatibilityItems.length > 0 || pricingNotes.length > 0 || requirements.length > 0 || typeof mcp.usageCount === "number" || typeof mcp.rating === "number";
+  const hasTechSpecs = authMethods.length > 0 || compatibilityItems.length > 0 || requirements.length > 0 || typeof mcp.usageCount === "number" || typeof mcp.rating === "number";
+  const hasHostingSection = hostingOptions.length > 0 || pricingNotes.length > 0;
 
   // Collect required and optional config parameters from enriched tools
   const requiredParams = enrichedTools.flatMap((t) =>
@@ -157,9 +160,10 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
     t.parameters.filter((p) => !p.required).map((p) => ({ ...p, toolName: t.name }))
   );
 
-  // Build sticky tabs — Smithery-style: Overview | API | Performance | Usage
+  // Build sticky tabs — Smithery-style: Overview | Hosting | API | Performance | Usage
   const stickyTabs: TabItem[] = [];
   stickyTabs.push({ id: "overview", label: "Overview" });
+  if (hasHostingSection) stickyTabs.push({ id: "hosting", label: "Hosting" });
   if (hasInstallSection || hasEnrichedTools) stickyTabs.push({ id: "api", label: "API" });
   stickyTabs.push({ id: "performance", label: "Performance" });
   stickyTabs.push({ id: "usage", label: "Usage" });
@@ -170,7 +174,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
   const keywords = [mcp.industry, mcp.category, ...tagNames, ...companyNames].filter(Boolean).join(", ");
   const softwareApp = {
     "@type": "SoftwareApplication" as const,
-    name: mcp.name,
+    name: displayName,
     description: metaDescription,
     applicationCategory: "MCP Server",
     applicationSubCategory: mcp.category || undefined,
@@ -218,7 +222,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
           softwareApp,
           {
             "@type": "HowTo" as const,
-            name: `How to install ${mcp.name}`,
+            name: `How to install ${displayName}`,
             step: howToSteps,
           },
         ],
@@ -246,7 +250,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
         </Link>
         <span>/</span>
         <span className="text-zinc-700 dark:text-zinc-200" aria-current="page">
-          {mcp.name}
+          {displayName}
         </span>
       </nav>
 
@@ -254,7 +258,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
       <div className="reveal mt-6">
         <EnterprisePageHero
           kicker="MCP profile"
-          title={mcp.name}
+          title={displayName}
           description={mcp.description || "MCP server profile with structured metadata for discoverability and deployment readiness."}
           chips={[
             mcp.industry,
@@ -324,8 +328,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
                 <SectionHeading title="About This MCP Server" />
                 <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
                 <div className="mt-6 space-y-4 text-[0.9375rem] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                  {mcp.primaryFunction && <p className="font-medium text-zinc-900 dark:text-zinc-100">{mcp.primaryFunction}</p>}
-                  {mcp.description && !mcp.longDescription && <p>{mcp.description}</p>}
+                  {primaryFunctionUnique && <p className="font-medium text-zinc-900 dark:text-zinc-100">{mcp.primaryFunction}</p>}
                   {mcp.longDescription && renderRichText(mcp.longDescription)}
                 </div>
                 {capabilities.length > 0 && (
@@ -408,7 +411,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
               <div className="mt-10">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Connected Tools</h3>
                 <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                  End tools this MCP server connects to.
+                  Tools and services this MCP server integrates with.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {mcp.linkedTools.map((tool) => (
@@ -427,7 +430,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
             {/* Benefits / Limitations */}
             {hasBenefits && (
               <div className="mt-10">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Why Use {mcp.name}?</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Why Use {displayName}?</h3>
                 <div className="mt-4">
                   <BulletList items={keyBenefits} />
                 </div>
@@ -455,10 +458,10 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
               </div>
             )}
 
-            {/* Technical Specifications (moved into Overview) */}
+            {/* Specifications (moved into Overview) */}
             {hasTechSpecs && (
               <div className="mt-10">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Technical Specifications</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Specifications</h3>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <SpecCard label="Status" value={status} />
                   <SpecCard label="Industry" value={mcp.industry || "General"} />
@@ -477,7 +480,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
                   )}
                 </div>
 
-                {(authMethods.length > 0 || hostingOptions.length > 0 || compatibilityItems.length > 0 || pricingNotes.length > 0) && (
+                {(authMethods.length > 0 || compatibilityItems.length > 0) && (
                   <div className="mt-6 grid gap-6 sm:grid-cols-2">
                     {authMethods.length > 0 && (
                       <div>
@@ -485,22 +488,10 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
                         <div className="mt-3"><BulletList items={authMethods} /></div>
                       </div>
                     )}
-                    {hostingOptions.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Hosting Options</h4>
-                        <div className="mt-3"><BulletList items={hostingOptions} /></div>
-                      </div>
-                    )}
                     {compatibilityItems.length > 0 && (
                       <div>
                         <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Compatibility</h4>
                         <div className="mt-3"><BulletList items={compatibilityItems} /></div>
-                      </div>
-                    )}
-                    {pricingNotes.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Pricing</h4>
-                        <div className="mt-3"><BulletList items={pricingNotes} /></div>
                       </div>
                     )}
                   </div>
@@ -515,6 +506,28 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
               </div>
             )}
           </section>
+
+          {/* ── HOSTING TAB ── */}
+          {hasHostingSection && (
+            <section id="hosting" className="reveal scroll-mt-[128px]">
+              <SectionHeading title="Hosting" />
+              <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
+              <div className="mt-6 grid gap-6 sm:grid-cols-2">
+                {hostingOptions.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Hosting Options</h4>
+                    <div className="mt-3"><BulletList items={hostingOptions} /></div>
+                  </div>
+                )}
+                {pricingNotes.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Pricing</h4>
+                    <div className="mt-3"><BulletList items={pricingNotes} /></div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
 
           {/* ── API TAB ── */}
           {(hasInstallSection || hasEnrichedTools) && (
@@ -702,7 +715,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
             <dl className="mt-6 grid gap-4 sm:grid-cols-2 text-sm">
               <div>
                 <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Name</dt>
-                <dd className="mt-1 text-zinc-900 dark:text-zinc-100">{mcp.name}</dd>
+                <dd className="mt-1 text-zinc-900 dark:text-zinc-100">{displayName}</dd>
               </div>
               <div>
                 <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Function</dt>
