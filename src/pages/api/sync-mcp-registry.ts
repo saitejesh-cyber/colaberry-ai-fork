@@ -64,7 +64,7 @@ function deriveDisplayName(entry: RegistryServer["server"]): string {
     s.replace(/[-_.]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const displayServer = titleCase(server);
   if (!vendor) return displayServer;
-  const vendorDisplay = titleCase(vendor.replace(/^app\./i, ""));
+  const vendorDisplay = titleCase(vendor.replace(/^(app|ai|co|dev|io|com|org|net|cloud|api|hub|get|run|use|try)\./i, ""));
   if (displayServer.toLowerCase().includes(vendorDisplay.toLowerCase()))
     return displayServer;
   return `${vendorDisplay} ${displayServer}`;
@@ -102,7 +102,8 @@ function deriveLanguage(packages?: RegistryServer["server"]["packages"]): string
 function mapRegistryToStrapi(entry: RegistryServer) {
   const srv = entry.server;
   const meta = entry._meta?.["io.modelcontextprotocol.registry/official"];
-  const slug = deriveSlug(srv.name);
+  const displayName = deriveDisplayName(srv);
+  const slug = deriveSlug(displayName);
 
   return {
     registryName: srv.name,
