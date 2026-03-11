@@ -64,7 +64,7 @@ function deriveDisplayName(entry: RegistryServer["server"]): string {
     s.replace(/[-_.]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const displayServer = titleCase(server);
   if (!vendor) return displayServer;
-  const vendorDisplay = titleCase(vendor.replace(/^app\./i, ""));
+  const vendorDisplay = titleCase(vendor.replace(/^(app|ai|co|dev|io|com|org|net|cloud|api|hub|get|run|use|try)\./i, ""));
   if (displayServer.toLowerCase().includes(vendorDisplay.toLowerCase()))
     return displayServer;
   return `${vendorDisplay} ${displayServer}`;

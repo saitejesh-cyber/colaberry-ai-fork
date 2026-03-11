@@ -123,7 +123,7 @@ function cleanDisplayName(name) {
   if (!name.includes("/")) return name;
   const parts = name.split("/").filter(Boolean);
   const server = parts[parts.length - 1];
-  const vendor = parts.length > 1 ? parts[0].replace(/^app\./i, "") : null;
+  const vendor = parts.length > 1 ? parts[0].replace(/^(app|ai|co|dev|io|com|org|net|cloud|api|hub|get|run|use|try)\./i, "") : null;
   const titleCase = (s) => s.replace(/[-_.]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const serverDisplay = titleCase(server);
   if (!vendor) return serverDisplay;
