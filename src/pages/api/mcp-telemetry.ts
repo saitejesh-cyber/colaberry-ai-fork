@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getTelemetrySlugs } from "../../lib/mcp-slug-aliases";
 
 const CMS_URL = (process.env.CMS_URL || process.env.NEXT_PUBLIC_CMS_URL || "").trim().replace(/\/$/, "");
 const CMS_API_TOKEN = (process.env.CMS_API_TOKEN || "").trim();
@@ -50,12 +51,18 @@ function cmsHeaders(): Record<string, string> {
   return h;
 }
 
-async function fetchTelemetryEvents(slug: string): Promise<TelemetryEvent[]> {
+async function fetchTelemetryEvents(slugs: string[]): Promise<TelemetryEvent[]> {
   const events: TelemetryEvent[] = [];
   let page = 1;
 
+  // Build Strapi filter: $in for multiple slugs, $eq for single
+  const slugFilter =
+    slugs.length === 1
+      ? `filters[mcpServerSlug][$eq]=${encodeURIComponent(slugs[0])}`
+      : slugs.map((s, i) => `filters[mcpServerSlug][$in][${i}]=${encodeURIComponent(s)}`).join("&");
+
   for (let i = 0; i < 20; i++) {
-    const url = `${CMS_URL}/api/mcp-telemetry-events?filters[mcpServerSlug][$eq]=${encodeURIComponent(slug)}&pagination[page]=${page}&pagination[pageSize]=100&sort=timestamp:desc`;
+    const url = `${CMS_URL}/api/mcp-telemetry-events?${slugFilter}&pagination[page]=${page}&pagination[pageSize]=100&sort=timestamp:desc`;
     const res = await fetch(url, { headers: cmsHeaders() });
     if (!res.ok) break;
     const body = await res.json();
@@ -213,7 +220,9 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
     return res.status(200).json(cached.data);
   }
 
-  const events = await fetchTelemetryEvents(slug);
+  // Query by both current and legacy slugs (handles slug migrations)
+  const slugs = getTelemetrySlugs(slug);
+  const events = await fetchTelemetryEvents(slugs);
   const metrics = aggregateMetrics(events);
 
   // Cache
