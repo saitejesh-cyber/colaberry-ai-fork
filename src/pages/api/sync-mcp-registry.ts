@@ -42,16 +42,32 @@ type RegistryResponse = {
 };
 
 function deriveSlug(name: string): string {
-  const afterSlash = name.includes("/") ? name.split("/").pop()! : name;
-  return afterSlash.replace(/[^a-z0-9-]/gi, "-").toLowerCase().replace(/-+/g, "-").replace(/^-|-$/g, "");
+  if (!name.includes("/")) {
+    return name.replace(/[^a-z0-9-]/gi, "-").toLowerCase().replace(/-+/g, "-").replace(/^-|-$/g, "");
+  }
+  const parts = name.split("/").filter(Boolean);
+  const vendor = parts[0];
+  const server = parts[parts.length - 1];
+  // If server name already starts with vendor prefix, just use server
+  const vendorClean = vendor.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  const serverClean = server.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  const combined = serverClean.startsWith(vendorClean) ? server : `${vendor}-${server}`;
+  return combined.replace(/[^a-z0-9-]/gi, "-").toLowerCase().replace(/-+/g, "-").replace(/^-|-$/g, "");
 }
 
 function deriveDisplayName(entry: RegistryServer["server"]): string {
   if (entry.title) return entry.title;
-  const afterSlash = entry.name.includes("/") ? entry.name.split("/").pop()! : entry.name;
-  return afterSlash
-    .replace(/[-_]/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const parts = entry.name.split("/").filter(Boolean);
+  const server = parts[parts.length - 1];
+  const vendor = parts.length > 1 ? parts[0] : null;
+  const titleCase = (s: string) =>
+    s.replace(/[-_.]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const displayServer = titleCase(server);
+  if (!vendor) return displayServer;
+  const vendorDisplay = titleCase(vendor.replace(/^app\./i, ""));
+  if (displayServer.toLowerCase().includes(vendorDisplay.toLowerCase()))
+    return displayServer;
+  return `${vendorDisplay} ${displayServer}`;
 }
 
 function deriveServerType(packages?: RegistryServer["server"]["packages"]): string {

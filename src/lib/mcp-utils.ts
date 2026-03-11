@@ -75,6 +75,26 @@ export function renderRichText(value?: string | null): ReactNode {
   });
 }
 
+/**
+ * Clean up MCP server names that still contain registry path patterns.
+ * "app.thoughtspot/mcp-server" → "Thoughtspot Mcp Server"
+ * Normal display names without "/" pass through unchanged.
+ */
+export function cleanDisplayName(name: string): string {
+  if (!name.includes("/")) return name;
+  const parts = name.split("/").filter(Boolean);
+  const server = parts[parts.length - 1];
+  const vendor = parts.length > 1 ? parts[0].replace(/^app\./i, "") : null;
+  const titleCase = (s: string) =>
+    s.replace(/[-_.]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const serverDisplay = titleCase(server);
+  if (!vendor) return serverDisplay;
+  const vendorDisplay = titleCase(vendor);
+  if (serverDisplay.toLowerCase().includes(vendorDisplay.toLowerCase()))
+    return serverDisplay;
+  return `${vendorDisplay} ${serverDisplay}`;
+}
+
 export function renderParagraphs(value: string): ReactNode[] {
   return value
     .split(/\r?\n+/)
