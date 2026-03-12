@@ -44,7 +44,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
     if (!response.ok) {
-      return res.status(response.status === 404 ? 404 : 502).json({ error: "GitHub API error" });
+      const notFound = response.status === 404 || response.status === 403 || response.status === 451;
+      return res.status(notFound ? 404 : 502).json({ error: "GitHub API error" });
     }
 
     const data = await response.json();
