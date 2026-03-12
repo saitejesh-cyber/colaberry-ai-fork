@@ -151,23 +151,50 @@ async function fetchAllRegistryServers(): Promise<RegistryServer[]> {
   return all;
 }
 
-async function findExistingByRegistryName(registryName: string): Promise<{ documentId: string } | null> {
-  const url = `${CMS_URL}/api/mcp-servers?filters[registryName][$eq]=${encodeURIComponent(registryName)}&fields[0]=id&publicationState=live`;
-  const headers: Record<string, string> = {};
-  if (CMS_API_TOKEN) headers.Authorization = `Bearer ${CMS_API_TOKEN}`;
+async function findExistingServer(
+  registryName: string,
+  slug: string,
+  displayName: string
+): Promise<{ documentId: string } | null> {
+  const authHeaders: Record<string, string> = {};
+  if (CMS_API_TOKEN) authHeaders.Authorization = `Bearer ${CMS_API_TOKEN}`;
 
-  const res = await fetch(url, { headers });
-  if (!res.ok) return null;
-  const body = await res.json();
-  const item = body?.data?.[0];
-  return item ? { documentId: item.documentId } : null;
+  // 1. Check by registryName (primary key for sync)
+  const byRegistry = `${CMS_URL}/api/mcp-servers?filters[registryName][$eq]=${encodeURIComponent(registryName)}&fields[0]=id&publicationState=live`;
+  const res1 = await fetch(byRegistry, { headers: authHeaders });
+  if (res1.ok) {
+    const body1 = await res1.json();
+    if (body1?.data?.[0]) return { documentId: body1.data[0].documentId };
+  }
+
+  // 2. Fallback: check by slug
+  if (slug) {
+    const bySlug = `${CMS_URL}/api/mcp-servers?filters[slug][$eq]=${encodeURIComponent(slug)}&fields[0]=id&publicationState=live`;
+    const res2 = await fetch(bySlug, { headers: authHeaders });
+    if (res2.ok) {
+      const body2 = await res2.json();
+      if (body2?.data?.[0]) return { documentId: body2.data[0].documentId };
+    }
+  }
+
+  // 3. Fallback: check by name (case-insensitive)
+  if (displayName) {
+    const byName = `${CMS_URL}/api/mcp-servers?filters[name][$eqi]=${encodeURIComponent(displayName)}&fields[0]=id&publicationState=live`;
+    const res3 = await fetch(byName, { headers: authHeaders });
+    if (res3.ok) {
+      const body3 = await res3.json();
+      if (body3?.data?.[0]) return { documentId: body3.data[0].documentId };
+    }
+  }
+
+  return null;
 }
 
 async function upsertToStrapi(data: ReturnType<typeof mapRegistryToStrapi>): Promise<"created" | "updated" | "skipped"> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (CMS_API_TOKEN) headers.Authorization = `Bearer ${CMS_API_TOKEN}`;
 
-  const existing = await findExistingByRegistryName(data.registryName!);
+  const existing = await findExistingServer(data.registryName!, data.slug, data.name);
 
   if (existing) {
     const res = await fetch(`${CMS_URL}/api/mcp-servers/${existing.documentId}`, {
