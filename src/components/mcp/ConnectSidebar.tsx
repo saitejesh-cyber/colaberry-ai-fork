@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import type { MCPServer } from "../../lib/cms";
 import CopyButton from "./CopyButton";
 import GitHubStats from "./GitHubStats";
@@ -9,6 +9,8 @@ type ConnectSidebarProps = {
 
 export default function ConnectSidebar({ mcp }: ConnectSidebarProps) {
   const [connectTab, setConnectTab] = useState<"agents" | "humans">("agents");
+  const [repoAccessible, setRepoAccessible] = useState(true);
+  const handleRepoNotFound = useCallback(() => setRepoAccessible(false), []);
 
   const publishedLabel = (() => {
     const d = mcp.publishedDate || mcp.lastUpdated;
@@ -149,7 +151,7 @@ export default function ConnectSidebar({ mcp }: ConnectSidebarProps) {
             <span className="ml-auto font-medium text-zinc-900 dark:text-zinc-100">{publishedLabel}</span>
           </div>
         )}
-        {repoDisplay && mcp.sourceUrl && (
+        {repoDisplay && mcp.sourceUrl && repoAccessible && (
           <div className="flex items-center gap-2 text-sm">
             <svg className="h-4 w-4 text-zinc-400" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38l-.01-1.49c-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 8 .2Z" /></svg>
             <span className="text-zinc-500 dark:text-zinc-400">Repository</span>
@@ -175,19 +177,19 @@ export default function ConnectSidebar({ mcp }: ConnectSidebarProps) {
           </div>
         )}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <GitHubStats sourceUrl={mcp.sourceUrl} />
+          <GitHubStats sourceUrl={mcp.sourceUrl} onRepoNotFound={handleRepoNotFound} />
         </div>
       </div>
 
       {/* Resource links */}
-      {(mcp.docsUrl || mcp.sourceUrl || mcp.tryItNowUrl) && (
+      {(mcp.docsUrl || (mcp.sourceUrl && repoAccessible) || mcp.tryItNowUrl) && (
         <div className="space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-700">
           {mcp.docsUrl && (
             <a href={mcp.docsUrl} target="_blank" rel="noreferrer" className="btn btn-secondary w-full text-center text-sm">
               View documentation
             </a>
           )}
-          {mcp.sourceUrl && (
+          {mcp.sourceUrl && repoAccessible && (
             <a href={mcp.sourceUrl} target="_blank" rel="noreferrer" className="btn btn-ghost w-full text-center text-sm">
               View source
             </a>
