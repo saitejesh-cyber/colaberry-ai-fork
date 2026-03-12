@@ -335,7 +335,7 @@ export default function Tools({ tools: initialTools, fetchError, totalCount, ini
         </div>
       </section>
 
-      <div className="reveal mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="reveal stagger-grid mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
         {allTools.map((t) => (
           <ToolCard
             key={t.slug || String(t.id)}
