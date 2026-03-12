@@ -19,6 +19,9 @@ COPY . .
 # Build Next.js app
 RUN npm run build
 
+# Give non-root user write access to .next for ISR page regeneration
+RUN chown -R appuser:appgroup /app/.next
+
 # Switch to non-root user
 USER appuser
 
