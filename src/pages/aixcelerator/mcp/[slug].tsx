@@ -329,7 +329,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
               <div>
                 <SectionHeading title="About This MCP Server" />
                 <hr className="mt-3 border-zinc-200 dark:border-zinc-700" />
-                <div className="mt-6 space-y-4 text-[0.9375rem] leading-relaxed text-zinc-700 dark:text-zinc-300">
+                <div className="mt-6 max-w-prose space-y-4 text-[0.9375rem] leading-relaxed text-zinc-700 dark:text-zinc-300">
                   {primaryFunctionUnique && <p className="font-medium text-zinc-900 dark:text-zinc-100">{mcp.primaryFunction}</p>}
                   {mcp.longDescription && renderRichText(mcp.longDescription)}
                   {descriptionFallback && <p>{descriptionFallback}</p>}
