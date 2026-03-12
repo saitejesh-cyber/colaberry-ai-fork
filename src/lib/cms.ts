@@ -2539,25 +2539,31 @@ export async function fetchCatalogCounts(
   visibility?: "public" | "private"
 ): Promise<{ agents: number; mcpServers: number; skills: number }> {
   const vis = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
-  const endpoints = [
+
+  // Agents and Skills: raw CMS pagination totals (no dedup needed)
+  const simpleEndpoints = [
     { key: "agents", path: "/api/agents" },
-    { key: "mcpServers", path: "/api/mcp-servers" },
     { key: "skills", path: "/api/skills" },
   ] as const;
 
-  const results = await Promise.all(
-    endpoints.map(async ({ key, path }) => {
-      try {
-        const json = await fetchCMSJson<CMSCollectionResponse>(
-          `${CMS_URL}${path}?pagination[pageSize]=1${vis}`,
-          { allowStaleOnError: true }
-        );
-        return [key, json?.meta?.pagination?.total ?? 0] as const;
-      } catch {
-        return [key, 0] as const;
-      }
-    })
-  );
+  const [simpleResults, mcpCount] = await Promise.all([
+    Promise.all(
+      simpleEndpoints.map(async ({ key, path }) => {
+        try {
+          const json = await fetchCMSJson<CMSCollectionResponse>(
+            `${CMS_URL}${path}?pagination[pageSize]=1${vis}`,
+            { allowStaleOnError: true }
+          );
+          return [key, json?.meta?.pagination?.total ?? 0] as const;
+        } catch {
+          return [key, 0] as const;
+        }
+      })
+    ),
+    // MCP Servers: use deduplicated count (fetchMCPServers already deduplicates)
+    fetchMCPServers(visibility).then((mcps) => mcps.length).catch(() => 0),
+  ]);
 
-  return Object.fromEntries(results) as { agents: number; mcpServers: number; skills: number };
+  const counts = Object.fromEntries(simpleResults) as { agents: number; skills: number };
+  return { ...counts, mcpServers: mcpCount };
 }
