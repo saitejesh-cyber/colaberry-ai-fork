@@ -143,13 +143,14 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
   const hasEnrichedTools = enrichedTools.length > 0;
 
   const primaryFunctionUnique = mcp.primaryFunction && mcp.primaryFunction !== mcp.description;
-  const hasAboutSection = Boolean(primaryFunctionUnique || mcp.longDescription || capabilities.length);
+  const descriptionFallback = !primaryFunctionUnique && !mcp.longDescription ? mcp.description : null;
+  const hasAboutSection = Boolean(primaryFunctionUnique || mcp.longDescription || descriptionFallback || capabilities.length);
   const hasUseCases = useCases.length > 0;
   const hasHowItWorks = hasEnrichedTools || tools.length > 0 || Boolean(mcp.exampleWorkflow);
   const hasBenefits = keyBenefits.length > 0;
   const hasLimitations = limitations.length > 0;
   const hasInstallSection = Boolean(mcp.installCommand || mcp.configSnippet || mcp.installCli || mcp.installSdk || mcp.configSnippetClaude || mcp.installAiSdk || mcp.installTypescript);
-  const hasTechSpecs = authMethods.length > 0 || compatibilityItems.length > 0 || requirements.length > 0 || typeof mcp.usageCount === "number" || typeof mcp.rating === "number";
+  const hasTechSpecs = true; // Always show — status, industry, category available for all servers
   const hasHostingSection = hostingOptions.length > 0 || pricingNotes.length > 0;
 
   // Collect required and optional config parameters from enriched tools
@@ -330,6 +331,7 @@ export default function MCPDetail({ mcp, relatedServers }: MCPDetailProps) {
                 <div className="mt-6 space-y-4 text-[0.9375rem] leading-relaxed text-zinc-700 dark:text-zinc-300">
                   {primaryFunctionUnique && <p className="font-medium text-zinc-900 dark:text-zinc-100">{mcp.primaryFunction}</p>}
                   {mcp.longDescription && renderRichText(mcp.longDescription)}
+                  {descriptionFallback && <p>{descriptionFallback}</p>}
                 </div>
                 {capabilities.length > 0 && (
                   <div className="mt-6">

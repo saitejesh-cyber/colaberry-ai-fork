@@ -5,6 +5,7 @@ import {
   buildCatalogHealthReport,
   catalogHealthRowsToCsv,
 } from "../../lib/catalogHealth";
+import { isAdminAuthorized } from "../../lib/api-auth";
 
 const REPORT_API_KEY = (process.env.CATALOG_REPORT_API_KEY || process.env.NEWSLETTER_REPORT_API_KEY || "").trim();
 
@@ -15,33 +16,6 @@ function normalizeText(value: unknown, maxLength = 200) {
 
 function readQueryValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] || "" : value || "";
-}
-
-function getApiKey(req: NextApiRequest) {
-  const rawHeader = req.headers["x-colaberry-admin-key"];
-  const apiKey = Array.isArray(rawHeader) ? rawHeader[0] || "" : rawHeader || "";
-  if (apiKey) return apiKey;
-
-  const auth = req.headers.authorization;
-  const bearer = Array.isArray(auth) ? auth[0] || "" : auth || "";
-  const prefix = "Bearer ";
-  if (bearer.startsWith(prefix)) {
-    return bearer.slice(prefix.length).trim();
-  }
-  return "";
-}
-
-function isLocalDevelopmentRequest(req: NextApiRequest) {
-  if (process.env.NODE_ENV === "production") return false;
-  const rawHost = req.headers.host;
-  const host = Array.isArray(rawHost) ? rawHost[0] || "" : rawHost || "";
-  return /^localhost(?::\d+)?$/i.test(host) || /^127\.0\.0\.1(?::\d+)?$/i.test(host);
-}
-
-function isAuthorized(req: NextApiRequest) {
-  if (isLocalDevelopmentRequest(req)) return true;
-  if (!REPORT_API_KEY) return false;
-  return getApiKey(req) === REPORT_API_KEY;
 }
 
 function parseEntity(value: string): CatalogHealthEntity | "all" {
@@ -62,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader("Allow", "GET");
     return res.status(405).json({ ok: false, message: "Method not allowed." });
   }
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req, REPORT_API_KEY)) {
     return res.status(401).json({ ok: false, message: "Unauthorized." });
   }
 

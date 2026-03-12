@@ -6,7 +6,12 @@ type GitHubStatsData = {
   lastCommit: string | null;
 };
 
-export default function GitHubStats({ sourceUrl }: { sourceUrl?: string | null }) {
+type Props = {
+  sourceUrl?: string | null;
+  onRepoNotFound?: () => void;
+};
+
+export default function GitHubStats({ sourceUrl, onRepoNotFound }: Props) {
   const [stats, setStats] = useState<GitHubStatsData | null>(null);
   const match = sourceUrl?.match(/github\.com\/([^/]+)\/([^/]+)/);
 
@@ -15,11 +20,17 @@ export default function GitHubStats({ sourceUrl }: { sourceUrl?: string | null }
     const [, owner, repo] = match;
     const cleanRepo = repo.replace(/\.git$/, "");
     fetch(`/api/github-stats?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(cleanRepo)}`)
-      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => {
+        if (res.ok) return res.json();
+        onRepoNotFound?.();
+        return null;
+      })
       .then((data) => {
         if (data) setStats(data);
       })
-      .catch(() => {});
+      .catch(() => {
+        onRepoNotFound?.();
+      });
   }, [sourceUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!stats) return null;

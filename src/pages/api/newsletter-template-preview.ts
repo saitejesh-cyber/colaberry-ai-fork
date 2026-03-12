@@ -3,6 +3,7 @@ import {
   buildNewsletterTemplate,
 } from "../../lib/newsletterTemplate";
 import { defaultNewsletterItems } from "../../lib/newsletterCampaignDefaults";
+import { isAdminAuthorized } from "../../lib/api-auth";
 
 const ADMIN_KEY = process.env.NEWSLETTER_REPORT_API_KEY || "";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai";
@@ -10,33 +11,6 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai";
 function normalizeText(value: unknown, maxLength = 200) {
   if (typeof value !== "string") return "";
   return value.trim().slice(0, maxLength);
-}
-
-function getApiKey(req: NextApiRequest) {
-  const rawHeader = req.headers["x-colaberry-admin-key"];
-  const apiKey = Array.isArray(rawHeader) ? rawHeader[0] || "" : rawHeader || "";
-  if (apiKey) return apiKey;
-
-  const auth = req.headers.authorization;
-  const bearer = Array.isArray(auth) ? auth[0] || "" : auth || "";
-  const prefix = "Bearer ";
-  if (bearer.startsWith(prefix)) {
-    return bearer.slice(prefix.length).trim();
-  }
-  return "";
-}
-
-function isLocalDevelopmentRequest(req: NextApiRequest) {
-  if (process.env.NODE_ENV === "production") return false;
-  const rawHost = req.headers.host;
-  const host = Array.isArray(rawHost) ? rawHost[0] || "" : rawHost || "";
-  return /^localhost(?::\d+)?$/i.test(host) || /^127\.0\.0\.1(?::\d+)?$/i.test(host);
-}
-
-function isAuthorized(req: NextApiRequest) {
-  if (isLocalDevelopmentRequest(req)) return true;
-  if (!ADMIN_KEY) return false;
-  return getApiKey(req) === ADMIN_KEY;
 }
 
 function readQueryValue(value: string | string[] | undefined) {
@@ -48,7 +22,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ ok: false, message: "Method not allowed." });
   }
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req, ADMIN_KEY)) {
     return res.status(401).json({ ok: false, message: "Unauthorized." });
   }
 

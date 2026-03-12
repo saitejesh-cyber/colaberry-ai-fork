@@ -2081,7 +2081,16 @@ export async function fetchMCPServers(
     page += 1;
   }
 
-  return results;
+  // Deduplicate by name — keep shortest slug (original import, not -16 suffix copies)
+  const seen = new Map<string, MCPServer>();
+  for (const mcp of results) {
+    const key = (mcp.name || "").trim().toLowerCase();
+    const existing = seen.get(key);
+    if (!existing || (mcp.slug || "").length < (existing.slug || "").length) {
+      seen.set(key, mcp);
+    }
+  }
+  return Array.from(seen.values());
 }
 
 export async function fetchAgentBySlug(slug: string) {
@@ -2335,7 +2344,13 @@ export async function fetchRelatedMCPServers(
     merged.set(candidate.id, candidate)
   );
 
-  return rankRelatedMCPServers(mcp, Array.from(merged.values()), limit);
+  // Deduplicate by name to avoid showing same-named servers
+  const nameDeduped = new Map<string, MCPServer>();
+  for (const c of merged.values()) {
+    const key = (c.name || "").trim().toLowerCase();
+    if (!nameDeduped.has(key)) nameDeduped.set(key, c);
+  }
+  return rankRelatedMCPServers(mcp, Array.from(nameDeduped.values()), limit);
 }
 
 // ── Tool fetch functions ──

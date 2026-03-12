@@ -69,6 +69,19 @@ npx tsc --noEmit     # TypeScript type check (no emit)
 npm run dev          # Local dev server
 ```
 
+## Security Agents
+Seven specialized security agents in `.claude/agents/` for continuous security auditing:
+
+| Agent | File | Purpose |
+|-------|------|---------|
+| Secrets Scanner | `security-secrets.md` | Find leaked API keys, tokens, committed `.env` files, `NEXT_PUBLIC_` exposure |
+| Input Sanitization | `security-input.md` | Audit XSS, email injection, CSP headers, `dangerouslySetInnerHTML` |
+| Rate Limiting | `security-ratelimit.md` | Check all API routes for rate limits, IP spoofing, brute force protection |
+| Auth Architecture | `security-auth.md` | Audit admin route auth, localhost bypass, timing-safe comparisons |
+| API Security | `security-api.md` | CORS config, security headers, error leakage, SSRF prevention |
+| File Uploads | `security-uploads.md` | Upload validation, path traversal, MIME type checks |
+| Dependencies | `security-deps.md` | `npm audit`, Dockerfile hardening, supply chain risks |
+
 ## Git
 - **Branch:** `dev`
 - **Remote:** https://github.com/saitejesh-cyber/colaberry-ai-fork
