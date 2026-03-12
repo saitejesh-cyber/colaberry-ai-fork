@@ -82,7 +82,7 @@ Optional threshold overrides:
 npm run audit:data -- --min-podcasts 200 --min-agents 40 --min-mcp 40 --min-use-cases 30 --verbose true
 ```
 
-This verifies:
+This verifies: 
 
 - published counts for podcasts, agents, MCP servers, and use cases
 - podcast playability coverage (audio/embed presence)
