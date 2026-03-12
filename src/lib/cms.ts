@@ -2539,31 +2539,36 @@ export async function fetchCatalogCounts(
   visibility?: "public" | "private"
 ): Promise<{ agents: number; mcpServers: number; skills: number }> {
   const vis = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
-
-  // Agents and Skills: raw CMS pagination totals (no dedup needed)
-  const simpleEndpoints = [
+  const endpoints = [
     { key: "agents", path: "/api/agents" },
+    { key: "mcpServers", path: "/api/mcp-servers" },
     { key: "skills", path: "/api/skills" },
   ] as const;
 
-  const [simpleResults, mcpCount] = await Promise.all([
-    Promise.all(
-      simpleEndpoints.map(async ({ key, path }) => {
-        try {
-          const json = await fetchCMSJson<CMSCollectionResponse>(
-            `${CMS_URL}${path}?pagination[pageSize]=1${vis}`,
-            { allowStaleOnError: true }
-          );
-          return [key, json?.meta?.pagination?.total ?? 0] as const;
-        } catch {
-          return [key, 0] as const;
-        }
-      })
-    ),
-    // MCP Servers: use deduplicated count (fetchMCPServers already deduplicates)
-    fetchMCPServers(visibility).then((mcps) => mcps.length).catch(() => 0),
-  ]);
+  const results = await Promise.all(
+    endpoints.map(async ({ key, path }) => {
+      try {
+        const json = await fetchCMSJson<CMSCollectionResponse>(
+          `${CMS_URL}${path}?pagination[pageSize]=1${vis}`,
+          { allowStaleOnError: true }
+        );
+        return [key, json?.meta?.pagination?.total ?? 0] as const;
+      } catch {
+        return [key, 0] as const;
+      }
+    })
+  );
 
-  const counts = Object.fromEntries(simpleResults) as { agents: number; skills: number };
-  return { ...counts, mcpServers: mcpCount };
+  const rawCounts = Object.fromEntries(results) as { agents: number; mcpServers: number; skills: number };
+
+  // MCP Servers: try to get deduplicated count (matches catalog page).
+  // Falls back to raw CMS count if fetchMCPServers fails or times out.
+  try {
+    const mcps = await fetchMCPServers(visibility);
+    rawCounts.mcpServers = mcps.length;
+  } catch {
+    // Keep raw CMS count as fallback — better than 0
+  }
+
+  return rawCounts;
 }
