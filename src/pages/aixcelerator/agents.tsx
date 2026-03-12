@@ -1,5 +1,4 @@
 import AgentCard from "../../components/AgentCard";
-import CatalogSearchBox from "../../components/CatalogSearchBox";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
@@ -452,7 +451,6 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
         <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
       </div>
 
-      <CatalogSearchBox placeholder="Search agents or ask a question..." />
     </Layout>
   );
 }

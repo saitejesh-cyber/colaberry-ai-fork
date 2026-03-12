@@ -2,7 +2,6 @@ import type { GetStaticProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import CatalogSearchBox from "../../components/CatalogSearchBox";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
@@ -326,7 +325,6 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
         </div>
       ) : null}
 
-      <CatalogSearchBox placeholder="Search skills or ask a question..." />
     </Layout>
   );
 }

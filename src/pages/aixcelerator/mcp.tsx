@@ -1,4 +1,3 @@
-import CatalogSearchBox from "../../components/CatalogSearchBox";
 import MCPCard from "../../components/MCPCard";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
@@ -587,7 +586,6 @@ export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, total
         ) : null}
       </div>
 
-      <CatalogSearchBox placeholder="Search MCP servers or ask a question..." />
     </Layout>
   );
 }
