@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { isBearerAuthorized } from "../../lib/api-auth";
 
 const REGISTRY_BASE = "https://registry.modelcontextprotocol.io/v0.1";
 const CMS_URL = (process.env.CMS_URL || process.env.NEXT_PUBLIC_CMS_URL || "").trim().replace(/\/$/, "");
@@ -190,10 +191,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Auth check
-  const authHeader = req.headers.authorization;
-  const providedSecret = authHeader?.replace("Bearer ", "") || (req.query.secret as string);
-  if (SYNC_SECRET && providedSecret !== SYNC_SECRET) {
+  if (!isBearerAuthorized(req, SYNC_SECRET)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 

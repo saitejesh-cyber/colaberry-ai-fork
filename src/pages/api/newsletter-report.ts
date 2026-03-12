@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { isAdminAuthorized } from "../../lib/api-auth";
 
 const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL;
 const CMS_TOKEN = process.env.CMS_API_TOKEN;
@@ -70,34 +71,6 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 function readQueryValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] || "" : value || "";
-}
-
-function getApiKey(req: NextApiRequest) {
-  const rawHeader = req.headers["x-colaberry-admin-key"];
-  const apiKey = Array.isArray(rawHeader) ? rawHeader[0] || "" : rawHeader || "";
-  if (apiKey) return apiKey;
-
-  const auth = req.headers.authorization;
-  const bearer = Array.isArray(auth) ? auth[0] || "" : auth || "";
-  const prefix = "Bearer ";
-  if (bearer.startsWith(prefix)) {
-    return bearer.slice(prefix.length).trim();
-  }
-  return "";
-}
-
-function isLocalDevelopmentRequest(req: NextApiRequest) {
-  if (process.env.NODE_ENV === "production") return false;
-  const rawHost = req.headers.host;
-  const host = Array.isArray(rawHost) ? rawHost[0] || "" : rawHost || "";
-  return /^localhost(?::\d+)?$/i.test(host) || /^127\.0\.0\.1(?::\d+)?$/i.test(host);
-}
-
-function isAuthorized(req: NextApiRequest) {
-  if (isLocalDevelopmentRequest(req)) return true;
-  if (!REPORT_API_KEY) return false;
-  const apiKey = getApiKey(req);
-  return apiKey === REPORT_API_KEY;
 }
 
 function parseStatusFilter(input: string) {
@@ -221,7 +194,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!CMS_URL || !CMS_TOKEN) {
     return res.status(503).json({ ok: false, message: "Report service unavailable." });
   }
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req, REPORT_API_KEY)) {
     return res.status(401).json({ ok: false, message: "Unauthorized." });
   }
 

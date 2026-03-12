@@ -1,8 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getTelemetrySlugs } from "../../lib/mcp-slug-aliases";
+import { isBearerAuthorized } from "../../lib/api-auth";
+import { isRateLimited, getClientIp } from "../../lib/rate-limit";
 
 const CMS_URL = (process.env.CMS_URL || process.env.NEXT_PUBLIC_CMS_URL || "").trim().replace(/\/$/, "");
 const CMS_API_TOKEN = (process.env.CMS_API_TOKEN || "").trim();
+const SYNC_SECRET = process.env.SYNC_SECRET || "";
 
 /* ── Types ─────────────────────────────────────────────────── */
 
@@ -171,6 +174,10 @@ function aggregateMetrics(events: TelemetryEvent[]): TelemetryResponse {
 /* ── POST: Ingest telemetry event ──────────────────────────── */
 
 async function handlePost(req: NextApiRequest, res: NextApiResponse) {
+  if (!isBearerAuthorized(req, SYNC_SECRET)) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   const { slug, toolName, clientName, latencyMs, success } = req.body;
 
   if (!slug || !toolName) {
@@ -195,8 +202,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   });
 
   if (!cmsRes.ok) {
-    const errBody = await cmsRes.text().catch(() => "");
-    return res.status(502).json({ error: "Failed to store event", detail: errBody });
+    return res.status(502).json({ error: "Failed to store event" });
   }
 
   // Invalidate cache for this slug
@@ -208,6 +214,11 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
 /* ── GET: Query aggregated telemetry ───────────────────────── */
 
 async function handleGet(req: NextApiRequest, res: NextApiResponse) {
+  const ip = getClientIp(req);
+  if (isRateLimited("mcp-telemetry", ip, 30, 60_000)) {
+    return res.status(429).json({ error: "Too many requests" });
+  }
+
   const slug = req.query.slug as string;
   if (!slug) {
     return res.status(400).json({ error: "slug query parameter is required" });

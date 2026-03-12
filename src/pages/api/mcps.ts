@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchMCPServers, type MCPServer } from "../../lib/cms";
+import { isRateLimited, getClientIp } from "../../lib/rate-limit";
 
 const PAGE_SIZE = 24;
 
@@ -198,6 +199,10 @@ export default async function handler(
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (isRateLimited("mcps", getClientIp(req), 60, 60_000)) {
+    return res.status(429).json({ error: "Too many requests" });
   }
 
   try {
