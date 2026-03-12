@@ -2559,16 +2559,5 @@ export async function fetchCatalogCounts(
     })
   );
 
-  const rawCounts = Object.fromEntries(results) as { agents: number; mcpServers: number; skills: number };
-
-  // MCP Servers: try to get deduplicated count (matches catalog page).
-  // Falls back to raw CMS count if fetchMCPServers fails or times out.
-  try {
-    const mcps = await fetchMCPServers(visibility);
-    rawCounts.mcpServers = mcps.length;
-  } catch {
-    // Keep raw CMS count as fallback — better than 0
-  }
-
-  return rawCounts;
+  return Object.fromEntries(results) as { agents: number; mcpServers: number; skills: number };
 }
