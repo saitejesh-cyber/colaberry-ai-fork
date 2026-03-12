@@ -2,7 +2,6 @@ import type { GetStaticProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import CatalogSearchBox from "../../components/CatalogSearchBox";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
@@ -126,8 +125,8 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
     () => sortSkills(filteredSkills, sortMode),
     [filteredSkills, sortMode]
   );
-  const latestSkills = useMemo(() => sortSkills(scopedSkills, "latest").slice(0, 6), [scopedSkills]);
-  const trendingSkills = useMemo(() => sortSkills(scopedSkills, "trending").slice(0, 6), [scopedSkills]);
+  const _latestSkills = useMemo(() => sortSkills(scopedSkills, "latest").slice(0, 6), [scopedSkills]);
+  const _trendingSkills = useMemo(() => sortSkills(scopedSkills, "trending").slice(0, 6), [scopedSkills]);
   const shownCount = Math.min(visibleCount, sortedSkills.length);
   const visibleSkills = useMemo(() => sortedSkills.slice(0, shownCount), [shownCount, sortedSkills]);
   const hasMore = shownCount < sortedSkills.length;
@@ -304,7 +303,7 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
         ) : null}
       </section>
 
-      <section className="reveal mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2">
+      <section className="reveal stagger-grid mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2">
         {visibleSkills.length > 0 ? (
           visibleSkills.map((skill) => <SkillCard key={skill.slug || skill.id} skill={skill} />)
         ) : (
@@ -326,7 +325,6 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
         </div>
       ) : null}
 
-      <CatalogSearchBox placeholder="Search skills or ask a question..." />
     </Layout>
   );
 }
@@ -379,7 +377,7 @@ function SkillCard({ skill }: { skill: Skill }) {
   );
 }
 
-function SkillSignalRail({
+function _SkillSignalRail({
   title,
   description,
   items,

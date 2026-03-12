@@ -7,7 +7,7 @@ import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import SectionHeader from "../../../components/SectionHeader";
 import StatePanel from "../../../components/StatePanel";
 import { fetchSkillBySlug, Skill } from "../../../lib/cms";
-import { heroImage } from "../../../lib/media";
+
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 
 type SkillDetailProps = {
@@ -153,11 +153,6 @@ export default function SkillDetailPage({ skill }: SkillDetailProps) {
           kicker="Skill profile"
           title={skill.name}
           description={metaDescription}
-          image={heroImage("hero-agents-cinematic.webp")}
-          alt={`${skill.name} skill profile preview`}
-          imageKicker="Skill surface"
-          imageTitle="Capability profile"
-          imageDescription={`${categoryLabel} · ${providerLabel} · ${status.charAt(0).toUpperCase() + status.slice(1)}`}
           chips={[
             categoryLabel,
             providerLabel,

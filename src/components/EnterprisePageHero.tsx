@@ -62,8 +62,8 @@ export default function EnterprisePageHero({
   metrics = [],
 }: EnterprisePageHeroProps) {
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#09090B]">
-      <div className={`relative z-10 grid gap-6 px-6 py-12 sm:px-10 sm:py-16 lg:items-start lg:px-14 lg:py-20${image ? " lg:grid-cols-[1.08fr_0.92fr]" : ""}`}>
+    <section className="hero-dot-grid relative overflow-hidden rounded-2xl bg-white dark:bg-[#09090B]">
+      <div className={`relative z-10 grid gap-6 px-5 py-12 sm:px-8 sm:py-16 md:px-10 lg:items-start lg:px-14 lg:py-20${image ? " lg:grid-cols-[1.08fr_0.92fr]" : ""}`}>
         <div className="flex flex-col gap-4">
           <div className="rise-in rise-delay-1 inline-flex w-fit items-center gap-2.5 rounded-full border border-zinc-200 bg-zinc-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
             <span className="relative flex h-1.5 w-1.5 shrink-0">
@@ -71,7 +71,7 @@ export default function EnterprisePageHero({
             </span>
             {kicker}
           </div>
-          <h1 className="rise-in rise-delay-2 mt-2 font-sans text-display-md font-bold text-zinc-900 dark:text-zinc-50 sm:text-display-lg lg:text-display-xl">
+          <h1 className="rise-in rise-delay-2 mt-2 font-sans text-display-sm font-bold text-zinc-900 dark:text-zinc-50 sm:text-display-md md:text-display-lg lg:text-display-xl">
             {title}
           </h1>
           <p className="rise-in rise-delay-3 max-w-2xl text-caption leading-relaxed text-zinc-500 dark:text-zinc-400 sm:text-lg">

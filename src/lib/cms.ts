@@ -130,6 +130,7 @@ export type Company = {
   slug: string;
   website?: string;
   logoUrl?: string | null;
+  companyType?: "platform" | "vendor" | "partner" | "other" | null;
 };
 
 export type PlatformLink = {
@@ -268,10 +269,66 @@ export type MCPServer = {
   industry?: string | null;
   category?: string | null;
   docsUrl?: string | null;
+  installCommand?: string | null;
+  configSnippet?: string | null;
+  toolsJson?: string | null;
+  installCli?: string | null;
+  installSdk?: string | null;
+  configSnippetClaude?: string | null;
+  connectionUrl?: string | null;
+  connectionPrompt?: string | null;
+  installTypescript?: string | null;
+  installAiSdk?: string | null;
+  publishedDate?: string | null;
+  homepageUrl?: string | null;
+  version?: string | null;
+  transportType?: string | null;
+  registrySource?: string | null;
+  lastSyncedAt?: string | null;
+  githubStars?: number | null;
+  githubForks?: number | null;
   tags?: Tag[];
   companies?: Company[];
+  linkedTools?: ToolReference[];
   coverImageUrl?: string | null;
   coverImageAlt?: string | null;
+};
+
+export type ToolCategory =
+  | "communication" | "database" | "storage" | "email"
+  | "project-management" | "crm" | "developer" | "analytics"
+  | "marketing" | "productivity" | "ai-ml" | "search"
+  | "version-control" | "cloud" | "other";
+
+export type ToolReference = {
+  name: string;
+  slug: string;
+};
+
+export type MCPToolParameter = {
+  name: string;
+  type: string;
+  required: boolean;
+  description?: string | null;
+};
+
+export type MCPToolSchema = {
+  name: string;
+  description?: string | null;
+  parameters: MCPToolParameter[];
+};
+
+export type Tool = {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  longDescription?: string | null;
+  toolCategory?: ToolCategory | null;
+  website?: string | null;
+  iconUrl?: string | null;
+  iconAlt?: string | null;
+  mcpServers: ToolReference[];
 };
 
 export type ArticleCategory = {
@@ -586,6 +643,46 @@ function mapCompany(item: any): Company {
     slug: attrs?.slug ?? "",
     website: attrs?.website ?? null,
     logoUrl,
+    companyType: attrs?.companyType ?? null,
+  };
+}
+
+function mapToolReference(item: any): ToolReference {
+  const attrs = item?.attributes ?? item;
+  return {
+    name: attrs?.name ?? "",
+    slug: attrs?.slug ?? "",
+  };
+}
+
+function mapTool(item: any): Tool {
+  const attrs = item?.attributes ?? item;
+  const mcpServersRaw = attrs?.mcpServers?.data ?? attrs?.mcpServers ?? [];
+  const mcpServers = (Array.isArray(mcpServersRaw) ? mcpServersRaw : [])
+    .map(mapToolReference)
+    .filter((ref: ToolReference) => Boolean(ref.name || ref.slug));
+  const rawIconUrl =
+    attrs?.icon?.data?.attributes?.url ??
+    attrs?.icon?.attributes?.url ??
+    attrs?.icon?.url ??
+    null;
+  const iconUrl = rawIconUrl && rawIconUrl.startsWith("/") ? `${CMS_URL}${rawIconUrl}` : rawIconUrl;
+  const iconAlt =
+    attrs?.icon?.data?.attributes?.alternativeText ??
+    attrs?.icon?.attributes?.alternativeText ??
+    null;
+
+  return {
+    id: item?.id ?? attrs?.id ?? 0,
+    name: attrs?.name ?? "",
+    slug: attrs?.slug ?? "",
+    description: attrs?.description ?? null,
+    longDescription: attrs?.longDescription ?? null,
+    toolCategory: attrs?.toolCategory ?? null,
+    website: attrs?.website ?? null,
+    iconUrl,
+    iconAlt,
+    mcpServers,
   };
 }
 
@@ -1012,6 +1109,10 @@ function mapMCPServer(item: any): MCPServer {
   const companies =
     attrs?.companies?.data?.map(mapCompany) ??
     (attrs?.companies ?? []).map(mapCompany);
+  const linkedToolsRaw = attrs?.linkedTools?.data ?? attrs?.linkedTools ?? [];
+  const linkedTools = (Array.isArray(linkedToolsRaw) ? linkedToolsRaw : [])
+    .map(mapToolReference)
+    .filter((ref: ToolReference) => Boolean(ref.name || ref.slug));
   const rawCoverUrl = attrs?.coverImage?.data?.attributes?.url ?? null;
   const coverImageUrl =
     rawCoverUrl && rawCoverUrl.startsWith("/") ? `${CMS_URL}${rawCoverUrl}` : rawCoverUrl;
@@ -1052,8 +1153,27 @@ function mapMCPServer(item: any): MCPServer {
     industry: attrs?.industry ?? null,
     category: attrs?.category ?? null,
     docsUrl: attrs?.docsUrl ?? null,
+    installCommand: attrs?.installCommand ?? null,
+    configSnippet: attrs?.configSnippet ?? null,
+    toolsJson: attrs?.toolsJson ?? null,
+    installCli: attrs?.installCli ?? null,
+    installSdk: attrs?.installSdk ?? null,
+    configSnippetClaude: attrs?.configSnippetClaude ?? null,
+    connectionUrl: attrs?.connectionUrl ?? null,
+    connectionPrompt: attrs?.connectionPrompt ?? null,
+    installTypescript: attrs?.installTypescript ?? null,
+    installAiSdk: attrs?.installAiSdk ?? null,
+    publishedDate: attrs?.publishedDate ?? null,
+    homepageUrl: attrs?.homepageUrl ?? null,
+    version: attrs?.version ?? null,
+    transportType: attrs?.transportType ?? null,
+    registrySource: attrs?.registrySource ?? null,
+    lastSyncedAt: attrs?.lastSyncedAt ?? null,
+    githubStars: typeof attrs?.githubStars === "number" ? attrs.githubStars : null,
+    githubForks: typeof attrs?.githubForks === "number" ? attrs.githubForks : null,
     tags,
     companies,
+    linkedTools,
     coverImageUrl,
     coverImageAlt,
   };
@@ -1862,6 +1982,8 @@ export async function fetchMCPServers(
     `&populate[tags][fields][1]=slug` +
     `&populate[companies][fields][0]=name` +
     `&populate[companies][fields][1]=slug` +
+    `&populate[linkedTools][fields][0]=name` +
+    `&populate[linkedTools][fields][1]=slug` +
     `&populate[coverImage][fields][0]=url` +
     `&populate[coverImage][fields][1]=alternativeText`;
   const minimalPopulateQuery =
@@ -1959,7 +2081,65 @@ export async function fetchMCPServers(
     page += 1;
   }
 
-  return results;
+  // Deduplicate by name — prefer entries with richer content, then shortest slug
+  const seen = new Map<string, MCPServer>();
+  const seenBySlugBase = new Map<string, MCPServer>();
+  const seenByRegistry = new Map<string, MCPServer>();
+
+  function mcpContentScore(m: MCPServer): number {
+    let s = 0;
+    if (m.longDescription) s += 10;
+    if (m.capabilities) s += 5;
+    if (m.keyBenefits) s += 5;
+    if (m.useCases) s += 4;
+    if (m.tools) s += 4;
+    if (m.installCommand) s += 3;
+    if (m.sourceUrl) s += 3;
+    // Prefer shorter slugs (original imports)
+    s += Math.max(0, 50 - (m.slug || "").length);
+    return s;
+  }
+
+  function isBetter(candidate: MCPServer, existing: MCPServer): boolean {
+    return mcpContentScore(candidate) > mcpContentScore(existing);
+  }
+
+  for (const mcp of results) {
+    // Primary key: normalized name
+    const nameKey = (mcp.name || "").trim().toLowerCase();
+    if (nameKey) {
+      const existing = seen.get(nameKey);
+      if (!existing || isBetter(mcp, existing)) {
+        seen.set(nameKey, mcp);
+      }
+    }
+
+    // Secondary key: slug base (strip trailing -\d+ suffixes)
+    const slugBase = (mcp.slug || "").replace(/-\d+$/, "").toLowerCase();
+    if (slugBase) {
+      const existing = seenBySlugBase.get(slugBase);
+      if (!existing || isBetter(mcp, existing)) {
+        seenBySlugBase.set(slugBase, mcp);
+      }
+    }
+
+    // Tertiary key: registryName
+    const regKey = (mcp.registryName || "").trim().toLowerCase();
+    if (regKey) {
+      const existing = seenByRegistry.get(regKey);
+      if (!existing || isBetter(mcp, existing)) {
+        seenByRegistry.set(regKey, mcp);
+      }
+    }
+  }
+
+  // Merge: name-deduped is primary, then filter out any remaining slug-base or registry dupes
+  const finalMap = new Map<number, MCPServer>();
+  for (const mcp of seen.values()) {
+    finalMap.set(mcp.id, mcp);
+  }
+
+  return Array.from(finalMap.values());
 }
 
 export async function fetchAgentBySlug(slug: string) {
@@ -1999,6 +2179,9 @@ export async function fetchMCPServerBySlug(slug: string) {
       `&populate[tags][fields][1]=slug` +
       `&populate[companies][fields][0]=name` +
       `&populate[companies][fields][1]=slug` +
+      `&populate[companies][fields][2]=companyType` +
+      `&populate[linkedTools][fields][0]=name` +
+      `&populate[linkedTools][fields][1]=slug` +
       `&populate[coverImage][fields][0]=url` +
       `&populate[coverImage][fields][1]=alternativeText`;
 
@@ -2210,5 +2393,171 @@ export async function fetchRelatedMCPServers(
     merged.set(candidate.id, candidate)
   );
 
-  return rankRelatedMCPServers(mcp, Array.from(merged.values()), limit);
+  // Deduplicate by name to avoid showing same-named servers
+  const nameDeduped = new Map<string, MCPServer>();
+  for (const c of merged.values()) {
+    const key = (c.name || "").trim().toLowerCase();
+    if (!nameDeduped.has(key)) nameDeduped.set(key, c);
+  }
+  return rankRelatedMCPServers(mcp, Array.from(nameDeduped.values()), limit);
+}
+
+// ── Tool fetch functions ──
+
+export async function fetchTools(
+  options: { maxRecords?: number; category?: string } = {}
+): Promise<Tool[]> {
+  const categoryFilter = options.category
+    ? `&filters[toolCategory][$eq]=${encodeURIComponent(options.category)}`
+    : "";
+  const listFields =
+    `&fields[0]=name` +
+    `&fields[1]=slug` +
+    `&fields[2]=description` +
+    `&fields[3]=toolCategory` +
+    `&fields[4]=website`;
+  const pageSize = 100;
+  const maxRecords =
+    typeof options.maxRecords === "number" && options.maxRecords > 0
+      ? Math.floor(options.maxRecords)
+      : Number.POSITIVE_INFINITY;
+  let page = 1;
+  const results: Tool[] = [];
+  const fullPopulateQuery =
+    `&populate[mcpServers][fields][0]=name` +
+    `&populate[mcpServers][fields][1]=slug` +
+    `&populate[icon][fields][0]=url` +
+    `&populate[icon][fields][1]=alternativeText`;
+  const minimalPopulateQuery =
+    `&populate[icon][fields][0]=url` +
+    `&populate[icon][fields][1]=alternativeText`;
+  const buildPageQuery = (
+    currentPage: number,
+    publicationState: "live" | "preview",
+    populateQuery: string
+  ) =>
+    `${CMS_URL}/api/tools` +
+    `?sort=name:asc` +
+    `${categoryFilter}` +
+    `&publicationState=${publicationState}` +
+    `${listFields}` +
+    `&pagination[page]=${currentPage}` +
+    `&pagination[pageSize]=${pageSize}` +
+    `${populateQuery}`;
+
+  while (true) {
+    let json: CMSCollectionResponse | null = null;
+
+    try {
+      json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live", fullPopulateQuery), {
+        cacheMs: CMS_CACHE_TTL_MS,
+      });
+    } catch (error) {
+      const status = parseCMSStatusCode(error);
+      const shouldTryFallback = page === 1 && results.length === 0;
+
+      if (!shouldTryFallback) throw error;
+
+      if (status === 404) return [];
+
+      if (status === 400) {
+        json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live", minimalPopulateQuery), {
+          cacheMs: CMS_CACHE_TTL_MS,
+        }).catch(() => null);
+        if (!json) return [];
+      } else if (status === 401 || status === 403) {
+        json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live", fullPopulateQuery), {
+          cacheMs: CMS_CACHE_TTL_MS,
+          authMode: "none",
+        }).catch(() => null);
+        if (!json) {
+          json = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "live", minimalPopulateQuery), {
+            cacheMs: CMS_CACHE_TTL_MS,
+            authMode: "none",
+          }).catch(() => null);
+        }
+        if (!json) return [];
+      } else {
+        throw error;
+      }
+    }
+
+    if (!json) break;
+
+    let data = json?.data || [];
+    if (page === 1 && results.length === 0 && data.length === 0 && CMS_ALLOW_DRAFT_FALLBACK) {
+      const previewJson = await fetchCMSJson<CMSCollectionResponse>(buildPageQuery(page, "preview", fullPopulateQuery), {
+        cacheMs: CMS_CACHE_TTL_MS,
+      }).catch(() => null);
+      if (previewJson?.data?.length) {
+        json = previewJson;
+        data = previewJson.data || [];
+      }
+    }
+
+    const remaining = Math.max(maxRecords - results.length, 0);
+    if (remaining <= 0) break;
+    results.push(...data.slice(0, remaining).map(mapTool));
+    if (results.length >= maxRecords) break;
+
+    const pagination = json?.meta?.pagination;
+    if (!pagination || page >= pagination.pageCount) break;
+    page += 1;
+  }
+
+  return results;
+}
+
+export async function fetchToolBySlug(slug: string): Promise<Tool | null> {
+  const query =
+    `${CMS_URL}/api/tools` +
+    `?filters[slug][$eq]=${encodeURIComponent(slug)}` +
+    `&publicationState=live` +
+    `&populate[mcpServers][fields][0]=name` +
+    `&populate[mcpServers][fields][1]=slug` +
+    `&populate[icon][fields][0]=url` +
+    `&populate[icon][fields][1]=alternativeText`;
+
+  const json = await fetchCMSJson<CMSCollectionResponse>(query, { cacheMs: CMS_CACHE_TTL_MS });
+  if (json?.data?.[0]) {
+    return mapTool(json.data[0]);
+  }
+
+  if (!CMS_ALLOW_DRAFT_FALLBACK) {
+    return null;
+  }
+
+  const previewQuery = query.replace("&publicationState=live", "&publicationState=preview");
+  const previewJson = await fetchCMSJson<CMSCollectionResponse>(previewQuery, {
+    cacheMs: CMS_CACHE_TTL_MS,
+  }).catch(() => null);
+  return previewJson?.data?.[0] ? mapTool(previewJson.data[0]) : null;
+}
+
+/** Lightweight count-only queries — fetches pageSize=1 just to read meta.pagination.total. */
+export async function fetchCatalogCounts(
+  visibility?: "public" | "private"
+): Promise<{ agents: number; mcpServers: number; skills: number }> {
+  const vis = visibility ? `&filters[visibility][$eq]=${visibility}` : "";
+  const endpoints = [
+    { key: "agents", path: "/api/agents" },
+    { key: "mcpServers", path: "/api/mcp-servers" },
+    { key: "skills", path: "/api/skills" },
+  ] as const;
+
+  const results = await Promise.all(
+    endpoints.map(async ({ key, path }) => {
+      try {
+        const json = await fetchCMSJson<CMSCollectionResponse>(
+          `${CMS_URL}${path}?pagination[pageSize]=1${vis}`,
+          { allowStaleOnError: true }
+        );
+        return [key, json?.meta?.pagination?.total ?? 0] as const;
+      } catch {
+        return [key, 0] as const;
+      }
+    })
+  );
+
+  return Object.fromEntries(results) as { agents: number; mcpServers: number; skills: number };
 }

@@ -10,7 +10,7 @@ import {
   type PodcastEpisode,
   type Tag,
 } from "../../../lib/cms";
-import { heroImage } from "../../../lib/media";
+
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 
 type CompanyEpisode = {
@@ -124,11 +124,6 @@ export default function PodcastCompanyPage({
         kicker="Company signal"
         title={`${companyName} podcasts`}
         description={`Episodes connected to ${companyName}, with direct links into podcast detail pages.`}
-        image={heroImage("hero-podcasts-cinematic.webp")}
-        alt={`${companyName} podcast signal`}
-        imageKicker="Company feed"
-        imageTitle={`${companyName} episode distribution`}
-        imageDescription="Company-tagged episodes surfaced for fast discovery."
         chips={[`Company: ${companyName}`, `${episodes.length} episodes`, `${uniqueTagCount} linked tags`]}
         primaryAction={{ label: "All podcasts", href: "/resources/podcasts" }}
         secondaryAction={{ label: "Resources hub", href: "/resources", variant: "secondary" }}

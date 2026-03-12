@@ -67,14 +67,14 @@ export default function PremiumMediaCard({
           <div className="media-premium-overlay" />
           {kicker ? (
             <div className="absolute left-3 top-3">
-              <div className="rounded-full border border-zinc-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600 backdrop-blur">
+              <div className="rounded-full border border-zinc-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600 backdrop-blur dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-zinc-300">
                 {kicker}
               </div>
             </div>
           ) : null}
           {meta ? (
             <div className="absolute right-3 top-3">
-              <div className="rounded-full border border-zinc-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600 backdrop-blur">
+              <div className="rounded-full border border-zinc-200/80 bg-white/90 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600 backdrop-blur dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-zinc-300">
                 {meta}
               </div>
             </div>

@@ -8,6 +8,7 @@
     "start": "next start -p $PORT",
     "lint": "eslint",
     "import:podcasts:csv": "node scripts/import-podcasts-csv.mjs",
+    "sync:buzzsprout": "node scripts/sync-buzzsprout.mjs",
     "audit:data": "node scripts/audit-data-readiness.mjs"
   },
   "dependencies": {
@@ -16,6 +17,7 @@
     "openai": "^6.25.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "recharts": "^3.8.0",
     "sanitize-html": "^2.13.0"
   },
   "devDependencies": {

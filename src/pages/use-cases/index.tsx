@@ -2,7 +2,6 @@ import type { GetStaticProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import CatalogSearchBox from "../../components/CatalogSearchBox";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
@@ -118,11 +117,11 @@ export default function UseCasesPage({ useCases, allowPrivate, fetchError }: Use
     () => sortUseCases(filteredUseCases, sortMode),
     [filteredUseCases, sortMode]
   );
-  const latestUseCases = useMemo(
+  const _latestUseCases = useMemo(
     () => sortUseCases(scopedUseCases, "latest").slice(0, 6),
     [scopedUseCases]
   );
-  const trendingUseCases = useMemo(
+  const _trendingUseCases = useMemo(
     () => sortUseCases(scopedUseCases, "trending").slice(0, 6),
     [scopedUseCases]
   );
@@ -395,7 +394,6 @@ export default function UseCasesPage({ useCases, allowPrivate, fetchError }: Use
         <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
       </div>
 
-      <CatalogSearchBox placeholder="Search use cases or ask a question..." />
     </Layout>
   );
 }
@@ -471,7 +469,7 @@ function scoreTrendingUseCase(item: UseCase) {
   return linkageScore + verifiedScore + completenessScore + freshnessScore;
 }
 
-function SignalRail({
+function _SignalRail({
   title,
   description,
   items,

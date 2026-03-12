@@ -5,6 +5,7 @@ import {
   getStatusTone,
   capitalizeFirst,
 } from "@/src/lib/catalogFormatters";
+import { cleanDisplayName } from "@/src/lib/mcp-utils";
 
 type MCP = {
   name: string;
@@ -38,20 +39,20 @@ export default function MCPCard({ mcp }: { mcp: MCP }) {
   if (mcp.source) metaParts.push(capitalizeFirst(mcp.source));
 
   return (
-    <Link href={href} className="group block" aria-label={`View MCP server ${mcp.name} details`}>
+    <Link href={href} className="group block" aria-label={`View MCP server ${cleanDisplayName(mcp.name)} details`}>
       <div className="catalog-card p-6">
         <div className="flex items-center justify-between gap-3">
           <span className="chip chip-neutral rounded-full px-2.5 py-1 text-label font-semibold uppercase tracking-[0.12em]">
             <span className="h-1.5 w-1.5 rounded-full bg-[#DC2626]" />
             MCP
           </span>
-          <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-400 transition-colors group-hover:text-zinc-600 dark:group-hover:text-zinc-300">
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="card-arrow h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-400 transition-colors group-hover:text-zinc-600 dark:group-hover:text-zinc-300">
             <path d="M6.5 3.5 11 8l-4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           </svg>
         </div>
 
         <div className="mt-3">
-          <h3 className="truncate text-caption font-semibold text-zinc-900 dark:text-zinc-50">{mcp.name}</h3>
+          <h3 className="truncate text-caption font-semibold text-zinc-900 dark:text-zinc-50">{cleanDisplayName(mcp.name)}</h3>
           <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{summary}</p>
         </div>
 

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { getMcpRedirects } from "./src/lib/mcp-slug-aliases";
 
 const cmsUrl = process.env.NEXT_PUBLIC_CMS_URL;
 const cmsRemotePattern = (() => {
@@ -37,6 +38,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return getMcpRedirects();
+  },
   async rewrites() {
     return [
       { source: "/podcasts", destination: "/resources/podcasts" },
@@ -72,11 +76,12 @@ const nextConfig: NextConfig = {
                   key: "Content-Security-Policy",
                   value: [
                     "default-src 'self'",
-                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.buzzsprout.com",
+                    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://www.buzzsprout.com",
                     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
                     "font-src 'self' https://fonts.gstatic.com data:",
                     `img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com ${cmsUrl ? new URL(cmsUrl).origin : ""}`.trim(),
-                    `connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com ${cmsUrl || ""}`.trim(),
+                    `connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com https://www.buzzsprout.com https://*.buzzsprout.com ${cmsUrl || ""}`.trim(),
+                    "media-src 'self' https://www.buzzsprout.com https://*.buzzsprout.com",
                     "frame-src 'self' https://www.buzzsprout.com",
                     "frame-ancestors 'self'",
                     "base-uri 'self'",

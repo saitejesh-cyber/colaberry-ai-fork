@@ -4,7 +4,7 @@ import Link from "next/link";
 import Layout from "../../../components/Layout";
 import EnterprisePageHero from "../../../components/EnterprisePageHero";
 import StatePanel from "../../../components/StatePanel";
-import { heroImage } from "../../../lib/media";
+
 import { Article, fetchArticles } from "../../../lib/cms";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 
@@ -59,11 +59,6 @@ export default function ArticlesPage({ articles, fetchError }: ArticlesPageProps
         kicker="Resources"
         title="Articles"
         description="Analysis, implementation notes, and practical guidance for teams deploying agents, MCP systems, and use-case workflows."
-        image={heroImage("hero-updates-cinematic.webp")}
-        alt="Enterprise AI editorial feed"
-        imageKicker="Editorial feed"
-        imageTitle="Enterprise AI analysis"
-        imageDescription="Structured CMS content published for humans and LLM indexability."
         chips={["Analysis", "Implementation notes", "Product signals", "LLM-indexable content"]}
         primaryAction={{ label: "Open updates feed", href: "/updates" }}
         secondaryAction={{ label: "Back to resources", href: "/resources", variant: "secondary" }}

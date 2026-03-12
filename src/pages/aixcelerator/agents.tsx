@@ -1,5 +1,4 @@
 import AgentCard from "../../components/AgentCard";
-import CatalogSearchBox from "../../components/CatalogSearchBox";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
@@ -132,11 +131,11 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
     () => filterByVisibility(agents, allowPrivate, visibility),
     [agents, allowPrivate, visibility]
   );
-  const latestAgents = useMemo(
+  const _latestAgents = useMemo(
     () => sortAgents(scopedAgents, "latest").slice(0, 6),
     [scopedAgents]
   );
-  const trendingAgents = useMemo(
+  const _trendingAgents = useMemo(
     () => sortAgents(scopedAgents, "trending").slice(0, 6),
     [scopedAgents]
   );
@@ -234,8 +233,8 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
           description="Find agents by industry, status, tags, and visibility."
           size="md"
         />
-        <div className="mt-4 grid gap-3 lg:grid-cols-12">
-          <div className="lg:col-span-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-12">
+          <div className="sm:col-span-2 md:col-span-3 lg:col-span-4">
             <label htmlFor="agent-search" className="sr-only">
               Search agents
             </label>
@@ -417,7 +416,7 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
         </div>
       </section>
 
-      <div className="reveal mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="reveal stagger-grid mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
         {visibleAgents.map((a) => (
           <AgentCard key={a.slug || String(a.id)} agent={a} />
         ))}
@@ -452,7 +451,6 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
         <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
       </div>
 
-      <CatalogSearchBox placeholder="Search agents or ask a question..." />
     </Layout>
   );
 }
@@ -604,7 +602,7 @@ function formatShortDate(value?: string | null) {
   });
 }
 
-function SignalRail({
+function _SignalRail({
   title,
   description,
   items,

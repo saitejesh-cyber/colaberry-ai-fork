@@ -75,14 +75,14 @@ export default function TranscriptTimeline({ segments, audioRef }: TranscriptTim
             aria-current={isActive ? "true" : undefined}
             className={`focus-ring group flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-left transition ${
               isActive
-                ? "border-brand-purple-600/50 bg-brand-purple-600/5"
-                : "border-zinc-200/80 bg-white/80 hover:border-brand-purple-600/30"
+                ? "border-[#DC2626]/40 bg-[#DC2626]/5 dark:border-[#F87171]/40 dark:bg-[#F87171]/5"
+                : "border-zinc-200/80 bg-white/80 hover:border-[#DC2626]/30 dark:border-zinc-700/80 dark:bg-zinc-800/80 dark:hover:border-[#F87171]/30"
             }`}
           >
-            <span className="mt-0.5 shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            <span className="mt-0.5 shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
               {formatTime(segment.start)}
             </span>
-            <span className="text-sm text-zinc-700">{segment.text}</span>
+            <span className="text-sm text-zinc-700 dark:text-zinc-300">{segment.text}</span>
           </button>
         );
       })}

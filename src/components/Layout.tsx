@@ -15,7 +15,6 @@ import {
 import { useRouter } from "next/router";
 import { fetchGlobalNavigation, GlobalNavigation } from "../lib/cms";
 import { captureUtmContextFromLocation, getTrackingContext } from "../lib/tracking";
-import NewsletterSignup from "./NewsletterSignup";
 import AnimatedSignalBanner from "./AnimatedSignalBanner";
 
 const CookieConsentBanner = dynamic(() => import("./CookieConsentBanner"), {
@@ -37,7 +36,8 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Agents", href: "/aixcelerator/agents", order: 1 },
         { label: "MCP Servers", href: "/aixcelerator/mcp", order: 2 },
         { label: "Skills", href: "/aixcelerator/skills", order: 3 },
-        { label: "Use Cases", href: "/use-cases", order: 4 },
+        { label: "Tools", href: "/aixcelerator/tools", order: 4 },
+        { label: "Use Cases", href: "/use-cases", order: 5 },
       ],
     },
     {
@@ -78,10 +78,11 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Agents", href: "/aixcelerator/agents", order: 2, group: "Product" },
         { label: "MCP servers", href: "/aixcelerator/mcp", order: 3, group: "Product" },
         { label: "Skills", href: "/aixcelerator/skills", order: 4, group: "Product" },
-        { label: "Discovery assistant", href: "/assistant", order: 5, group: "Product" },
-        { label: "Solutions", href: "/solutions", order: 6, group: "Product" },
-        { label: "Use cases", href: "/use-cases", order: 7, group: "Product" },
-        { label: "Industries", href: "/industries", order: 8, group: "Product" },
+        { label: "Tools", href: "/aixcelerator/tools", order: 5, group: "Product" },
+        { label: "Discovery assistant", href: "/assistant", order: 6, group: "Product" },
+        { label: "Solutions", href: "/solutions", order: 7, group: "Product" },
+        { label: "Use cases", href: "/use-cases", order: 8, group: "Product" },
+        { label: "Industries", href: "/industries", order: 9, group: "Product" },
       ],
     },
     {
@@ -144,18 +145,33 @@ const fallbackNavigation: GlobalNavigation = {
   ],
 };
 
-const FOOTER_NAV_LINKS = [
-  { label: "Platform", href: "/aixcelerator" },
-  { label: "Agents", href: "/aixcelerator/agents" },
-  { label: "MCP Servers", href: "/aixcelerator/mcp" },
-  { label: "Skills", href: "/aixcelerator/skills" },
-  { label: "Solutions", href: "/solutions" },
-  { label: "Use Cases", href: "/use-cases" },
-  { label: "Industries", href: "/industries" },
-  { label: "Resources", href: "/resources" },
-  { label: "Podcasts", href: "/resources/podcasts" },
-  { label: "Updates", href: "/updates" },
-  { label: "Contact", href: "/request-demo" },
+const FOOTER_COLUMNS = [
+  {
+    title: "Platform",
+    links: [
+      { label: "Agents", href: "/aixcelerator/agents" },
+      { label: "MCP Servers", href: "/aixcelerator/mcp" },
+      { label: "Skills", href: "/aixcelerator/skills" },
+      { label: "Solutions", href: "/solutions" },
+      { label: "Use Cases", href: "/use-cases" },
+      { label: "Industries", href: "/industries" },
+    ],
+  },
+  {
+    title: "Catalog",
+    links: [
+      { label: "Podcasts", href: "/resources/podcasts" },
+      { label: "Articles", href: "/resources/articles" },
+      { label: "Case Studies", href: "/resources/case-studies" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { label: "Updates", href: "/updates" },
+      { label: "Contact", href: "/request-demo" },
+    ],
+  },
 ] as const;
 
 const SOCIAL_ICON_PATHS: Record<string, ReactNode> = {
@@ -260,6 +276,7 @@ const PLATFORM_CHILD_BLUEPRINT = [
   { label: "Agents", href: "/aixcelerator/agents" },
   { label: "MCP servers", href: "/aixcelerator/mcp" },
   { label: "Skills", href: "/aixcelerator/skills" },
+  { label: "Tools", href: "/aixcelerator/tools" },
   { label: "Use cases", href: "/use-cases" },
   { label: "Discovery assistant", href: "/assistant" },
 ];
@@ -271,6 +288,8 @@ const PLATFORM_CHILD_ALIASES: Record<string, string> = {
   "mcp server": "/aixcelerator/mcp",
   skills: "/aixcelerator/skills",
   skill: "/aixcelerator/skills",
+  tools: "/aixcelerator/tools",
+  tool: "/aixcelerator/tools",
   "use cases": "/use-cases",
   "use case": "/use-cases",
   "discovery assistant": "/assistant",
@@ -408,6 +427,30 @@ type WorkspaceSection = {
   title: string;
   links: WorkspaceLink[];
 };
+
+const sidebarIconProps = { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.75, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+
+function getSidebarIcon(href: string): ReactNode {
+  const p = normalizePath(href);
+  if (p === "/aixcelerator") return <svg {...sidebarIconProps}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>;
+  if (p.startsWith("/aixcelerator/agents") || p === "/aixcelerator/agents") return <svg {...sidebarIconProps}><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="3" /><line x1="8" y1="16" x2="8" y2="16.01" /><line x1="16" y1="16" x2="16" y2="16.01" /><line x1="12" y1="16" x2="12" y2="18" /></svg>;
+  if (p.startsWith("/aixcelerator/mcp")) return <svg {...sidebarIconProps}><rect x="2" y="2" width="20" height="8" rx="2" /><rect x="2" y="14" width="20" height="8" rx="2" /><circle cx="6" cy="6" r="1" /><circle cx="6" cy="18" r="1" /></svg>;
+  if (p.startsWith("/aixcelerator/skills")) return <svg {...sidebarIconProps}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>;
+  if (p.startsWith("/use-cases")) return <svg {...sidebarIconProps}><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a4 4 0 0 0-8 0v2" /></svg>;
+  if (p === "/search") return <svg {...sidebarIconProps}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>;
+  if (p === "/assistant") return <svg {...sidebarIconProps}><path d="M12 3l1.912 5.813L20 12l-6.088 3.187L12 21l-1.912-5.813L4 12l6.088-3.187z" /><path d="M20 3l.75 2.25L23 6l-2.25.75L20 9l-.75-2.25L17 6l2.25-.75z" /></svg>;
+  if (p.startsWith("/resources/podcasts")) return <svg {...sidebarIconProps}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>;
+  if (p.startsWith("/resources/articles")) return <svg {...sidebarIconProps}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><line x1="10" y1="9" x2="8" y2="9" /></svg>;
+  if (p.startsWith("/resources/case-studies")) return <svg {...sidebarIconProps}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>;
+  if (p.startsWith("/resources/white-papers")) return <svg {...sidebarIconProps}><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><polyline points="13 2 13 9 20 9" /></svg>;
+  if (p.startsWith("/resources/books")) return <svg {...sidebarIconProps}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z" /><line x1="10" y1="2" x2="10" y2="10" /><path d="M10 6l3-2 3 2" /></svg>;
+  if (p === "/resources") return <svg {...sidebarIconProps}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>;
+  if (p.startsWith("/updates")) return <svg {...sidebarIconProps}><path d="M4 22V4c0-.5.2-1 .6-1.4C5 2.2 5.5 2 6 2h8.5L20 7.5V22z" /><polyline points="14 2 14 8 20 8" /><path d="M8 12h8" /><path d="M8 16h5" /></svg>;
+  if (p.startsWith("/industries")) return <svg {...sidebarIconProps}><rect x="4" y="2" width="16" height="20" rx="2" /><line x1="9" y1="22" x2="9" y2="12" /><line x1="15" y1="22" x2="15" y2="12" /><line x1="4" y1="12" x2="20" y2="12" /></svg>;
+  if (p.startsWith("/solutions")) return <svg {...sidebarIconProps}><line x1="12" y1="2" x2="12" y2="6" /><circle cx="12" cy="14" r="8" /><path d="M12 6a6 6 0 0 0-4.24 10.24" /><path d="M12 6a6 6 0 0 1 4.24 10.24" /><line x1="12" y1="18" x2="12" y2="22" /></svg>;
+  // fallback: use first letters
+  return null;
+}
 
 function dedupeWorkspaceLinks(links: WorkspaceLink[]) {
   const seen = new Set<string>();
@@ -604,17 +647,20 @@ export default function Layout({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", handleKeyboard);
   }, []);
 
-  /* Scroll-collapse header: compact after 100px scroll down, expand on scroll up */
+  /* Scroll-collapse header: compact after 100px scroll down, expand on scroll up.
+     Uses a 10px delta threshold to avoid shaking from micro-scrolls. */
   useEffect(() => {
     let ticking = false;
+    const DELTA = 10;
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
         const y = window.scrollY;
-        if (y > 100 && y > lastScrollY.current) {
+        const diff = y - lastScrollY.current;
+        if (y > 100 && diff > DELTA) {
           setHeaderCompact(true);
-        } else if (y < lastScrollY.current) {
+        } else if (diff < -DELTA) {
           setHeaderCompact(false);
         }
         lastScrollY.current = y;
@@ -798,21 +844,43 @@ export default function Layout({ children }: { children: ReactNode }) {
   /* Scroll-triggered reveal: observe `.reveal` elements and add `.revealed` */
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("revealed");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.08, rootMargin: "0px 0px -60px 0px" },
-    );
-    const targets = document.querySelectorAll(".reveal:not(.revealed)");
-    targets.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  });
+
+    let observer: IntersectionObserver;
+    let rafId: number;
+
+    const observeAll = () => {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("revealed");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0, rootMargin: "0px 0px -60px 0px" },
+      );
+      document
+        .querySelectorAll(".reveal:not(.revealed)")
+        .forEach((el) => observer.observe(el));
+    };
+
+    // Delay until browser finishes layout after hydration/navigation
+    rafId = requestAnimationFrame(observeAll);
+
+    const handleRouteChange = () => {
+      observer?.disconnect();
+      rafId = requestAnimationFrame(observeAll);
+    };
+
+    router.events.on("routeChangeComplete", handleRouteChange);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      observer?.disconnect();
+      router.events.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [router.events]);
 
   const toggleTheme = () => {
     setTheme((previous) => (previous === "dark" ? "light" : "dark"));
@@ -1015,9 +1083,21 @@ export default function Layout({ children }: { children: ReactNode }) {
         <link rel="dns-prefetch" href="https://www.buzzsprout.com" />
       </Head>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-brand-deep focus:shadow-lg focus:ring-2 focus:ring-[#DC2626]/40">Skip to content</a>
-      <header role="banner" className={`site-header sticky top-0 z-40 border-b transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${headerCompact ? "site-header--compact border-[var(--stroke)]/60 bg-white/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-xl dark:bg-[#18181B]/80" : "border-[var(--stroke)] bg-white shadow-sm dark:bg-[#18181B]"}`}>
-        <div className={`flex w-full items-center justify-between gap-3 px-4 transition-[padding] duration-200 sm:px-6 lg:px-8 ${headerCompact ? "py-1.5" : "py-3"}`}>
-          <div className="flex items-center gap-3">
+      <header role="banner" className={`site-header sticky top-0 z-40 border-b transition-[background-color,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${headerCompact ? "site-header--compact border-[var(--stroke)]/60 bg-white/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-xl dark:bg-[#18181B]/80" : "border-[var(--stroke)] bg-white shadow-sm dark:bg-[#18181B]"}`}>
+        <div className="flex w-full items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2 lg:gap-3">
+            {/* ── Mobile hamburger (left-aligned, Gmail/YouTube pattern) ── */}
+            <button
+              type="button"
+              onClick={openMobileMenu}
+              className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg text-zinc-700 hover:bg-zinc-100 hover:text-[#18181B] lg:hidden dark:text-zinc-100 dark:hover:bg-zinc-800"
+              aria-expanded={mobileMenuOpen}
+              aria-label="Open navigation menu"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </button>
             <Link href="/" className="flex min-w-0 items-center gap-2">
               <span className="inline-flex items-center justify-center px-1">
                 <Image
@@ -1040,13 +1120,13 @@ export default function Layout({ children }: { children: ReactNode }) {
             </Link>
           </div>
 
-          <nav role="navigation" aria-label="Main navigation" className="hidden min-w-0 items-center gap-1.5 text-sm min-[1240px]:flex">
+          <nav role="navigation" aria-label="Main navigation" className="hidden min-w-0 items-center gap-1.5 text-sm lg:flex">
             {isCatalogWorkspace ? (
               <>
                 <button
                   type="button"
                   onClick={() => setWorkspaceRailCollapsed((current) => !current)}
-                  className="btn btn-secondary btn-sm"
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                   aria-expanded={!workspaceRailCollapsed}
                   aria-label={workspaceRailCollapsed ? "Expand catalog menu" : "Collapse catalog menu"}
                 >
@@ -1062,7 +1142,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     {workspaceRailCollapsed ? "Expand menu" : "Collapse menu"}
                   </span>
                 </button>
-                <span className="hidden rounded-md border border-zinc-200/80 bg-white/80 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 min-[1560px]:inline-flex dark:border-zinc-700/80 dark:bg-zinc-900/70 dark:text-zinc-300">
+                <span className="hidden rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400 min-[1560px]:inline-flex dark:text-zinc-500">
                   Catalog workspace
                 </span>
                 <div className="hidden h-6 w-px bg-zinc-200/80 min-[1560px]:block dark:bg-zinc-700/80" />
@@ -1100,6 +1180,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 onClick={toggleTheme}
                 className="btn btn-ghost btn-icon"
                 aria-label={themeToggleLabel}
+                data-tour="theme-toggle"
               >
                 <span className="sr-only">{themeToggleLabel}</span>
                 <ThemeIcon isDark={isDarkMode} />
@@ -1118,7 +1199,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             ) : null}
           </nav>
 
-          <div className="flex items-center gap-1.5 min-[1240px]:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
             {isCatalogWorkspace ? (
               <button
                 type="button"
@@ -1130,16 +1211,19 @@ export default function Layout({ children }: { children: ReactNode }) {
                 aria-expanded={workspaceMobileRailOpen}
                 aria-label="Open catalog sidebar"
               >
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
-                  <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
                 </svg>
-                <span>Catalog</span>
+                <span className="hidden min-[420px]:inline">Catalog</span>
               </button>
             ) : null}
             <button
               type="button"
               onClick={openSearch}
-              className="btn btn-ghost btn-icon"
+              className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200/70 bg-white/85 text-zinc-700 hover:border-[#DC2626]/35 hover:text-[#18181B] dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
               aria-expanded={searchOpen}
               aria-label="Open global search"
             >
@@ -1160,42 +1244,30 @@ export default function Layout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={toggleTheme}
-              className="btn btn-ghost btn-icon"
+              className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200/70 bg-white/85 text-zinc-700 hover:border-[#DC2626]/35 hover:text-[#18181B] dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
               aria-label={themeToggleLabel}
             >
               <span className="sr-only">{themeToggleLabel}</span>
               <ThemeIcon isDark={isDarkMode} />
-            </button>
-            <button
-              type="button"
-              onClick={openMobileMenu}
-              className="focus-ring inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200/70 bg-white/85 px-3 text-sm font-semibold text-zinc-700 hover:border-[#DC2626]/35 hover:text-[#18181B] dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
-              aria-expanded={mobileMenuOpen}
-              aria-label="Open navigation menu"
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
-                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-              <span>Menu</span>
             </button>
           </div>
         </div>
       </header>
       {mobileMenuOpen ? (
         <div
-          className="fixed inset-0 z-[55] bg-zinc-950/45 backdrop-blur-sm min-[1240px]:hidden animate-fade-in"
+          className="fixed inset-0 z-[55] bg-zinc-950/45 backdrop-blur-sm lg:hidden animate-fade-in"
           onClick={closeMobileMenu}
         >
           <aside
             data-mobile-menu
-            className="absolute right-0 top-0 flex h-full w-[min(92vw,380px)] flex-col border-l border-zinc-200/70 bg-white/95 p-4 shadow-2xl dark:border-[#3F3F46] dark:bg-[#18181B]/95 animate-slide-in-right"
+            className="absolute left-0 top-0 flex h-full w-[min(92vw,380px)] flex-col border-r border-zinc-200/70 bg-white/95 p-4 shadow-2xl dark:border-[#3F3F46] dark:bg-[#18181B]/95 animate-slide-in-left"
             onClick={(event) => event.stopPropagation()}
             onTouchStart={(e) => {
               const startX = e.touches[0].clientX;
               const aside = e.currentTarget;
               const onMove = (ev: TouchEvent) => {
                 const dx = ev.touches[0].clientX - startX;
-                if (dx > 80) {
+                if (dx < -80) {
                   closeMobileMenu();
                   aside.removeEventListener("touchmove", onMove);
                 }
@@ -1216,7 +1288,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={closeMobileMenu}
-                className="btn btn-ghost btn-icon"
+                className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200/70 bg-white/85 text-zinc-700 hover:text-[#18181B] dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
                 aria-label="Close navigation menu"
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
@@ -1312,7 +1384,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       {isCatalogWorkspace && workspaceMobileRailOpen ? (
         <div
-          className="fixed inset-0 z-[58] bg-zinc-950/45 backdrop-blur-sm min-[1240px]:hidden"
+          className="fixed inset-0 z-[58] bg-zinc-950/45 backdrop-blur-sm lg:hidden"
           onClick={() => setWorkspaceMobileRailOpen(false)}
         >
           <aside
@@ -1331,7 +1403,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => setWorkspaceMobileRailOpen(false)}
-                className="btn btn-ghost btn-icon"
+                className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200/70 bg-white/85 text-zinc-700 hover:text-[#18181B] dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
                 aria-label="Close catalog sidebar"
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
@@ -1378,8 +1450,8 @@ export default function Layout({ children }: { children: ReactNode }) {
       ) : null}
 
       {isCatalogWorkspace ? (
-        <div className="w-full flex-1 min-[1240px]:grid min-[1240px]:grid-cols-[var(--workspace-rail-width)_minmax(0,1fr)] min-[1240px]:gap-6 min-[1240px]:px-8" style={workspaceGridStyle}>
-          <aside className="hidden min-[1240px]:block" aria-label="Catalog navigation">
+        <div className="w-full flex-1 lg:grid lg:grid-cols-[var(--workspace-rail-width)_minmax(0,1fr)] lg:gap-6 lg:px-8" style={workspaceGridStyle}>
+          <aside className="hidden lg:block" aria-label="Catalog navigation">
             <div className="sticky pb-6" style={{ top: "var(--site-header-height)", height: "calc(100dvh - var(--site-header-height))" }}>
               <div className="surface-panel h-full overflow-y-auto p-3" style={{ maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 100%)" }}>
                 {workspaceSections.map((section) => (
@@ -1403,13 +1475,8 @@ export default function Layout({ children }: { children: ReactNode }) {
                                 : "border-zinc-200/70 bg-white/80 text-zinc-700 hover:border-[#DC2626]/35 hover:text-[#18181B] dark:border-zinc-700 dark:bg-zinc-900/75 dark:text-zinc-200 dark:hover:border-[#F87171]/45 dark:hover:text-[#FAFAFA]"
                             } ${workspaceRailCollapsed ? "justify-center" : ""}`}
                           >
-                            <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border text-label font-semibold ${isActive ? "border-[#DC2626]/45 bg-white/90 text-[#18181B] dark:border-[#F87171]/60 dark:bg-[#3F3F46]/85 dark:text-[#FAFAFA]" : "border-zinc-200/80 bg-white/90 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-300"}`}>
-                              {link.label
-                                .split(" ")
-                                .map((token) => token[0])
-                                .join("")
-                                .slice(0, 2)
-                                .toUpperCase()}
+                            <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border ${isActive ? "border-[#DC2626]/45 bg-white/90 text-[#18181B] dark:border-[#F87171]/60 dark:bg-[#3F3F46]/85 dark:text-[#FAFAFA]" : "border-zinc-200/80 bg-white/90 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-300"}`}>
+                              {getSidebarIcon(link.href) ?? <span className="text-label font-semibold">{link.label.split(" ").map((t) => t[0]).join("").slice(0, 2).toUpperCase()}</span>}
                             </span>
                             {!workspaceRailCollapsed ? <span className="line-clamp-1">{link.label}</span> : null}
                           </Link>
@@ -1421,7 +1488,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               </div>
             </div>
           </aside>
-          <main id="main-content" className="main-offset relative min-w-0 px-4 sm:px-6 min-[1240px]:px-0">
+          <main id="main-content" className="main-offset relative min-w-0 px-4 sm:px-6 lg:px-0">
             {children}
           </main>
         </div>
@@ -1438,119 +1505,140 @@ export default function Layout({ children }: { children: ReactNode }) {
       ) : null}
 
       <footer role="contentinfo" className="footer-surface mt-6">
-        {/* ── Main 3-column grid ── */}
-        <div className="mx-auto grid max-w-7xl gap-8 px-6 pt-12 pb-8 lg:grid-cols-[1fr_auto_auto] lg:gap-10 lg:pt-16 lg:pb-10">
-          {/* LEFT — Newsletter */}
-          <div className="max-w-md">
-            <h2 className="text-xl font-semibold text-[#18181B] dark:text-[#FAFAFA]">
-              Subscribe to newsletter
-            </h2>
-            <form onSubmit={handleFooterNewsletterSubmit} className="mt-6">
-              {/* Honeypot */}
-              <input
-                type="text"
-                name="website"
-                value={footerHoneypot}
-                onChange={(e) => setFooterHoneypot(e.target.value)}
-                autoComplete="off"
-                tabIndex={-1}
-                className="absolute -left-[9999px] h-0 w-0 opacity-0"
-                aria-hidden="true"
-              />
-              <div className="flex items-center gap-3">
-                <input
-                  type="email"
-                  required
-                  placeholder="Email address"
-                  value={footerEmail}
-                  onChange={(e) => setFooterEmail(e.target.value)}
-                  disabled={footerSubState === "submitting"}
-                  className="footer-input-underline flex-1 text-sm"
+        {/* ── Top section: Logo + Newsletter (left) + Link columns (right) ── */}
+        <div className="mx-auto max-w-7xl px-6 pt-12 pb-8 lg:pt-16 lg:pb-10">
+          <div className="flex flex-col gap-10 lg:flex-row lg:justify-between lg:gap-16">
+            {/* LEFT — Logo + Newsletter */}
+            <div className="max-w-sm flex-shrink-0">
+              {/* Logo */}
+              <span className="flex items-center">
+                <Image
+                  src="/brand/colaberry-ai-logo.svg"
+                  alt="Colaberry AI"
+                  width={130}
+                  height={28}
+                  priority
+                  className="brand-logo-light h-7 w-auto"
                 />
-                <button
-                  type="submit"
-                  disabled={footerSubState === "submitting" || !footerConsent}
-                  aria-label="Subscribe"
-                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#18181B] text-white transition-transform hover:scale-105 disabled:opacity-40 dark:bg-[#FAFAFA] dark:text-[#18181B]"
-                >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </button>
+                <Image
+                  src="/brand/colaberry-ai-logo-dark.svg"
+                  alt="Colaberry AI"
+                  width={130}
+                  height={28}
+                  priority
+                  className="brand-logo-dark h-7 w-auto"
+                />
+              </span>
+
+              {/* Newsletter */}
+              <h2 className="mt-8 text-sm font-semibold text-[#18181B] dark:text-[#FAFAFA]">
+                Subscribe to newsletter
+              </h2>
+              <form onSubmit={handleFooterNewsletterSubmit} className="mt-4">
+                {/* Honeypot */}
+                <input
+                  type="text"
+                  name="website"
+                  value={footerHoneypot}
+                  onChange={(e) => setFooterHoneypot(e.target.value)}
+                  autoComplete="off"
+                  tabIndex={-1}
+                  className="absolute -left-[9999px] h-0 w-0 opacity-0"
+                  aria-hidden="true"
+                />
+                <div className="flex items-center gap-3">
+                  <input
+                    type="email"
+                    required
+                    placeholder="Email address"
+                    value={footerEmail}
+                    onChange={(e) => setFooterEmail(e.target.value)}
+                    disabled={footerSubState === "submitting"}
+                    className="footer-input-underline flex-1 text-sm"
+                  />
+                  <button
+                    type="submit"
+                    disabled={footerSubState === "submitting" || !footerConsent}
+                    aria-label="Subscribe"
+                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#18181B] text-white transition-transform hover:scale-105 disabled:opacity-40 dark:bg-[#FAFAFA] dark:text-[#18181B]"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+                <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-[#71717A] dark:text-[#A1A1AA]">
+                  <input
+                    type="checkbox"
+                    checked={footerConsent}
+                    onChange={(e) => setFooterConsent(e.target.checked)}
+                    className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-300 accent-[#DC2626] dark:border-zinc-600"
+                  />
+                  <span>
+                    By subscribing you agree to with our{" "}
+                    <Link href="/privacy-policy" className="underline hover:text-[#18181B] dark:hover:text-white">
+                      Privacy Policy
+                    </Link>
+                  </span>
+                </label>
+                {footerSubMessage ? (
+                  <p className={`mt-3 text-xs ${footerSubState === "error" ? "text-red-600" : "text-emerald-600"}`}>
+                    {footerSubMessage}
+                  </p>
+                ) : null}
+              </form>
+            </div>
+
+            {/* RIGHT — Link columns + Watermark */}
+            <div className="flex flex-1 flex-col lg:items-end">
+              <nav aria-label="Footer navigation" className="grid w-full grid-cols-2 gap-x-10 gap-y-8 sm:grid-cols-3 lg:max-w-2xl">
+                {FOOTER_COLUMNS.map((col) => (
+                  <div key={col.title}>
+                    <h3 className="footer-column-heading">{col.title}</h3>
+                    <ul className="mt-3 space-y-2">
+                      {col.links.map((link) => (
+                        <li key={link.href}>
+                          <FooterLink href={link.href} className="text-sm font-normal">
+                            {link.label}
+                          </FooterLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </nav>
+
+              {/* ── Watermark logo — right-aligned ── */}
+              <div className="footer-watermark mt-8 w-full max-w-sm lg:max-w-md" aria-hidden="true">
+                <Image
+                  src="/brand/colaberry-ai-watermark.svg"
+                  alt=""
+                  width={2259}
+                  height={476}
+                  className="brand-logo-light h-auto w-full lg:ml-auto"
+                  priority={false}
+                />
+                <Image
+                  src="/brand/colaberry-ai-watermark-dark.svg"
+                  alt=""
+                  width={2259}
+                  height={476}
+                  className="brand-logo-dark h-auto w-full lg:ml-auto"
+                  priority={false}
+                />
               </div>
-              <label className="mt-4 flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-[#71717A] dark:text-[#A1A1AA]">
-                <input
-                  type="checkbox"
-                  checked={footerConsent}
-                  onChange={(e) => setFooterConsent(e.target.checked)}
-                  className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-300 accent-[#DC2626] dark:border-zinc-600"
-                />
-                <span>
-                  By subscribing you agree to with our{" "}
-                  <Link href="/privacy-policy" className="underline hover:text-[#18181B] dark:hover:text-white">
-                    Privacy Policy
-                  </Link>
-                </span>
-              </label>
-              {footerSubMessage ? (
-                <p className={`mt-3 text-xs ${footerSubState === "error" ? "text-red-600" : "text-emerald-600"}`}>
-                  {footerSubMessage}
-                </p>
-              ) : null}
-            </form>
-          </div>
-
-          {/* MIDDLE — Nav links */}
-          <nav aria-label="Footer navigation" className="lg:border-r lg:border-[#D4D1CA] lg:pr-12 dark:lg:border-[#4A473F]">
-            <ul className="grid grid-cols-2 gap-x-10 gap-y-2.5 sm:grid-cols-3 lg:grid-cols-1 lg:gap-y-2">
-              {FOOTER_NAV_LINKS.map((link) => (
-                <li key={link.href}>
-                  <FooterLink href={link.href}>{link.label}</FooterLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* RIGHT — Social icons */}
-          <div className="flex flex-row flex-wrap gap-3 lg:flex-col">
-            {globalNav.socialLinks.map((link) => (
-              <a
-                key={`footer-social-${link.label}`}
-                href={link.href}
-                target={link.target ?? "_blank"}
-                rel="noopener noreferrer"
-                aria-label={link.label}
-                className="social-icon-circle"
-              >
-                <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-                  {resolveSocialIcon(link.icon, link.label)}
-                </svg>
-              </a>
-            ))}
+            </div>
           </div>
         </div>
 
         {/* ── Bottom bar ── */}
         <div className="border-t border-[#D4D1CA] dark:border-[#4A473F]">
           <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-6 py-6 sm:flex-row sm:justify-between">
-            {/* Logo */}
-            <span className="flex items-center">
-              <Image
-                src="/brand/colaberry-ai-logo.svg"
-                alt="Colaberry AI"
-                width={130}
-                height={28}
-                priority
-                className="brand-logo-light h-7 w-auto"
-              />
-              <Image
-                src="/brand/colaberry-ai-logo-dark.svg"
-                alt="Colaberry AI"
-                width={130}
-                height={28}
-                priority
-                className="brand-logo-dark h-7 w-auto"
-              />
+            {/* Copyright */}
+            <span className="footer-copyright">
+              &copy; {new Date().getFullYear()} Colaberry, Inc.
+              <br />
+              All rights reserved.
             </span>
 
             {/* Legal links */}
@@ -1567,10 +1655,23 @@ export default function Layout({ children }: { children: ReactNode }) {
               ))}
             </div>
 
-            {/* Copyright */}
-            <span className="text-xs text-[#71717A] dark:text-[#A1A1AA]">
-              &copy; {new Date().getFullYear()} Colaberry, Inc.
-            </span>
+            {/* Social icons — small inline */}
+            <div className="flex items-center gap-4">
+              {globalNav.socialLinks.map((link) => (
+                <a
+                  key={`footer-social-${link.label}`}
+                  href={link.href}
+                  target={link.target ?? "_blank"}
+                  rel="noopener noreferrer"
+                  aria-label={link.label}
+                  className="text-[#71717A] transition-colors hover:text-[#18181B] dark:text-[#A1A1AA] dark:hover:text-white"
+                >
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+                    {resolveSocialIcon(link.icon, link.label)}
+                  </svg>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </footer>
@@ -1604,7 +1705,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={closeSearch}
-                className="btn btn-ghost btn-icon"
+                className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200/70 bg-white/85 text-zinc-700 hover:text-[#18181B] dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
                 aria-label="Close search"
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
@@ -1693,10 +1794,10 @@ export default function Layout({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={dismissDiscovery}
-                className="btn btn-ghost btn-icon"
+                className="focus-ring inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-200/70 bg-white/85 text-zinc-700 hover:text-[#18181B] dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
                 aria-label="Dismiss"
               >
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none">
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
                   <path
                     d="M6 6 18 18M18 6 6 18"
                     stroke="currentColor"
@@ -1731,7 +1832,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
       ) : null}
       {isCatalogWorkspace && !mobileMenuOpen && !workspaceMobileRailOpen && !searchOpen ? (
-        <div className="pointer-events-none fixed inset-x-0 bottom-5 z-30 flex justify-center px-4 min-[1240px]:inset-x-auto min-[1240px]:right-8 min-[1240px]:px-0">
+        <div className="pointer-events-none fixed inset-x-0 bottom-5 z-30 flex justify-center px-4 lg:inset-x-auto lg:right-8 lg:px-0">
           <form
             action="/search"
             method="get"
@@ -1861,7 +1962,7 @@ function FooterLink({
 function ThemeIcon({ isDark }: { isDark: boolean }) {
   if (isDark) {
     return (
-      <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="none">
+      <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true" fill="none">
         <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.6" />
         <path
           d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"
@@ -1874,37 +1975,9 @@ function ThemeIcon({ isDark }: { isDark: boolean }) {
   }
 
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="currentColor">
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true" fill="currentColor">
       <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5Z" />
     </svg>
   );
 }
 
-function SocialIcon({
-  href,
-  label,
-  icon,
-  target,
-}: {
-  href: string;
-  label: string;
-  icon?: string | null;
-  target?: string | null;
-}) {
-  const iconMarkup = resolveSocialIcon(icon, label);
-  const linkTarget = target ?? "_blank";
-  return (
-    <a
-      href={href}
-      target={linkTarget}
-      rel={getLinkRel(linkTarget)}
-      className="social-button focus-ring inline-flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-200/70 bg-white/80 text-zinc-500 transition hover:border-zinc-300 hover:text-zinc-700 hover:shadow-sm dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:text-white"
-      aria-label={label}
-    >
-      <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-        {iconMarkup}
-      </svg>
-      <span className="sr-only">{label}</span>
-    </a>
-  );
-}

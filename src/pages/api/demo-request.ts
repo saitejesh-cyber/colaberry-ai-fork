@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { resolveSenderProvider, sendNewsletterEmail } from "../../lib/newsletterSender";
+import { isRateLimited, getClientIp } from "../../lib/rate-limit";
 
 type DemoRequestPayload = {
   name?: string;
@@ -79,6 +80,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ ok: false, message: "Method not allowed." });
   }
 
+  if (isRateLimited("demo-request", getClientIp(req), 10, 60_000)) {
+    return res.status(429).json({ ok: false, message: "Too many requests. Please try again shortly." });
+  }
+
   const payload = parsePayload(req);
   if (!payload) {
     return res.status(400).json({ ok: false, message: "Invalid request payload." });
@@ -87,6 +92,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const email = normalizeEmail(payload.email);
   if (!email || !isValidEmail(email)) {
     return res.status(400).json({ ok: false, message: "A valid email is required." });
+  }
+
+  // Prevent email header injection
+  if (/[\r\n]/.test(email) || /[\r\n]/.test(payload.name || "")) {
+    return res.status(400).json({ ok: false, message: "Invalid input." });
   }
 
   if (payload.website && String(payload.website).trim().length > 0) {

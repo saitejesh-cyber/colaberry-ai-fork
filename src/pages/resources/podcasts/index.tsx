@@ -36,35 +36,45 @@ type PodcastsPageProps = {
   activeType: PodcastTypeFilter;
   searchQuery: string;
   canonicalPath: string;
+  totalEpisodes: number;
+  initialHasMore: boolean;
 };
 
 export default function Podcasts({
-  episodes,
+  episodes: initialEpisodes,
   companies,
   fetchError,
   activeSort,
   activeType,
   searchQuery,
   canonicalPath,
+  totalEpisodes,
+  initialHasMore,
 }: PodcastsPageProps) {
   const [playingSlug, setPlayingSlug] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(Boolean(searchQuery.trim()));
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [allEpisodes, setAllEpisodes] = useState<PodcastEpisode[]>(initialEpisodes);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [displayTotal, setDisplayTotal] = useState(totalEpisodes);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Refs to avoid stale closures in IntersectionObserver callback
+  const loadingRef = useRef(false);
+  const pageRef = useRef(1);
 
   // Sidebar newsletter state
   const [sidebarEmail, setSidebarEmail] = useState("");
   const [sidebarHoneypot, setSidebarHoneypot] = useState("");
-  const [sidebarConsent, setSidebarConsent] = useState(false);
+
   const [sidebarSubState, setSidebarSubState] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [sidebarSubMessage, setSidebarSubMessage] = useState<string | null>(null);
   const sidebarTracking = useMemo(() => getTrackingContext(), []);
 
   async function handleSidebarSubscribe(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (sidebarSubState === "submitting" || !sidebarConsent) return;
+    if (sidebarSubState === "submitting") return;
     setSidebarSubState("submitting");
     setSidebarSubMessage(null);
     try {
@@ -74,7 +84,7 @@ export default function Podcasts({
         body: JSON.stringify({
           email: sidebarEmail,
           website: sidebarHoneypot,
-          consent: sidebarConsent,
+          consent: true,
           sourcePath: canonicalPath,
           sourcePage: "podcast-listing-sidebar",
           utmSource: sidebarTracking.utmSource,
@@ -95,20 +105,39 @@ export default function Podcasts({
       setSidebarSubMessage(payload?.message || "Subscription confirmed.");
       setSidebarEmail("");
       setSidebarHoneypot("");
-      setSidebarConsent(false);
     } catch {
       setSidebarSubState("error");
       setSidebarSubMessage("Unable to subscribe right now.");
     }
   }
 
-  // Handle audio ended → reset icon
+  // Handle audio ended → reset icon + persist playback position for resume
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onEnded = () => setPlayingSlug(null);
+    const onEnded = () => {
+      setPlayingSlug(null);
+      localStorage.removeItem("podcast-playing-slug");
+    };
+    const onPause = () => {
+      localStorage.removeItem("podcast-playing-slug");
+    };
+    let lastSaved = 0;
+    const onTimeUpdate = () => {
+      const now = audio.currentTime;
+      if (now - lastSaved >= 2) {
+        lastSaved = now;
+        localStorage.setItem("podcast-playing-time", String(now));
+      }
+    };
     audio.addEventListener("ended", onEnded);
-    return () => audio.removeEventListener("ended", onEnded);
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    return () => {
+      audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+    };
   }, []);
 
   const handlePlay = (episode: PodcastEpisode, source: string) => {
@@ -126,27 +155,57 @@ export default function Podcasts({
     audio.src = episode.audioUrl;
     audio.play();
     setPlayingSlug(episode.slug);
+    localStorage.setItem("podcast-playing-slug", episode.slug);
+    localStorage.setItem("podcast-playing-time", "0");
     logPodcastEvent("play", source, { slug: episode.slug, title: episode.title });
   };
 
-  const displayedEpisodes = episodes.slice(0, visibleCount);
-  const hasMore = visibleCount < episodes.length;
+  // Reset when SSR props change (sort/filter/search navigation)
+  useEffect(() => {
+    setAllEpisodes(initialEpisodes);
+    setHasMore(initialHasMore);
+    setCurrentPage(1);
+    setDisplayTotal(totalEpisodes);
+    pageRef.current = 1;
+    loadingRef.current = false;
+  }, [initialEpisodes, initialHasMore, totalEpisodes]);
+
+  const fetchNextPage = async () => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    const nextPage = pageRef.current + 1;
+    const params = new URLSearchParams({ page: String(nextPage), sort: activeSort });
+    if (activeType !== "all") params.set("type", activeType);
+    if (searchQuery) params.set("q", searchQuery);
+    try {
+      const res = await fetch(`/api/podcasts?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAllEpisodes((prev) => [...prev, ...data.episodes]);
+        setHasMore(data.hasMore);
+        setCurrentPage(nextPage);
+        setDisplayTotal(data.total);
+        pageRef.current = nextPage;
+      }
+    } catch { /* silently fail, user can scroll again */ }
+    loadingRef.current = false;
+  };
 
   useEffect(() => {
     if (!hasMore) return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
+    const handler = fetchNextPage;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, episodes.length));
-        }
+        if (entries[0]?.isIntersecting) handler();
       },
-      { rootMargin: "300px" }
+      { rootMargin: "400px" }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [episodes.length, hasMore]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMore, currentPage]);
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai").replace(/\/$/, "");
   const canonicalUrl = `${siteUrl}${canonicalPath}`;
@@ -160,8 +219,8 @@ export default function Podcasts({
     "@type": "ItemList",
     name: "Colaberry AI podcast catalog",
     itemListOrder: activeSort === "trending" ? "https://schema.org/ItemListOrderDescending" : "https://schema.org/ItemListOrderAscending",
-    numberOfItems: episodes.length,
-    itemListElement: episodes.map((episode, index) => ({
+    numberOfItems: displayTotal,
+    itemListElement: allEpisodes.map((episode, index) => ({
       "@type": "ListItem",
       position: index + 1,
       url: `${siteUrl}/resources/podcasts/${episode.slug}`,
@@ -192,7 +251,7 @@ export default function Podcasts({
 
       {/* ── Clean header with pill tabs + search ── */}
       <section className="reveal section-shell px-4 pt-6 pb-4 sm:px-6 sm:pt-8">
-        <h1 className="font-display text-display-md font-bold text-zinc-900 dark:text-zinc-100 sm:text-display-lg lg:text-display-xl">
+        <h1 className="font-display text-display-sm font-bold text-zinc-900 dark:text-zinc-100 sm:text-display-md md:text-display-lg lg:text-display-xl">
           Podcasts
         </h1>
 
@@ -250,13 +309,28 @@ export default function Podcasts({
             {activeSort !== "latest" ? <input type="hidden" name="sort" value={activeSort} /> : null}
           </form>
         ) : null}
+
+        {/* Example search tags — visible when search is closed */}
+        {!searchOpen && companies.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {companies.slice(0, 5).map((c) => (
+              <Link
+                key={c.slug}
+                href={`/resources/podcasts?q=${encodeURIComponent(c.name)}`}
+                className="rounded-full border border-zinc-200/80 px-2.5 py-1 text-xs font-medium text-zinc-500 transition-colors hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-200"
+              >
+                {c.name}
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       {/* ── Content area: hero + list | sidebar ── */}
       <section className="reveal section-shell px-4 pt-4 pb-6 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8 lg:items-start">
         {/* Left column */}
         <div>
-          {episodes.length === 0 ? (
+          {allEpisodes.length === 0 ? (
             <div className="mt-4">
               <StatePanel
                 variant="empty"
@@ -268,7 +342,7 @@ export default function Podcasts({
             <>
               {/* ── Featured hero episode ── */}
               {(() => {
-                const hero = displayedEpisodes[0];
+                const hero = allEpisodes[0];
                 const heroCanPlay = Boolean(hero.audioUrl);
                 const heroIsPlaying = playingSlug === hero.slug;
                 const heroType = (hero.podcastType || "internal").toLowerCase();
@@ -283,7 +357,7 @@ export default function Podcasts({
                 return (
                   <div className="group/hero flex flex-col gap-5 rounded-2xl bg-[#F5F3EE] p-6 dark:bg-[#1E1D1A] sm:flex-row sm:items-start sm:gap-8 sm:p-8">
                     {/* Artwork */}
-                    <div className="relative w-full shrink-0 overflow-hidden rounded-2xl shadow-lg sm:w-72 lg:w-80">
+                    <div className="relative w-full shrink-0 overflow-hidden rounded-2xl shadow-lg sm:w-56 md:w-72 lg:w-80">
                       <Link href={heroUrl} tabIndex={-1} aria-hidden="true">
                         <PodcastArtwork
                           src={heroArtwork}
@@ -296,9 +370,9 @@ export default function Podcasts({
                           type="button"
                           aria-label={heroIsPlaying ? `Pause ${hero.title}` : `Play ${hero.title}`}
                           onClick={() => handlePlay(hero, "hero-inline")}
-                          className="absolute inset-0 flex items-center justify-center bg-zinc-900/40 transition-colors hover:bg-zinc-900/55"
+                          className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors hover:bg-black/50"
                         >
-                          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-lg backdrop-blur-sm">
+                          <span className="flex h-14 w-14 items-center justify-center rounded-full shadow-xl" style={{ backgroundColor: '#fff', color: '#18181B' }}>
                             {heroIsPlaying ? <PauseIcon size={22} /> : <PlayIcon size={22} />}
                           </span>
                         </button>
@@ -410,7 +484,7 @@ export default function Podcasts({
 
               {/* ── Episode list (remaining episodes) ── */}
               <div className="mt-4 flex flex-col gap-4">
-                {displayedEpisodes.slice(1).map((episode) => {
+                {allEpisodes.slice(1).map((episode) => {
                   const canPlay = Boolean(episode.audioUrl);
                   const isPlaying = playingSlug === episode.slug;
                   const shortDate = formatShortDate(episode.publishedDate);
@@ -515,7 +589,7 @@ export default function Podcasts({
                       </div>
 
                       {/* Right: Artwork with play overlay */}
-                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg sm:h-36 sm:w-36 sm:rounded-xl lg:h-40 lg:w-40">
+                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg sm:h-24 sm:w-24 sm:rounded-xl md:h-36 md:w-36 lg:h-40 lg:w-40">
                         <Link href={episodeUrl} tabIndex={-1} aria-hidden="true">
                           <PodcastArtwork
                             src={cardArtwork}
@@ -528,9 +602,9 @@ export default function Podcasts({
                             type="button"
                             aria-label={isPlaying ? `Pause ${episode.title}` : `Play ${episode.title}`}
                             onClick={() => handlePlay(episode, "list-inline")}
-                            className="absolute inset-0 hidden items-center justify-center bg-zinc-900/40 transition-colors hover:bg-zinc-900/55 sm:flex"
+                            className="absolute inset-0 hidden items-center justify-center bg-black/30 transition-colors hover:bg-black/50 sm:flex"
                           >
-                            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-zinc-900 shadow-lg backdrop-blur-sm">
+                            <span className="flex h-11 w-11 items-center justify-center rounded-full shadow-xl" style={{ backgroundColor: '#fff', color: '#18181B' }}>
                               {isPlaying ? <PauseIcon /> : <PlayIcon />}
                             </span>
                           </button>
@@ -554,9 +628,9 @@ export default function Podcasts({
                 <div ref={sentinelRef} className="mt-6 flex justify-center">
                   <span className="text-sm text-zinc-500">Loading more episodes...</span>
                 </div>
-              ) : episodes.length > 0 ? (
+              ) : allEpisodes.length > 0 ? (
                 <div className="mt-6 text-center text-sm text-zinc-500">
-                  Showing all {episodes.length} episodes
+                  Showing all {displayTotal} episodes
                 </div>
               ) : null}
             </>
@@ -564,8 +638,8 @@ export default function Podcasts({
         </div>
 
         {/* ── Right sidebar (together.ai warm beige style) ── */}
-        <aside className="hidden lg:block">
-          <div className="rounded-2xl bg-[#E8E5DE] p-6 dark:bg-[#2A2824] lg:sticky lg:top-24">
+        <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
+          <div className="rounded-2xl bg-[#E8E5DE] p-6 dark:bg-[#2A2824]">
             {/* Podcast identity */}
             <div className="flex items-center gap-4">
               <Image
@@ -581,7 +655,7 @@ export default function Podcasts({
                   Colaberry AI Podcast
                 </h3>
                 <p className="text-sm text-[#71717A] dark:text-[#A1A1AA]">
-                  {episodes.length} episodes
+                  {displayTotal} episodes
                 </p>
               </div>
             </div>
@@ -617,7 +691,7 @@ export default function Podcasts({
                   />
                   <button
                     type="submit"
-                    disabled={sidebarSubState === "submitting" || !sidebarConsent}
+                    disabled={sidebarSubState === "submitting"}
                     aria-label="Subscribe"
                     className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#18181B] text-white transition-transform hover:scale-105 disabled:opacity-40 dark:bg-[#FAFAFA] dark:text-[#18181B]"
                   >
@@ -626,15 +700,9 @@ export default function Podcasts({
                     </svg>
                   </button>
                 </div>
-                <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-[#71717A] dark:text-[#A1A1AA]">
-                  <input
-                    type="checkbox"
-                    checked={sidebarConsent}
-                    onChange={(e) => setSidebarConsent(e.target.checked)}
-                    className="mt-0.5 h-3.5 w-3.5 rounded border-[#A1A1AA] accent-[#DC2626] dark:border-[#71717A]"
-                  />
-                  <span>I agree to receive marketing communications from Colaberry AI</span>
-                </label>
+                <p className="mt-3 text-xs leading-relaxed text-[#71717A] dark:text-[#A1A1AA]">
+                  By subscribing you agree to receive podcast notifications from Colaberry AI.
+                </p>
                 {sidebarSubMessage ? (
                   <p className={`mt-2 text-xs ${sidebarSubState === "error" ? "text-red-600" : "text-emerald-600"}`}>
                     {sidebarSubMessage}
@@ -643,19 +711,9 @@ export default function Podcasts({
               </form>
             </div>
 
-            {/* CTA */}
-            <div className="mt-6">
-              <Link
-                href="/request-demo"
-                className="flex h-11 w-full items-center justify-center rounded-full bg-[#18181B] text-sm font-semibold text-white transition-transform hover:scale-[1.02] dark:bg-[#FAFAFA] dark:text-[#18181B]"
-              >
-                Let&apos;s Talk
-              </Link>
-            </div>
-
             {/* Company tags */}
             {companies.length > 0 ? (
-              <div className="mt-6">
+              <div className="mt-6 border-t border-[#D4D1CA] pt-6 dark:border-[#4A473F]">
                 <h4 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#71717A] dark:text-[#A1A1AA]">
                   Browse by company
                 </h4>
@@ -743,14 +801,15 @@ function formatShortDate(value?: string | null) {
 }
 
 /** Extract plain text from Strapi rich-text (block array or string). */
-function extractPlainText(description: any, maxLen = 140): string {
+type RichTextBlock = { type?: string; children?: { text?: string }[] };
+function extractPlainText(description: string | RichTextBlock[] | null | undefined, maxLen = 140): string {
   if (!description) return "";
   if (typeof description === "string") return description.slice(0, maxLen);
   if (Array.isArray(description)) {
     const text = description
-      .filter((block: any) => block?.type === "paragraph")
-      .flatMap((block: any) =>
-        (block.children || []).map((child: any) => child?.text || "")
+      .filter((block: RichTextBlock) => block?.type === "paragraph")
+      .flatMap((block: RichTextBlock) =>
+        (block.children || []).map((child) => child?.text || "")
       )
       .join(" ")
       .trim();
@@ -800,11 +859,12 @@ export const getServerSideProps: GetServerSideProps<PodcastsPageProps> = async (
   const canonicalPath = canonicalQs ? `/resources/podcasts?${canonicalQs}` : "/resources/podcasts";
 
   try {
-    const allEpisodes = await fetchPodcastEpisodes();
+    // Fetch only the first page for fast initial render
+    const firstPageEpisodes = await fetchPodcastEpisodes({ maxRecords: PAGE_SIZE + 1 });
     const now = Date.now();
 
     const companyMap = new Map<string, PodcastCompanyFacet>();
-    allEpisodes.forEach((episode) => {
+    firstPageEpisodes.forEach((episode) => {
       (episode.companies || []).forEach((company) => {
         if (!company.slug) return;
         const existing = companyMap.get(company.slug);
@@ -820,14 +880,14 @@ export const getServerSideProps: GetServerSideProps<PodcastsPageProps> = async (
       });
     });
 
-    const sourceFiltered = allEpisodes.filter((episode) => {
+    const sourceFiltered = firstPageEpisodes.filter((episode) => {
       if (activeType === "all") return true;
       const episodeType = (episode.podcastType || "internal").toLowerCase();
       return episodeType === activeType;
     });
 
     const searchedEpisodes = sourceFiltered.filter((episode) => matchesEpisodeSearch(episode, searchQuery));
-    const episodes =
+    const sorted =
       activeSort === "trending"
         ? [...searchedEpisodes].sort((a, b) => {
             const scoreDiff = getPodcastTrendingScore(b, now) - getPodcastTrendingScore(a, now);
@@ -837,6 +897,9 @@ export const getServerSideProps: GetServerSideProps<PodcastsPageProps> = async (
             return bDate - aDate;
           })
         : searchedEpisodes;
+
+    const episodes = sorted.slice(0, PAGE_SIZE);
+    const initialHasMore = sorted.length > PAGE_SIZE;
 
     const companies = Array.from(companyMap.values()).sort((a, b) => {
       if (b.count !== a.count) return b.count - a.count;
@@ -852,6 +915,8 @@ export const getServerSideProps: GetServerSideProps<PodcastsPageProps> = async (
         activeType,
         searchQuery,
         canonicalPath,
+        totalEpisodes: sorted.length,
+        initialHasMore,
       },
     };
   } catch {
@@ -864,6 +929,8 @@ export const getServerSideProps: GetServerSideProps<PodcastsPageProps> = async (
         activeType,
         searchQuery,
         canonicalPath,
+        totalEpisodes: 0,
+        initialHasMore: false,
       },
     };
   }

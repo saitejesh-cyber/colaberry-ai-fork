@@ -98,11 +98,6 @@ export default function Resources({ counts }: ResourcesProps) {
         kicker="Modular layer"
         title="Resources"
         description="A structured knowledge layer for podcasts, books, white papers, case studies, and editorial signals-ready for teams, SEO, and LLM indexing."
-        image={heroImage("hero-resources-cinematic.webp")}
-        alt="Research workspace overview"
-        imageKicker="Knowledge hub"
-        imageTitle="Research and artifacts"
-        imageDescription="Podcasts, books, white papers, and curated signals in one governed publishing surface."
         chips={["Podcasts", "White papers", "Books", "Case studies", "Articles"]}
         primaryAction={{ label: "Browse podcasts", href: "/resources/podcasts" }}
         secondaryAction={{ label: "Open updates feed", href: "/updates", variant: "secondary" }}

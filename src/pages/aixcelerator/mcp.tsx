@@ -1,9 +1,8 @@
-import CatalogSearchBox from "../../components/CatalogSearchBox";
 import MCPCard from "../../components/MCPCard";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GetStaticProps } from "next";
 import { fetchMCPServers, MCPServer } from "../../lib/cms";
 import { useRouter } from "next/router";
@@ -11,85 +10,126 @@ import Head from "next/head";
 import Link from "next/link";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
 
+const PAGE_SIZE = 24;
+
 type MCPPageProps = {
   mcps: MCPServer[];
   allowPrivate: boolean;
   fetchError: boolean;
+  totalCount: number;
+  initialHasMore: boolean;
 };
 
 type MCPSortMode = "alphabetical" | "latest" | "trending";
+
+type Facets = {
+  industries: string[];
+  statuses: string[];
+  sources: string[];
+  tags: { value: string; label: string }[];
+  tools: { value: string; label: string }[];
+};
 
 export const getStaticProps: GetStaticProps<MCPPageProps> = async () => {
   const allowPrivate = process.env.NEXT_PUBLIC_SHOW_PRIVATE === "true";
   const visibilityFilter = allowPrivate ? undefined : "public";
 
   try {
-    const mcps = (await fetchMCPServers(visibilityFilter, { maxRecords: 300 })).map(
-      toMcpListItem
-    );
+    const raw = await fetchMCPServers(visibilityFilter, { maxRecords: PAGE_SIZE + 1 });
+    const mcps = raw.slice(0, PAGE_SIZE).map(toMcpListItem);
+    const initialHasMore = raw.length > PAGE_SIZE;
     return {
-      props: { mcps, allowPrivate, fetchError: false },
+      props: { mcps, allowPrivate, fetchError: false, totalCount: mcps.length, initialHasMore },
       revalidate: 600,
     };
   } catch {
     return {
-      props: { mcps: [], allowPrivate, fetchError: true },
+      props: { mcps: [], allowPrivate, fetchError: true, totalCount: 0, initialHasMore: false },
       revalidate: 120,
     };
   }
 };
 
-export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
+export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, totalCount, initialHasMore }: MCPPageProps) {
   const router = useRouter();
   const [visibility, setVisibility] = useState<"all" | "public" | "private">(
     allowPrivate ? "all" : "public"
   );
   const [sortMode, setSortMode] = useState<MCPSortMode>("trending");
   const [search, setSearch] = useState<string | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState<string | null>(null);
   const [industryFilter, setIndustryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
+  const [toolFilter, setToolFilter] = useState("all");
   const querySearch = useMemo(() => {
     const raw = Array.isArray(router.query.q) ? router.query.q[0] : router.query.q;
     return typeof raw === "string" ? raw : "";
   }, [router.query.q]);
   const effectiveSearch = search ?? querySearch;
-  const pageSize = 24;
-  const [visibleCount, setVisibleCount] = useState(pageSize);
+
+  // Debounce search input (300ms) to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(effectiveSearch), 300);
+    return () => clearTimeout(timer);
+  }, [effectiveSearch]);
+
+  // All loaded MCPs (SSR first page + API pages)
+  const [allMCPs, setAllMCPs] = useState<MCPServer[]>(initialMCPs);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [displayTotal, setDisplayTotal] = useState(totalCount);
+  const [catalogTotal, setCatalogTotal] = useState(totalCount);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const industries = useMemo(
-    () =>
-      Array.from(new Set(mcps.map((m) => m.industry || "Other"))).filter(Boolean).sort(),
-    [mcps]
+
+  // Refs to avoid stale closures in IntersectionObserver callback
+  const loadingRef = useRef(false);
+  const pageRef = useRef(1);
+
+  // Facets from the API (full dataset)
+  const [facets, setFacets] = useState<Facets | null>(null);
+
+  // Initial facets derived from SSR data (incomplete but immediate)
+  const ssrIndustries = useMemo(
+    () => Array.from(new Set(initialMCPs.map((m) => m.industry || "Other"))).filter(Boolean).sort(),
+    [initialMCPs]
   );
-  const statuses = useMemo(() => {
-    const list = Array.from(new Set(mcps.map((m) => (m.status || "unknown").toLowerCase())));
-    return list.sort();
-  }, [mcps]);
-  const sources = useMemo(() => {
-    const list = Array.from(new Set(mcps.map((m) => (m.source || "internal").toLowerCase())));
-    return list.sort();
-  }, [mcps]);
-  const tagOptions = useMemo(() => {
+  const ssrStatuses = useMemo(() => {
+    return Array.from(new Set(initialMCPs.map((m) => (m.status || "unknown").toLowerCase()))).sort();
+  }, [initialMCPs]);
+  const ssrSources = useMemo(() => {
+    return Array.from(new Set(initialMCPs.map((m) => (m.source || "internal").toLowerCase()))).sort();
+  }, [initialMCPs]);
+  const ssrTags = useMemo(() => {
     const map = new Map<string, string>();
-    mcps.forEach((mcp) => {
+    initialMCPs.forEach((mcp) => {
       (mcp.tags || []).forEach((tag) => {
         const key = (tag.slug || tag.name || "").toLowerCase();
-        if (key && !map.has(key)) {
-          map.set(key, tag.name || tag.slug || key);
-        }
+        if (key && !map.has(key)) map.set(key, tag.name || tag.slug || key);
       });
     });
     return Array.from(map.entries())
       .map(([value, label]) => ({ value, label }))
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [mcps]);
-  const visibilityCounts = mcps.reduce<Record<string, number>>((acc, m) => {
-    const key = (m.visibility || "public").toLowerCase();
-    acc[key] = (acc[key] ?? 0) + 1;
-    return acc;
-  }, {});
+  }, [initialMCPs]);
+
+  // Use API facets when available, fall back to SSR-derived facets
+  const industries = facets?.industries ?? ssrIndustries;
+  const statuses = facets?.statuses ?? ssrStatuses;
+  const sources = facets?.sources ?? ssrSources;
+  const tagOptions = facets?.tags ?? ssrTags;
+  const toolOptions = facets?.tools ?? [];
+
+  const visibilityCounts = useMemo(() => {
+    return allMCPs.reduce<Record<string, number>>((acc, m) => {
+      const key = (m.visibility || "public").toLowerCase();
+      acc[key] = (acc[key] ?? 0) + 1;
+      return acc;
+    }, {});
+  }, [allMCPs]);
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://colaberry.ai";
   const metaTitle = "MCP Servers Catalog | Colaberry AI";
   const metaDescription =
@@ -106,7 +146,7 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
     name: "Colaberry AI MCP Servers Catalog",
     url: canonicalUrl,
     description: metaDescription,
-    itemListElement: mcps.slice(0, 12).map((mcp, index) => ({
+    itemListElement: allMCPs.slice(0, 12).map((mcp, index) => ({
       "@type": "ListItem",
       position: index + 1,
       item: {
@@ -118,51 +158,132 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
       },
     })),
   };
-  const filteredMCPs = useMemo(() => {
-    const query = effectiveSearch.trim().toLowerCase();
-    return filterByVisibility(mcps, allowPrivate, visibility).filter((mcp) =>
-      matchesFilters(mcp, query, industryFilter, statusFilter, sourceFilter, tagFilter)
-    );
-  }, [allowPrivate, effectiveSearch, industryFilter, mcps, sourceFilter, statusFilter, tagFilter, visibility]);
-  const sortedMCPs = useMemo(
-    () => sortMCPs(filteredMCPs, sortMode),
-    [filteredMCPs, sortMode]
-  );
-  const scopedMCPs = useMemo(
-    () => filterByVisibility(mcps, allowPrivate, visibility),
-    [allowPrivate, mcps, visibility]
-  );
-  const latestMCPs = useMemo(
-    () => sortMCPs(scopedMCPs, "latest").slice(0, 6),
-    [scopedMCPs]
-  );
-  const trendingMCPs = useMemo(
-    () => sortMCPs(scopedMCPs, "trending").slice(0, 6),
-    [scopedMCPs]
-  );
-  const shownCount = Math.min(visibleCount, sortedMCPs.length);
-  const visibleMCPs = useMemo(
-    () => sortedMCPs.slice(0, shownCount),
-    [shownCount, sortedMCPs]
-  );
-  const hasMore = shownCount < sortedMCPs.length;
-  const hasResults = sortedMCPs.length > 0;
 
+  // Build API query params from current filters
+  const buildParams = useCallback(
+    (page: number) => {
+      const params = new URLSearchParams({ page: String(page), sort: sortMode });
+      const q = (debouncedSearch ?? "").trim();
+      if (q) params.set("q", q);
+      if (industryFilter !== "all") params.set("industry", industryFilter);
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (sourceFilter !== "all") params.set("source", sourceFilter);
+      if (tagFilter !== "all") params.set("tag", tagFilter);
+      if (toolFilter !== "all") params.set("tool", toolFilter);
+      if (visibility !== "all") params.set("visibility", visibility);
+      return params;
+    },
+    [sortMode, debouncedSearch, industryFilter, statusFilter, sourceFilter, tagFilter, toolFilter, visibility]
+  );
+
+  // When any filter/sort changes, reset and fetch page 1 from API
+  const filterKey = `${sortMode}|${debouncedSearch}|${industryFilter}|${statusFilter}|${sourceFilter}|${tagFilter}|${toolFilter}|${visibility}`;
+  const prevFilterKey = useRef(filterKey);
+  const initialMount = useRef(true);
+
+  useEffect(() => {
+    // On initial mount, fetch page 1 to get full facets and real total
+    if (initialMount.current) {
+      initialMount.current = false;
+      const params = buildParams(1);
+      fetch(`/api/mcps?${params}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) {
+            setAllMCPs(data.mcps);
+            setHasMore(data.hasMore);
+            setCurrentPage(1);
+            setDisplayTotal(data.total);
+            setCatalogTotal(data.catalogTotal);
+            setFacets(data.facets);
+            pageRef.current = 1;
+            loadingRef.current = false;
+          }
+        })
+        .catch(() => {});
+      return;
+    }
+
+    // On subsequent filter changes, reset and fetch page 1
+    if (prevFilterKey.current !== filterKey) {
+      prevFilterKey.current = filterKey;
+      loadingRef.current = true;
+      const params = buildParams(1);
+      fetch(`/api/mcps?${params}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) {
+            setAllMCPs(data.mcps);
+            setHasMore(data.hasMore);
+            setCurrentPage(1);
+            setDisplayTotal(data.total);
+            setCatalogTotal(data.catalogTotal);
+            setFacets(data.facets);
+            pageRef.current = 1;
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          loadingRef.current = false;
+          setLoadingMore(false);
+        });
+    }
+  }, [filterKey, buildParams]);
+
+  // Fetch next page on scroll
+  const fetchNextPage = useCallback(() => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    setLoadingMore(true);
+    const nextPage = pageRef.current + 1;
+    const params = buildParams(nextPage);
+    fetch(`/api/mcps?${params}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setAllMCPs((prev) => [...prev, ...data.mcps]);
+          setHasMore(data.hasMore);
+          setCurrentPage(nextPage);
+          setDisplayTotal(data.total);
+          pageRef.current = nextPage;
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        loadingRef.current = false;
+        setLoadingMore(false);
+      });
+  }, [buildParams]);
+
+  // IntersectionObserver for infinite scroll
   useEffect(() => {
     if (!hasMore) return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
+    const handler = fetchNextPage;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setVisibleCount((prev) => Math.min(prev + pageSize, sortedMCPs.length));
-        }
+        if (entries[0]?.isIntersecting) handler();
       },
-      { rootMargin: "300px" }
+      { rootMargin: "400px" }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, pageSize, sortedMCPs.length]);
+  }, [hasMore, currentPage, fetchNextPage]);
+
+  // Compute latest/trending signal rails from loaded data
+  const scopedMCPs = useMemo(
+    () => filterByVisibility(allMCPs, allowPrivate, visibility),
+    [allowPrivate, allMCPs, visibility]
+  );
+  const _latestMCPs = useMemo(
+    () => sortMCPsLocal(scopedMCPs, "latest").slice(0, 6),
+    [scopedMCPs]
+  );
+  const _trendingMCPs = useMemo(
+    () => sortMCPsLocal(scopedMCPs, "trending").slice(0, 6),
+    [scopedMCPs]
+  );
 
   return (
     <Layout>
@@ -213,10 +334,10 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
           size="md"
         />
         <div className="mt-5 grid gap-4 sm:grid-cols-3 sm:items-center sm:gap-6">
-          <Stat title="Servers" value={String(mcps.length)} note="Curated library" />
+          <Stat title="Servers" value={String(catalogTotal)} note="Curated library" />
           <Stat
             title="Industries"
-            value={String(new Set(mcps.map((m) => m.industry)).size)}
+            value={String(industries.length)}
             note="Domain-aware"
           />
           <Stat
@@ -234,8 +355,8 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
           description="Find MCP servers by industry, status, tags, and visibility."
           size="md"
         />
-        <div className="mt-4 grid gap-3 lg:grid-cols-12">
-          <div className="lg:col-span-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-12">
+          <div className="sm:col-span-2 md:col-span-3 lg:col-span-4">
             <label htmlFor="mcp-search" className="sr-only">
               Search MCP servers
             </label>
@@ -248,7 +369,6 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                 value={effectiveSearch}
                 onChange={(event) => {
                   setSearch(event.target.value);
-                  setVisibleCount(pageSize);
                 }}
                 className="w-full rounded-lg border border-zinc-200/80 bg-white px-4 py-2 pr-11 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:border-zinc-500 dark:focus:ring-zinc-100/10 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200 dark:placeholder:text-zinc-500"
               />
@@ -281,7 +401,6 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
               value={industryFilter}
               onChange={(event) => {
                 setIndustryFilter(event.target.value);
-                setVisibleCount(pageSize);
               }}
               className="w-full rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:border-zinc-500 dark:focus:ring-zinc-100/10 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
             >
@@ -302,7 +421,6 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
               value={statusFilter}
               onChange={(event) => {
                 setStatusFilter(event.target.value);
-                setVisibleCount(pageSize);
               }}
               className="w-full rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:border-zinc-500 dark:focus:ring-zinc-100/10 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
             >
@@ -323,7 +441,6 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
               value={sourceFilter}
               onChange={(event) => {
                 setSourceFilter(event.target.value);
-                setVisibleCount(pageSize);
               }}
               className="w-full rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:border-zinc-500 dark:focus:ring-zinc-100/10 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
             >
@@ -345,7 +462,6 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                 value={tagFilter}
                 onChange={(event) => {
                   setTagFilter(event.target.value);
-                  setVisibleCount(pageSize);
                 }}
                 className="w-full rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:border-zinc-500 dark:focus:ring-zinc-100/10 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
               >
@@ -353,6 +469,28 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                 {tagOptions.map((tag) => (
                   <option key={tag.value} value={tag.value}>
                     {tag.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {toolOptions.length > 0 && (
+            <div className="lg:col-span-2">
+              <label htmlFor="mcp-tool" className="sr-only">
+                Filter by tool
+              </label>
+              <select
+                id="mcp-tool"
+                value={toolFilter}
+                onChange={(event) => {
+                  setToolFilter(event.target.value);
+                }}
+                className="w-full rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-sm text-zinc-700 shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:border-zinc-500 dark:focus:ring-zinc-100/10 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-200"
+              >
+                <option value="all">All tools</option>
+                {toolOptions.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
                   </option>
                 ))}
               </select>
@@ -377,7 +515,6 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                 type="button"
                 onClick={() => {
                   setSortMode(option.value);
-                  setVisibleCount(pageSize);
                 }}
                 aria-pressed={active}
                 className={`chip focus-ring rounded-md px-3 py-1 text-xs font-semibold ${
@@ -399,7 +536,6 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
                   type="button"
                   onClick={() => {
                     setVisibility(option);
-                    setVisibleCount(pageSize);
                   }}
                   aria-pressed={active}
                   className={`chip focus-ring rounded-md px-3 py-1 text-xs font-semibold ${
@@ -413,17 +549,17 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
           </div>
         )}
         <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-500" aria-live="polite">
-          Showing {shownCount} of {sortedMCPs.length} (catalog {scopedMCPs.length})
+          Showing {allMCPs.length} of {displayTotal} (catalog {catalogTotal})
         </div>
       </section>
 
-      <div className="reveal mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
-        {visibleMCPs.map((m) => (
+      <div className="reveal stagger-grid mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
+        {allMCPs.map((m) => (
           <MCPCard key={m.slug || String(m.id)} mcp={m} />
         ))}
       </div>
 
-      {!hasResults && (
+      {allMCPs.length === 0 && !loadingMore && (
         <div className="mt-6">
           <StatePanel
             variant="empty"
@@ -434,25 +570,22 @@ export default function MCP({ mcps, allowPrivate, fetchError }: MCPPageProps) {
       )}
 
       <div className="mt-6 flex flex-col items-center gap-3">
-        {hasResults ? (
+        {allMCPs.length > 0 ? (
           hasMore ? (
-            <button
-              type="button"
-              onClick={() => setVisibleCount((prev) => Math.min(prev + pageSize, sortedMCPs.length))}
-              className="btn btn-secondary"
-            >
-              Load more MCP servers
-            </button>
+            <>
+              <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
+              {loadingMore && (
+                <span className="text-sm text-zinc-500">Loading more MCP servers...</span>
+              )}
+            </>
           ) : (
             <div className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
               End of results
             </div>
           )
         ) : null}
-        <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
       </div>
 
-      <CatalogSearchBox placeholder="Search MCP servers or ask a question..." />
     </Layout>
   );
 }
@@ -485,52 +618,6 @@ function clipText(value?: string | null, limit = 220) {
   return `${normalized.slice(0, limit - 1).trimEnd()}...`;
 }
 
-function matchesFilters(
-  mcp: MCPServer,
-  query: string,
-  industryFilter?: string,
-  statusFilter?: string,
-  sourceFilter?: string,
-  tagFilter?: string
-) {
-  const industryMatch =
-    !industryFilter || industryFilter === "all"
-      ? true
-      : (mcp.industry || "").toLowerCase() === industryFilter;
-  const statusMatch =
-    !statusFilter || statusFilter === "all"
-      ? true
-      : (mcp.status || "unknown").toLowerCase() === statusFilter;
-  const sourceMatch =
-    !sourceFilter || sourceFilter === "all"
-      ? true
-      : (mcp.source || "internal").toLowerCase() === sourceFilter;
-  const tagMatch =
-    !tagFilter || tagFilter === "all"
-      ? true
-      : (mcp.tags || []).some(
-          (tag) => (tag.slug || tag.name || "").toLowerCase() === tagFilter
-        );
-  if (!industryMatch || !statusMatch || !sourceMatch || !tagMatch) {
-    return false;
-  }
-  if (!query) {
-    return true;
-  }
-  const haystack = [
-    mcp.name,
-    mcp.description,
-    mcp.industry,
-    mcp.category,
-    ...(mcp.tags || []).map((tag) => tag.name),
-    ...(mcp.companies || []).map((company) => company.name),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-  return haystack.includes(query);
-}
-
 function filterByVisibility(
   mcps: MCPServer[],
   allowPrivate: boolean,
@@ -543,27 +630,6 @@ function filterByVisibility(
     return mcps;
   }
   return mcps.filter((mcp) => (mcp.visibility || "public").toLowerCase() === visibility);
-}
-
-function sortMCPs(mcps: MCPServer[], mode: MCPSortMode) {
-  const sorted = [...mcps];
-  if (mode === "alphabetical") {
-    return sorted.sort((a, b) => a.name.localeCompare(b.name));
-  }
-  if (mode === "latest") {
-    return sorted.sort((a, b) => compareDatesDesc(a.lastUpdated, b.lastUpdated) || a.name.localeCompare(b.name));
-  }
-  return sorted.sort((a, b) => {
-    const scoreDelta = scoreTrendingMCP(b) - scoreTrendingMCP(a);
-    if (scoreDelta !== 0) return scoreDelta;
-    return compareDatesDesc(a.lastUpdated, b.lastUpdated) || a.name.localeCompare(b.name);
-  });
-}
-
-function compareDatesDesc(a?: string | null, b?: string | null) {
-  const left = toTimestamp(a);
-  const right = toTimestamp(b);
-  return right - left;
 }
 
 function toTimestamp(value?: string | null) {
@@ -594,6 +660,21 @@ function getFreshnessScore(value?: string | null) {
   return 0;
 }
 
+function sortMCPsLocal(mcps: MCPServer[], mode: MCPSortMode) {
+  const sorted = [...mcps];
+  if (mode === "alphabetical") {
+    return sorted.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  if (mode === "latest") {
+    return sorted.sort((a, b) => toTimestamp(b.lastUpdated) - toTimestamp(a.lastUpdated) || a.name.localeCompare(b.name));
+  }
+  return sorted.sort((a, b) => {
+    const scoreDelta = scoreTrendingMCP(b) - scoreTrendingMCP(a);
+    if (scoreDelta !== 0) return scoreDelta;
+    return toTimestamp(b.lastUpdated) - toTimestamp(a.lastUpdated) || a.name.localeCompare(b.name);
+  });
+}
+
 function formatShortDate(value?: string | null) {
   if (!value) return null;
   const parsed = new Date(value);
@@ -606,7 +687,7 @@ function formatShortDate(value?: string | null) {
   });
 }
 
-function SignalRail({
+function _SignalRail({
   title,
   description,
   items,

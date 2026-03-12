@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { defaultNewsletterItems } from "../../lib/newsletterCampaignDefaults";
 import { buildNewsletterTemplate } from "../../lib/newsletterTemplate";
 import { resolveSenderProvider, sendNewsletterEmail } from "../../lib/newsletterSender";
+import { isAdminAuthorized } from "../../lib/api-auth";
 
 const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL;
 const CMS_TOKEN = process.env.CMS_API_TOKEN;
@@ -59,32 +60,6 @@ type Subscriber = {
 function normalizeText(value: unknown, maxLength = 500) {
   if (typeof value !== "string") return "";
   return value.trim().slice(0, maxLength);
-}
-
-function readApiKey(req: NextApiRequest) {
-  const fromHeader = req.headers["x-colaberry-admin-key"];
-  const apiKey = Array.isArray(fromHeader) ? fromHeader[0] || "" : fromHeader || "";
-  if (apiKey) return apiKey;
-  const auth = req.headers.authorization;
-  const bearer = Array.isArray(auth) ? auth[0] || "" : auth || "";
-  const prefix = "Bearer ";
-  if (bearer.startsWith(prefix)) {
-    return bearer.slice(prefix.length).trim();
-  }
-  return "";
-}
-
-function isLocalDevelopmentRequest(req: NextApiRequest) {
-  if (process.env.NODE_ENV === "production") return false;
-  const rawHost = req.headers.host;
-  const host = Array.isArray(rawHost) ? rawHost[0] || "" : rawHost || "";
-  return /^localhost(?::\d+)?$/i.test(host) || /^127\.0\.0\.1(?::\d+)?$/i.test(host);
-}
-
-function isAuthorized(req: NextApiRequest) {
-  if (isLocalDevelopmentRequest(req)) return true;
-  if (!ADMIN_KEY) return false;
-  return readApiKey(req) === ADMIN_KEY;
 }
 
 function parsePayload(req: NextApiRequest): SendPayload | null {
@@ -197,7 +172,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!CMS_URL || !CMS_TOKEN) {
     return res.status(503).json({ ok: false, message: "Newsletter send is unavailable." });
   }
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req, ADMIN_KEY)) {
     return res.status(401).json({ ok: false, message: "Unauthorized." });
   }
 

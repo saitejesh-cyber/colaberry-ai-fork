@@ -11,6 +11,7 @@ import {
   fetchMCPServers,
   fetchPodcastEpisodes,
   fetchUseCases,
+  fetchCatalogCounts,
   type Agent,
   type Skill,
   type MCPServer,
@@ -79,6 +80,7 @@ type HomeProps = {
   trendingUseCases: HomeUseCaseSignal[];
   latestMCPs: HomeMcpSignal[];
   trendingMCPs: HomeMcpSignal[];
+  catalogCounts: { agents: number; mcpServers: number; skills: number };
 };
 
 export default function Home({
@@ -92,7 +94,10 @@ export default function Home({
   trendingSkills,
   trendingUseCases,
   trendingMCPs,
+  catalogCounts,
 }: HomeProps) {
+  const fmt = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k+` : `${n}+`;
+
   const industries = [
     { name: "Agriculture", slug: "agriculture", icon: "leaf" as const },
     { name: "Energy", slug: "energy", icon: "droplet" as const },
@@ -161,9 +166,9 @@ export default function Home({
       description: "Adopt agents with clear ownership, status, and workflow alignment — ready for rollout. Browse by industry, deployment stage, and readiness level.",
       href: "/aixcelerator/agents",
       metrics: [
-        { value: "100+", label: "Agent profiles" },
+        { value: fmt(catalogCounts.agents), label: "Agent profiles" },
         { value: "14", label: "Industries" },
-        { value: "33", label: "Public agents" },
+        { value: fmt(catalogCounts.agents), label: "Public agents" },
       ],
     },
     {
@@ -173,7 +178,7 @@ export default function Home({
       description: "Standardize tool access via MCP with integration-ready server patterns and endpoints. Connect your existing stack with governed, tested connectors.",
       href: "/aixcelerator/mcp",
       metrics: [
-        { value: "50+", label: "MCP servers" },
+        { value: fmt(catalogCounts.mcpServers), label: "MCP servers" },
         { value: "12", label: "Tool categories" },
         { value: "100%", label: "Tested connectors" },
       ],
@@ -268,7 +273,7 @@ export default function Home({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
       {/* ---- Hero (together.ai-inspired dark animated hero) ---- */}
-      <section className="relative overflow-hidden rounded-2xl" style={{ background: "var(--gradient-hero)" }}>
+      <section className="-mx-4 sm:mx-0 relative overflow-hidden rounded-none sm:rounded-2xl" style={{ background: "var(--gradient-hero)" }}>
         {/* Animated gradient mesh background */}
         <div className="hero-gradient-mesh" aria-hidden="true">
           <div className="hero-orb hero-orb-1" />
@@ -291,7 +296,7 @@ export default function Home({
         <div className="hero-vignette" aria-hidden="true" />
 
         {/* Content — centered layout */}
-        <div className="relative z-10 mx-auto max-w-4xl px-8 py-16 text-center sm:py-20 lg:py-24">
+        <div className="relative z-10 mx-auto max-w-4xl px-5 py-16 text-center sm:px-8 sm:py-20 md:px-10 lg:py-24">
           <div
             className="rise-in rise-delay-1 kicker-chip mx-auto inline-flex rounded-full px-4 py-1.5 tracking-[0.2em]"
             style={{ borderColor: "rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#FAFAFA" }}
@@ -300,7 +305,7 @@ export default function Home({
             Enterprise AI Platform
           </div>
 
-          <h1 className="rise-in rise-delay-2 mt-6 font-sans text-display-md font-bold text-white sm:text-display-xl lg:text-display-hero">
+          <h1 className="rise-in rise-delay-2 mt-6 font-sans text-display-md font-bold text-white sm:text-display-lg md:text-display-xl lg:text-display-2xl xl:text-display-hero">
             Discover, govern, and scale{" "}
             <span className="text-gradient">enterprise AI</span>
           </h1>
@@ -310,7 +315,7 @@ export default function Home({
           </p>
 
           <div className="rise-in mt-8 flex flex-wrap justify-center gap-4" style={{ animationDelay: "0.32s" }}>
-            <Link href="/request-demo" className="btn btn-cta">
+            <Link href="/request-demo" className="btn btn-cta" data-tour="hero-cta">
               Book a demo
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -331,9 +336,9 @@ export default function Home({
       <section className="reveal section-spacing">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <AnimatedMetric value="8+" label="Industries served" note="Agriculture to fintech" delay={0} />
-          <AnimatedMetric value="100+" label="Agent profiles" note="Cataloged and governed" delay={150} />
-          <AnimatedMetric value="50+" label="MCP servers" note="Integration-ready connectors" delay={300} />
-          <AnimatedMetric value="200+" label="Skills indexed" note="Reusable capability units" delay={450} />
+          <AnimatedMetric value={fmt(catalogCounts.agents)} label="Agent profiles" note="Cataloged and governed" delay={150} />
+          <AnimatedMetric value={fmt(catalogCounts.mcpServers)} label="MCP servers" note="Integration-ready connectors" delay={300} />
+          <AnimatedMetric value={fmt(catalogCounts.skills)} label="Skills indexed" note="Reusable capability units" delay={450} />
         </div>
       </section>
 
@@ -345,7 +350,7 @@ export default function Home({
           title="A structured destination for agents, MCPs, podcasts, and research"
           description="Give teams and LLMs a single place to discover, compare, and deploy intelligence."
         />
-        <div className="stagger-grid revealed mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="stagger-grid revealed mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-tour="catalog-grid">
           {catalogs.map((catalog) => (
             <CatalogCard key={catalog.title} {...catalog} />
           ))}
@@ -496,6 +501,12 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
     [] as MCPServer[]
   );
 
+  const catalogCounts = await fetchOrEmpty(
+    "catalogCounts",
+    () => fetchCatalogCounts(visibilityFilter),
+    { agents: 0, mcpServers: 0, skills: 0 }
+  );
+
   const latestAgents = sortAgentsByDate(latestAgentsRaw).slice(0, 6).map(toHomeAgentSignal);
   const trendingAgents = sortAgentsByTrending(trendingAgentsRaw).slice(0, 6).map(toHomeAgentSignal);
   const latestSkills = sortSkillsByDate(latestSkillsRaw).slice(0, 6).map(toHomeSkillSignal);
@@ -517,6 +528,7 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
       trendingUseCases,
       latestMCPs,
       trendingMCPs,
+      catalogCounts,
     },
     revalidate: 600,
   };
@@ -589,7 +601,7 @@ function SignalDashboard({
       </div>
 
       {/* Tab panels */}
-      <div className="mt-5">
+      <div className="mt-5 overflow-hidden">
         {activeTab === "Agents" && (
           <div role="tabpanel" id="signal-panel-Agents" aria-labelledby="signal-tab-Agents" className="grid gap-4 lg:grid-cols-2">
             <AgentRail title="Latest agents" description="Most recently updated." items={latestAgents} detailType="latest" />
@@ -1513,7 +1525,7 @@ function PlatformTabsSection({ tabs }: { tabs: PlatformTab[] }) {
         key={active.id}
         role="tabpanel"
         id={`platform-panel-${active.id}`}
-        className="mt-6 grid gap-6 lg:grid-cols-2"
+        className="mt-6 grid gap-6 lg:grid-cols-2 overflow-hidden"
       >
         <div className="flex flex-col justify-center">
           <h3 className="text-display-xs font-bold text-[var(--text-primary)] sm:text-display-sm">

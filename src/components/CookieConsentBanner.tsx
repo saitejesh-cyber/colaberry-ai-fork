@@ -246,7 +246,7 @@ export default function CookieConsentBanner() {
           type="button"
           onClick={() => setPreferencesOpen(true)}
           title={summary}
-          className="focus-ring fixed bottom-5 right-5 z-[70] inline-flex h-10 items-center gap-1.5 rounded-lg border border-zinc-300 bg-white/95 px-3.5 text-xs font-semibold text-zinc-600 shadow-md backdrop-blur transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900/95 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
+          className="focus-ring fixed bottom-20 right-5 z-[70] inline-flex h-10 items-center gap-1.5 rounded-lg border border-zinc-300 bg-white/95 px-3.5 text-xs font-semibold text-zinc-600 shadow-md backdrop-blur transition hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900/95 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-zinc-100"
           aria-label="Open cookie preferences"
         >
           <svg

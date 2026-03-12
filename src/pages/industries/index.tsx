@@ -22,7 +22,7 @@ export const getStaticProps: GetStaticProps<IndustriesProps> = async () => {
     const useCases = useCasesResult.status === "fulfilled" ? useCasesResult.value : [];
     // Count agents per industry (agents have an "industry" or "industries" field)
     for (const agent of agents) {
-      const ind = (agent as any).industry || (agent as any).industries?.[0] || "";
+      const ind = agent.industry || "";
       const slug = typeof ind === "string" ? ind.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and") : "";
       if (slug) {
         if (!industryCounts[slug]) industryCounts[slug] = { agents: 0, useCases: 0 };
@@ -31,7 +31,7 @@ export const getStaticProps: GetStaticProps<IndustriesProps> = async () => {
     }
     // Count use cases per industry
     for (const uc of useCases) {
-      const ind = (uc as any).industry || (uc as any).industries?.[0] || "";
+      const ind = uc.industry || "";
       const slug = typeof ind === "string" ? ind.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and") : "";
       if (slug) {
         if (!industryCounts[slug]) industryCounts[slug] = { agents: 0, useCases: 0 };
@@ -115,11 +115,6 @@ export default function IndustriesIndex({ industryCounts }: IndustriesProps) {
         kicker="Industry expertise"
         title="Industries"
         description="Domain-led delivery surfaces for sector-specific agents, MCP patterns, use cases, and outcomes."
-        image={heroImage("hero-industries-cinematic.webp")}
-        alt="Industry landscape overview"
-        imageKicker="Coverage"
-        imageTitle="Service line coverage map"
-        imageDescription="Industry-aligned AI delivery contexts with playbooks and measurable outcomes."
         chips={["Agriculture", "Energy", "Utilities", "Healthcare", "Manufacturing", "Supply chain"]}
         primaryAction={{ label: "Explore solutions", href: "/solutions" }}
         secondaryAction={{ label: "Browse case studies", href: "/resources/case-studies", variant: "secondary" }}
@@ -130,7 +125,7 @@ export default function IndustriesIndex({ industryCounts }: IndustriesProps) {
         ]}
       />
 
-      <section className="reveal section-spacing grid gap-3 sm:grid-cols-2">
+      <section className="reveal stagger-grid section-spacing grid gap-3 sm:grid-cols-2">
         {industryHighlights.map((item) => (
           <PremiumMediaCard
             key={item.title}
@@ -144,7 +139,7 @@ export default function IndustriesIndex({ industryCounts }: IndustriesProps) {
         ))}
       </section>
 
-      <div className="reveal section-spacing grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="reveal stagger-grid section-spacing grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {industries.map((item) => (
           <PremiumMediaCard
             key={item.slug}

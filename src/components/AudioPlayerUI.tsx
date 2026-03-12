@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type AudioPlayerUIProps = {
   src: string;
   title?: string;
   onPlay?: () => void;
+  audioRef?: React.RefObject<HTMLAudioElement | null>;
+  forwardSkipSeconds?: number;
+  className?: string;
 };
 
 const SPEEDS = [0.75, 1, 1.25, 1.5, 2] as const;
@@ -19,8 +22,12 @@ export default function AudioPlayerUI({
   src,
   title,
   onPlay,
+  audioRef: externalRef,
+  forwardSkipSeconds = 15,
+  className,
 }: AudioPlayerUIProps) {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const internalRef = useRef<HTMLAudioElement>(null);
+  const resolvedRef = externalRef ?? internalRef;
   const progressRef = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -31,28 +38,34 @@ export default function AudioPlayerUI({
 
   /* Sync state from audio element */
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = resolvedRef.current;
     if (!audio) return;
 
     const onTimeUpdate = () => setCurrentTime(audio.currentTime);
     const onLoaded = () => setDuration(audio.duration);
     const onEnded = () => setPlaying(false);
+    const onPlayEvent = () => setPlaying(true);
+    const onPauseEvent = () => setPlaying(false);
 
     audio.addEventListener("timeupdate", onTimeUpdate);
     audio.addEventListener("loadedmetadata", onLoaded);
     audio.addEventListener("durationchange", onLoaded);
     audio.addEventListener("ended", onEnded);
+    audio.addEventListener("play", onPlayEvent);
+    audio.addEventListener("pause", onPauseEvent);
 
     return () => {
       audio.removeEventListener("timeupdate", onTimeUpdate);
       audio.removeEventListener("loadedmetadata", onLoaded);
       audio.removeEventListener("durationchange", onLoaded);
       audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("play", onPlayEvent);
+      audio.removeEventListener("pause", onPauseEvent);
     };
-  }, []);
+  }, [resolvedRef]);
 
-  const togglePlay = useCallback(() => {
-    const audio = audioRef.current;
+  const togglePlay = () => {
+    const audio = resolvedRef.current;
     if (!audio) return;
     if (audio.paused) {
       audio.play();
@@ -65,48 +78,45 @@ export default function AudioPlayerUI({
       audio.pause();
       setPlaying(false);
     }
-  }, [onPlay]);
+  };
 
-  const skip = useCallback((delta: number) => {
-    const audio = audioRef.current;
+  const skip = (delta: number) => {
+    const audio = resolvedRef.current;
     if (!audio) return;
     audio.currentTime = Math.max(0, Math.min(audio.currentTime + delta, audio.duration || 0));
-  }, []);
+  };
 
-  const seek = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      const audio = audioRef.current;
-      const bar = progressRef.current;
-      if (!audio || !bar || !duration) return;
-      const rect = bar.getBoundingClientRect();
-      const ratio = Math.max(0, Math.min((e.clientX - rect.left) / rect.width, 1));
-      audio.currentTime = ratio * duration;
-    },
-    [duration]
-  );
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = resolvedRef.current;
+    const bar = progressRef.current;
+    if (!audio || !bar || !duration) return;
+    const rect = bar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min((e.clientX - rect.left) / rect.width, 1));
+    audio.currentTime = ratio * duration;
+  };
 
-  const cycleSpeed = useCallback(() => {
-    const audio = audioRef.current;
+  const cycleSpeed = () => {
+    const audio = resolvedRef.current;
     if (!audio) return;
     const idx = SPEEDS.indexOf(speed as (typeof SPEEDS)[number]);
     const next = SPEEDS[(idx + 1) % SPEEDS.length];
     audio.playbackRate = next;
     setSpeed(next);
-  }, [speed]);
+  };
 
-  const changeVolume = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const audio = audioRef.current;
+  const changeVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const audio = resolvedRef.current;
     if (!audio) return;
     const v = parseFloat(e.target.value);
     audio.volume = v;
     setVolume(v);
-  }, []);
+  };
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="surface-panel rounded-xl border border-[var(--stroke)] p-4">
-      <audio ref={audioRef} src={src} preload="metadata" />
+    <div className={className ?? "surface-panel rounded-xl border border-[var(--stroke)] p-4"}>
+      <audio ref={resolvedRef} src={src} preload="metadata" />
 
       {title ? (
         <div className="mb-3 text-sm font-semibold text-[var(--text-primary)] line-clamp-1">
@@ -149,24 +159,25 @@ export default function AudioPlayerUI({
       {/* Controls */}
       <div className="mt-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {/* Skip back */}
+          {/* Skip back 15s */}
           <button
             type="button"
             onClick={() => skip(-15)}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[var(--text-primary)]"
+            className="relative flex h-8 w-8 items-center justify-center rounded-full text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[var(--text-primary)]"
             aria-label="Skip back 15 seconds"
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M1 4v6h6" />
               <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
             </svg>
+            <span className="absolute inset-0 flex items-center justify-center pt-0.5 text-[7px] font-bold leading-none">15</span>
           </button>
 
           {/* Play/Pause */}
           <button
             type="button"
             onClick={togglePlay}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--brand-purple)] text-white shadow-md transition-transform hover:scale-105"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-white shadow-md transition-transform hover:scale-105 dark:bg-zinc-100 dark:text-zinc-900"
             aria-label={playing ? "Pause" : "Play"}
           >
             {playing ? (
@@ -184,14 +195,15 @@ export default function AudioPlayerUI({
           {/* Skip forward */}
           <button
             type="button"
-            onClick={() => skip(15)}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[var(--text-primary)]"
-            aria-label="Skip forward 15 seconds"
+            onClick={() => skip(forwardSkipSeconds)}
+            className="relative flex h-8 w-8 items-center justify-center rounded-full text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[var(--text-primary)]"
+            aria-label={`Skip forward ${forwardSkipSeconds} seconds`}
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M23 4v6h-6" />
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
+            <span className="absolute inset-0 flex items-center justify-center pt-0.5 text-[7px] font-bold leading-none">{forwardSkipSeconds}</span>
           </button>
         </div>
 
@@ -207,7 +219,7 @@ export default function AudioPlayerUI({
           </button>
 
           {/* Volume */}
-          <label className="flex items-center gap-1.5">
+          <label className="hidden items-center gap-1.5 sm:flex">
             <span className="sr-only">Volume</span>
             <svg viewBox="0 0 24 24" className="h-4 w-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
@@ -221,7 +233,7 @@ export default function AudioPlayerUI({
               step="0.05"
               value={volume}
               onChange={changeVolume}
-              className="h-1 w-16 cursor-pointer accent-[var(--brand-purple)]"
+              className="h-1 w-16 cursor-pointer accent-[var(--pivot-fill)]"
             />
           </label>
         </div>

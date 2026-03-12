@@ -2,7 +2,7 @@ import Layout from "../../components/Layout";
 import Head from "next/head";
 import Link from "next/link";
 import EnterprisePageHero from "../../components/EnterprisePageHero";
-import { heroImage } from "../../lib/media";
+
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
 
 export default function WhitePapers() {
@@ -37,11 +37,6 @@ export default function WhitePapers() {
         kicker="Resources"
         title="White papers"
         description="Technical deep-dives, POVs, and reference architectures for enterprise teams deploying AI at scale."
-        image={heroImage("hero-whitepapers-cinematic.webp")}
-        alt="Enterprise research and architecture review surface"
-        imageKicker="Research"
-        imageTitle="Reference architectures"
-        imageDescription="Technical guidance with reusable frameworks and governance patterns."
         chips={["Architecture", "Governance", "Playbooks", "POVs"]}
         primaryAction={{ label: "Open updates feed", href: "/updates" }}
         secondaryAction={{ label: "Back to resources", href: "/resources", variant: "secondary" }}
