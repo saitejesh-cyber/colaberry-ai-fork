@@ -45,7 +45,7 @@ export default function AgentCard({ agent }: { agent: Agent }) {
             <span className="h-1.5 w-1.5 rounded-full bg-[#DC2626]" />
             Agent
           </span>
-          <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-400 transition-colors group-hover:text-zinc-600 dark:group-hover:text-zinc-300">
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="card-arrow h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-400 transition-colors group-hover:text-zinc-600 dark:group-hover:text-zinc-300">
             <path d="M6.5 3.5 11 8l-4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           </svg>
         </div>

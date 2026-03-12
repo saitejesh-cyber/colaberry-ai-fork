@@ -554,7 +554,7 @@ export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, total
         </div>
       </section>
 
-      <div className="reveal mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="reveal stagger-grid mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
         {allMCPs.map((m) => (
           <MCPCard key={m.slug || String(m.id)} mcp={m} />
         ))}

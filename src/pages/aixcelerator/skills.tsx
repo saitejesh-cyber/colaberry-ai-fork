@@ -304,7 +304,7 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
         ) : null}
       </section>
 
-      <section className="reveal mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2">
+      <section className="reveal stagger-grid mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2">
         {visibleSkills.length > 0 ? (
           visibleSkills.map((skill) => <SkillCard key={skill.slug || skill.id} skill={skill} />)
         ) : (

@@ -1555,6 +1555,31 @@ footer .footer-link:focus-visible {
 }
 
 /* ---------------------------------------------------------------------------
+ * Hero dot-grid ambient background
+ * --------------------------------------------------------------------------- */
+.hero-dot-grid {
+  position: relative;
+}
+.hero-dot-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--neutral-stroke) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 1;
+  animation: dot-grid-drift 20s linear infinite;
+}
+.dark .hero-dot-grid::before {
+  opacity: 0.12;
+}
+@keyframes dot-grid-drift {
+  from { background-position: 0 0; }
+  to { background-position: 24px 24px; }
+}
+
+/* ---------------------------------------------------------------------------
  * Scroll-triggered reveal system
  * ---------------------------------------------------------------------------
  * Elements with `.reveal` start invisible and slide up when they enter the
@@ -1804,11 +1829,13 @@ footer .footer-link:focus-visible {
   border-radius: 0.75rem;
   box-shadow: none;
   overflow: hidden;
-  transition: border-color 200ms var(--ease-expo-out);
+  transition: border-color 200ms var(--ease-expo-out),
+              background-color 200ms var(--ease-expo-out);
 }
 
 .catalog-card:hover {
   border-color: var(--stroke);
+  background: var(--surface-soft);
 }
 
 .dark .catalog-card {
@@ -1818,6 +1845,15 @@ footer .footer-link:focus-visible {
 
 .dark .catalog-card:hover {
   border-color: #52525B;
+  background: #1f1f23;
+}
+
+/* Arrow nudge on card hover */
+.catalog-card .card-arrow {
+  transition: transform 200ms var(--ease-expo-out);
+}
+.catalog-card:hover .card-arrow {
+  transform: translateX(2px);
 }
 
 /* Trending indicator pulse */
@@ -2126,6 +2162,10 @@ footer .footer-link:focus-visible {
     animation: none !important;
   }
 
+  .hero-dot-grid::before {
+    animation: none !important;
+  }
+
   .hero-text-reveal {
     animation: none !important;
     clip-path: none !important;
@@ -2283,6 +2323,11 @@ footer .footer-link:focus-visible {
 .stagger-grid > *:nth-child(6) { transition-delay: 0.30s; }
 .stagger-grid > *:nth-child(7) { transition-delay: 0.36s; }
 .stagger-grid > *:nth-child(8) { transition-delay: 0.42s; }
+.stagger-grid > *:nth-child(9) { transition-delay: 0.48s; }
+.stagger-grid > *:nth-child(10) { transition-delay: 0.48s; }
+.stagger-grid > *:nth-child(11) { transition-delay: 0.48s; }
+.stagger-grid > *:nth-child(12) { transition-delay: 0.48s; }
+.stagger-grid > *:nth-child(n+13) { transition-delay: 0.48s; }
 
 /* Scroll-linked reading progress bar (detail pages) */
 .scroll-progress {
