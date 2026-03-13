@@ -209,9 +209,7 @@ export default function SkillDetailPage({ skill }: SkillDetailProps) {
       </div>
 
       {/* Sticky tab navigation */}
-      <div className="mt-6">
-        <StickyTabBar tabs={tabs} />
-      </div>
+      <StickyTabBar tabs={tabs} />
 
       {/* Two-column layout */}
       <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
