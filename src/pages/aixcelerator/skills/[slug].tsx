@@ -1,6 +1,7 @@
 import type { GetStaticPaths, GetStaticProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { useState } from "react";
 import sanitizeHtml from "sanitize-html";
 import Layout from "../../../components/Layout";
 import EnterprisePageHero from "../../../components/EnterprisePageHero";
@@ -17,12 +18,37 @@ import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../
 /*  Data fetching                                                             */
 /* -------------------------------------------------------------------------- */
 
-type SkillDetailProps = { skill: Skill; allowPrivate: boolean };
+type SkillDetailProps = { skill: Skill; allowPrivate: boolean; skillMdContent: string | null };
 
 export const getStaticPaths: GetStaticPaths = async () => ({
   paths: [],
   fallback: "blocking",
 });
+
+/**
+ * Try to fetch the SKILL.md content from the skill's source repository.
+ * Returns null if not available.
+ */
+async function fetchSkillMdFromSource(sourceUrl: string | undefined | null): Promise<string | null> {
+  if (!sourceUrl) return null;
+  try {
+    // Extract GitHub owner/repo/path from sourceUrl
+    const ghMatch = sourceUrl.match(/github\.com\/([^/]+)\/([^/]+)(?:\/tree\/[^/]+\/(.+))?/);
+    if (!ghMatch) return null;
+    const [, owner, repo, subPath] = ghMatch;
+    const skillMdPath = subPath ? `${subPath}/SKILL.md` : "SKILL.md";
+    const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/main/${skillMdPath}`;
+    const res = await fetch(rawUrl, {
+      headers: { "User-Agent": "colaberry-ai/1.0" },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const text = await res.text();
+    return text.length > 50 ? text : null; // skip trivially small files
+  } catch {
+    return null;
+  }
+}
 
 export const getStaticProps: GetStaticProps<SkillDetailProps> = async ({ params }) => {
   const slug = String(params?.slug || "");
@@ -36,7 +62,10 @@ export const getStaticProps: GetStaticProps<SkillDetailProps> = async ({ params 
     if (!allowPrivate && (skill.visibility || "public").toLowerCase() === "private")
       return { notFound: true, revalidate: 120 };
 
-    return { props: { skill, allowPrivate }, revalidate: 600 };
+    // Fetch SKILL.md content from source repo if available
+    const skillMdContent = await fetchSkillMdFromSource(skill.sourceUrl);
+
+    return { props: { skill, allowPrivate, skillMdContent }, revalidate: 600 };
   } catch {
     return { notFound: true, revalidate: 120 };
   }
@@ -46,7 +75,7 @@ export const getStaticProps: GetStaticProps<SkillDetailProps> = async ({ params 
 /*  Page component                                                            */
 /* -------------------------------------------------------------------------- */
 
-export default function SkillDetailPage({ skill }: SkillDetailProps) {
+export default function SkillDetailPage({ skill, skillMdContent }: SkillDetailProps) {
   /* ---- derived data ---- */
   const isPrivate = (skill.visibility || "public").toLowerCase() === "private";
   const status = (skill.status || "live").toLowerCase();
@@ -122,13 +151,18 @@ export default function SkillDetailPage({ skill }: SkillDetailProps) {
     url: canonicalUrl,
   };
 
+  /* ---- SKILL.md ---- */
+  const hasSkillMd = Boolean(skillMdContent);
+
   /* ---- tabs ---- */
   const tabs: TabItem[] = [
     { id: "overview", label: "Overview" },
+    ...(hasSkillMd ? [{ id: "skill-md", label: "SKILL.md" }] : []),
     ...(hasSpec ? [{ id: "technical", label: "Technical" }] : []),
     ...(hasGuidance ? [{ id: "guidance", label: "Guidance" }] : []),
     ...(hasRelations ? [{ id: "linked-assets", label: "Linked Assets" }] : []),
     ...(hasLinks ? [{ id: "references", label: "References" }] : []),
+    { id: "reviews", label: "Reviews" },
   ];
 
   /* ---- render ---- */
@@ -168,11 +202,17 @@ export default function SkillDetailPage({ skill }: SkillDetailProps) {
             ...(skill.verified ? ["Verified"] : []),
           ]}
           primaryAction={
-            skill.docsUrl
-              ? { label: "View docs", href: skill.docsUrl, external: true }
-              : { label: "Back to skills", href: "/aixcelerator/skills" }
+            skill.sourceUrl
+              ? { label: "Download skill", href: skill.sourceUrl, external: true }
+              : skill.docsUrl
+                ? { label: "View docs", href: skill.docsUrl, external: true }
+                : { label: "Browse skills", href: "/aixcelerator/skills" }
           }
-          secondaryAction={{ label: "View all skills", href: "/aixcelerator/skills", variant: "secondary" }}
+          secondaryAction={
+            skill.docsUrl && skill.sourceUrl
+              ? { label: "View docs", href: skill.docsUrl, variant: "secondary" }
+              : { label: "View all skills", href: "/aixcelerator/skills", variant: "secondary" }
+          }
           metrics={[
             { label: "Last updated", value: lastUpdatedLabel || "Pending", note: "Latest metadata refresh." },
             { label: "Linked assets", value: `${skill.agents.length} agents · ${skill.mcpServers.length} MCP`, note: "Catalog components using this skill." },
@@ -375,6 +415,20 @@ export default function SkillDetailPage({ skill }: SkillDetailProps) {
             </section>
           )}
 
+          {/* SKILL.md section */}
+          {hasSkillMd && (
+            <section id="skill-md" className="scroll-mt-28">
+              <SectionHeading title="SKILL.md" />
+              <SkillMdViewer content={skillMdContent!} sourceUrl={skill.sourceUrl} />
+            </section>
+          )}
+
+          {/* Reviews section */}
+          <section id="reviews" className="scroll-mt-28">
+            <SectionHeading title="Reviews" />
+            <ReviewsSection skillName={skill.name} skillSlug={skill.slug} />
+          </section>
+
           {/* Tags */}
           {(skill.tags || []).length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -514,6 +568,111 @@ function RelationList({ title, empty, links }: { title: string; empty: string; l
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SKILL.md Viewer                                                           */
+/* -------------------------------------------------------------------------- */
+
+function SkillMdViewer({ content, sourceUrl }: { content: string; sourceUrl?: string | null }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = content.length > 2000;
+  const displayContent = isLong && !expanded ? content.slice(0, 2000) + "\n..." : content;
+
+  return (
+    <div className="mt-6">
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-700">
+        {/* Header bar */}
+        <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-3 dark:border-zinc-700">
+          <div className="flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            <svg className="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+            SKILL.md
+          </div>
+          {sourceUrl && (
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-medium text-zinc-500 hover:text-[#DC2626] dark:text-zinc-400 dark:hover:text-red-400"
+            >
+              View on GitHub
+            </a>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="p-5">
+          <pre className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+            {displayContent}
+          </pre>
+        </div>
+
+        {/* Show more / less */}
+        {isLong && (
+          <div className="border-t border-zinc-200 px-5 py-3 dark:border-zinc-700">
+            <button
+              type="button"
+              onClick={() => setExpanded(!expanded)}
+              className="text-sm font-medium text-[#DC2626] hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            >
+              {expanded ? "Show less" : "Show full SKILL.md"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Reviews Section                                                           */
+/* -------------------------------------------------------------------------- */
+
+function ReviewsSection({ skillName, skillSlug }: { skillName: string; skillSlug: string }) {
+  return (
+    <div className="mt-6 space-y-6">
+      {/* Review prompt */}
+      <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-700">
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+            <svg className="h-5 w-5 text-zinc-500" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.2 48.2 0 0 0 5.887-.47c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Share your experience</h4>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Have you used <span className="font-medium text-zinc-700 dark:text-zinc-300">{skillName}</span>? Help others by sharing what worked well and any tips.
+            </p>
+            <div className="mt-4">
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-600 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-zinc-100"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                </svg>
+                Write a review
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Empty state */}
+      <div className="rounded-xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-600">
+        <svg className="mx-auto h-10 w-10 text-zinc-300 dark:text-zinc-600" fill="none" viewBox="0 0 24 24" strokeWidth="1" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+        </svg>
+        <p className="mt-3 text-sm font-medium text-zinc-600 dark:text-zinc-400">No reviews yet</p>
+        <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
+          Be the first to review this skill and help the community.
+        </p>
+      </div>
     </div>
   );
 }

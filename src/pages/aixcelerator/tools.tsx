@@ -1,4 +1,5 @@
 import ToolCard from "../../components/ToolCard";
+import CatalogSnapshot from "../../components/CatalogSnapshot";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
@@ -239,18 +240,12 @@ export default function Tools({ tools: initialTools, fetchError, totalCount, ini
         </div>
       </div>
 
-      <section className="reveal surface-panel mt-8 p-5 sm:mt-10">
-        <SectionHeader
-          kicker="Catalog snapshot"
-          title="Tool coverage"
-          description="End tools connected via MCP servers in the catalog."
-          size="md"
-        />
-        <div className="mt-5 grid gap-4 sm:grid-cols-3 sm:items-center sm:gap-6">
-          <Stat title="Tools" value={String(catalogTotal)} note="End tools cataloged" />
-          <Stat title="Categories" value={String(categoryOptions.length)} note="Tool types" />
-        </div>
-      </section>
+      <CatalogSnapshot
+        stats={[
+          { label: "Tools", value: catalogTotal.toLocaleString(), note: "End tools cataloged" },
+          { label: "Categories", value: String(categoryOptions.length), note: "Tool types" },
+        ]}
+      />
 
       <section className="reveal surface-panel mt-6 p-6 sm:mt-8">
         <SectionHeader
@@ -403,12 +398,3 @@ function formatCategoryLabel(cat: string): string {
   return cat.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function Stat({ title, value, note }: { title: string; value: string; note: string }) {
-  return (
-    <div className="flex flex-col items-center text-center gap-1">
-      <span className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{title}</span>
-      <span className="text-3xl font-extrabold text-zinc-900 dark:text-zinc-50">{value}</span>
-      <span className="text-xs text-zinc-400 dark:text-zinc-500">{note}</span>
-    </div>
-  );
-}
