@@ -1696,8 +1696,6 @@ export async function fetchSkills(
     `&populate[mcpServers][fields][1]=slug` +
     `&populate[useCases][fields][0]=title` +
     `&populate[useCases][fields][1]=slug` +
-    `&populate[relatedUseCases][fields][0]=title` +
-    `&populate[relatedUseCases][fields][1]=slug` +
     `&populate[coverImage][fields][0]=url` +
     `&populate[coverImage][fields][1]=alternativeText`;
   const minimalPopulateQuery =
