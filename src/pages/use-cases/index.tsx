@@ -118,14 +118,6 @@ export default function UseCasesPage({ useCases, allowPrivate, fetchError }: Use
     () => sortUseCases(filteredUseCases, sortMode),
     [filteredUseCases, sortMode]
   );
-  const _latestUseCases = useMemo(
-    () => sortUseCases(scopedUseCases, "latest").slice(0, 6),
-    [scopedUseCases]
-  );
-  const _trendingUseCases = useMemo(
-    () => sortUseCases(scopedUseCases, "trending").slice(0, 6),
-    [scopedUseCases]
-  );
   const shownCount = Math.min(visibleCount, sortedUseCases.length);
   const visibleUseCases = useMemo(
     () => sortedUseCases.slice(0, shownCount),
@@ -456,51 +448,4 @@ function scoreTrendingUseCase(item: UseCase) {
   return linkageScore + verifiedScore + completenessScore + freshnessScore;
 }
 
-function _SignalRail({
-  title,
-  description,
-  items,
-  emptyText,
-  detailType,
-}: {
-  title: string;
-  description: string;
-  items: UseCase[];
-  emptyText: string;
-  detailType: "latest" | "trending";
-}) {
-  return (
-    <article className="card-elevated p-5">
-      <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{title}</div>
-      <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{description}</p>
-      {items.length === 0 ? (
-        <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{emptyText}</p>
-      ) : (
-        <ul className="mt-3 grid gap-2">
-          {items.map((item) => {
-            const detail =
-              detailType === "latest"
-                ? formatDate(item.lastUpdated) || "Date pending"
-                : item.verified
-                ? "Verified"
-                : `${item.agents.length + item.mcpServers.length} links`;
-            return (
-              <li key={item.slug || item.id}>
-                <Link
-                  href={`/use-cases/${item.slug}`}
-                  className="card-elevated group flex items-center justify-between px-3 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200"
-                >
-                  <span className="truncate pr-3">{item.title}</span>
-                  <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-zinc-500 group-hover:text-[#4F2AA3] dark:text-zinc-400 dark:group-hover:text-[#7B5CE0]">
-                    {detail}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </article>
-  );
-}
 
