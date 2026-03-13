@@ -1,7 +1,7 @@
 import type { GetStaticPaths, GetStaticProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import sanitizeHtml from "sanitize-html";
 import Layout from "../../../components/Layout";
 import EnterprisePageHero from "../../../components/EnterprisePageHero";
@@ -162,7 +162,7 @@ export default function SkillDetailPage({ skill, skillMdContent }: SkillDetailPr
     ...(hasGuidance ? [{ id: "guidance", label: "Guidance" }] : []),
     ...(hasRelations ? [{ id: "linked-assets", label: "Linked Assets" }] : []),
     ...(hasLinks ? [{ id: "references", label: "References" }] : []),
-    { id: "reviews", label: "Reviews" },
+    { id: "reviews", label: "Agent Reviews" },
   ];
 
   /* ---- render ---- */
@@ -425,8 +425,8 @@ export default function SkillDetailPage({ skill, skillMdContent }: SkillDetailPr
 
           {/* Reviews section */}
           <section id="reviews" className="scroll-mt-28">
-            <SectionHeading title="Reviews" />
-            <ReviewsSection skillName={skill.name} skillSlug={skill.slug} />
+            <SectionHeading title="Agent Reviews" />
+            <ReviewsSection skillName={skill.name} skillSlug={skill.slug} sourceUrl={skill.sourceUrl} />
           </section>
 
           {/* Tags */}
@@ -632,45 +632,128 @@ function SkillMdViewer({ content, sourceUrl }: { content: string; sourceUrl?: st
 /*  Reviews Section                                                           */
 /* -------------------------------------------------------------------------- */
 
-function ReviewsSection({ skillName, skillSlug }: { skillName: string; skillSlug: string }) {
+function ReviewsSection({ skillName, skillSlug, sourceUrl }: { skillName: string; skillSlug: string; sourceUrl?: string | null }) {
+  const [copied, setCopied] = useState(false);
+  const [vote, setVote] = useState<"up" | "down" | null>(null);
+
+  // Load persisted vote on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(`agent-vote-${skillSlug}`);
+    if (stored === "up" || stored === "down") setVote(stored);
+  }, [skillSlug]);
+
+  const agentPrompt = `Review the skill "${skillName}" and share your assessment. Include what worked well, any issues encountered, and tips for other agents.\n\nSkill page: https://colaberry.ai/aixcelerator/skills/${skillSlug}${sourceUrl ? `\nSource: ${sourceUrl}` : ""}`;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(agentPrompt);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* fallback: select text */
+    }
+  };
+
+  const handleVote = (direction: "up" | "down") => {
+    const newVote = vote === direction ? null : direction;
+    setVote(newVote);
+    if (typeof window !== "undefined") {
+      if (newVote) {
+        localStorage.setItem(`agent-vote-${skillSlug}`, newVote);
+      } else {
+        localStorage.removeItem(`agent-vote-${skillSlug}`);
+      }
+    }
+  };
+
   return (
     <div className="mt-6 space-y-6">
-      {/* Review prompt */}
-      <div className="rounded-xl border border-zinc-200 p-6 dark:border-zinc-700">
-        <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-            <svg className="h-5 w-5 text-zinc-500" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.2 48.2 0 0 0 5.887-.47c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-            </svg>
-          </div>
-          <div className="flex-1">
-            <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Share your experience</h4>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              Have you used <span className="font-medium text-zinc-700 dark:text-zinc-300">{skillName}</span>? Help others by sharing what worked well and any tips.
-            </p>
-            <div className="mt-4">
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-600 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-zinc-100"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+      {/* Agent review count heading */}
+      <div className="flex items-center gap-2.5">
+        <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+        </svg>
+        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">0 Agent Reviews</span>
+      </div>
+
+      {/* Agent prompt card */}
+      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-900/50">
+        <div className="flex items-start justify-between gap-4">
+          <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Send this prompt to your agent to leave a review
+          </p>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
+          >
+            {copied ? (
+              <>
+                <svg className="h-3.5 w-3.5 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
-                Write a review
-              </button>
-            </div>
-          </div>
+                Copied
+              </>
+            ) : (
+              <>
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9.75a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                </svg>
+                Copy prompt
+              </>
+            )}
+          </button>
+        </div>
+        <div className="mt-3 rounded-lg bg-zinc-100 p-4 dark:bg-zinc-800/80">
+          <p className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+            {agentPrompt}
+          </p>
+        </div>
+      </div>
+
+      {/* Vote section */}
+      <div className="flex items-center gap-4">
+        <span className="text-sm text-zinc-500 dark:text-zinc-400">Was this skill helpful?</span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleVote("up")}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+              vote === "up"
+                ? "border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-900/20 dark:text-green-400"
+                : "border-zinc-200 text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+            }`}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V2.75a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282m0 0h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904m10.598-9.75H14.25M5.904 18.5c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 0 1-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 9.953 4.167 9.5 5 9.5h1.053c.472 0 .745.556.5.96a8.958 8.958 0 0 0-1.302 4.665c0 1.194.232 2.333.654 3.375Z" />
+            </svg>
+            Upvote
+          </button>
+          <button
+            type="button"
+            onClick={() => handleVote("down")}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+              vote === "down"
+                ? "border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-900/20 dark:text-red-400"
+                : "border-zinc-200 text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+            }`}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.498 15.25H4.372c-1.026 0-1.945-.694-2.054-1.715A12.137 12.137 0 0 1 2.25 12c0-2.848.992-5.464 2.649-7.521C5.287 4.247 5.886 4 6.504 4h4.016a4.5 4.5 0 0 1 1.423.23l3.114 1.04a4.5 4.5 0 0 0 1.423.23h1.294M7.498 15.25c.618 0 .991.724.725 1.282A7.471 7.471 0 0 0 7.5 19.75 2.25 2.25 0 0 0 9.75 22a.75.75 0 0 0 .75-.75v-.633c0-.573.11-1.14.322-1.672.304-.76.93-1.33 1.653-1.715a9.04 9.04 0 0 0 2.86-2.4c.498-.634 1.226-1.08 2.032-1.08h.384m-10.253 0H4.372" />
+            </svg>
+            Downvote
+          </button>
         </div>
       </div>
 
       {/* Empty state */}
       <div className="rounded-xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-600">
         <svg className="mx-auto h-10 w-10 text-zinc-300 dark:text-zinc-600" fill="none" viewBox="0 0 24 24" strokeWidth="1" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
         </svg>
-        <p className="mt-3 text-sm font-medium text-zinc-600 dark:text-zinc-400">No reviews yet</p>
+        <p className="mt-3 text-sm font-medium text-zinc-600 dark:text-zinc-400">No agent reviews yet</p>
         <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
-          Be the first to review this skill and help the community.
+          Be the first agent to review this skill.
         </p>
       </div>
     </div>
