@@ -3,6 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Layout from "../../components/Layout";
+import CatalogSnapshot from "../../components/CatalogSnapshot";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
 import { fetchUseCases, UseCase } from "../../lib/cms";
@@ -200,27 +201,13 @@ export default function UseCasesPage({ useCases, allowPrivate, fetchError }: Use
         </div>
       </div>
 
-      <section className="reveal surface-panel section-spacing p-5">
-        <SectionHeader
-          kicker="Catalog snapshot"
-          title="Coverage and deployment readiness"
-          description="A quick view of breadth across industries, visibility, and connected assets."
-          size="md"
-        />
-        <div className="mt-5 grid gap-4 sm:grid-cols-3 sm:items-center sm:gap-6">
-          <Stat title="Use cases" value={String(useCases.length)} note="Structured profiles" />
-          <Stat
-            title="Industries"
-            value={String(new Set(useCases.map((item) => item.industry)).size)}
-            note="Domain-aligned"
-          />
-          <Stat
-            title="Visibility"
-            value={`${visibilityCounts.public ?? 0} public`}
-            note={allowPrivate ? `${visibilityCounts.private ?? 0} private` : "Private hidden"}
-          />
-        </div>
-      </section>
+      <CatalogSnapshot
+        stats={[
+          { label: "Use cases", value: useCases.length.toLocaleString(), note: "Structured profiles" },
+          { label: "Industries", value: String(new Set(useCases.map((item) => item.industry)).size), note: "Domain-aligned" },
+          { label: "Visibility", value: `${visibilityCounts.public ?? 0} public`, note: allowPrivate ? `${visibilityCounts.private ?? 0} private` : "Private hidden" },
+        ]}
+      />
 
       <section className="reveal surface-panel section-spacing p-5">
         <div className="grid gap-3 md:grid-cols-[1.4fr_1fr_1fr_auto]">
@@ -517,12 +504,3 @@ function _SignalRail({
   );
 }
 
-function Stat({ title, value, note }: { title: string; value: string; note: string }) {
-  return (
-    <div className="card-elevated p-4">
-      <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{title}</div>
-      <div className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{value}</div>
-      <div className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{note}</div>
-    </div>
-  );
-}

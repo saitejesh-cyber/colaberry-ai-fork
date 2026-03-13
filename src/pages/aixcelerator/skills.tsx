@@ -3,6 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Layout from "../../components/Layout";
+import CatalogSnapshot from "../../components/CatalogSnapshot";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
 import { fetchSkills, Skill } from "../../lib/cms";
@@ -199,23 +200,13 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
         </div>
       </div>
 
-      <section className="reveal surface-panel mt-8 p-5 sm:mt-10">
-        <SectionHeader
-          kicker="Catalog snapshot"
-          title="Coverage and operational readiness"
-          description="Quick signal view across visibility, categories, and linked assets."
-          size="md"
-        />
-        <div className="mt-5 grid gap-4 sm:grid-cols-3 sm:items-center sm:gap-6">
-          <Stat title="Skills" value={String(skills.length)} note="Reusable capability profiles" />
-          <Stat title="Categories" value={String(categories.length)} note="Modeled from current skill taxonomy" />
-          <Stat
-            title="Visibility"
-            value={`${visibilityCounts.public ?? 0} public`}
-            note={allowPrivate ? `${visibilityCounts.private ?? 0} private` : "Private hidden"}
-          />
-        </div>
-      </section>
+      <CatalogSnapshot
+        stats={[
+          { label: "Skills", value: skills.length.toLocaleString(), note: "Reusable capability profiles" },
+          { label: "Categories", value: String(categories.length), note: "Modeled from current skill taxonomy" },
+          { label: "Visibility", value: `${visibilityCounts.public ?? 0} public`, note: allowPrivate ? `${visibilityCounts.private ?? 0} private` : "Private hidden" },
+        ]}
+      />
 
       <section className="reveal surface-panel mt-6 p-5 sm:mt-8">
         <div className="grid gap-3 md:grid-cols-[1.45fr_1fr_1fr_auto]">
@@ -535,20 +526,3 @@ function formatUsageLabel(value: number) {
   return String(value);
 }
 
-function Stat({
-  title,
-  value,
-  note,
-}: {
-  title: string;
-  value: string;
-  note: string;
-}) {
-  return (
-    <div className="card-elevated p-4">
-      <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{title}</div>
-      <div className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{value}</div>
-      <div className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{note}</div>
-    </div>
-  );
-}

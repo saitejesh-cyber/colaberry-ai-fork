@@ -1,4 +1,5 @@
 import MCPCard from "../../components/MCPCard";
+import CatalogSnapshot from "../../components/CatalogSnapshot";
 import Layout from "../../components/Layout";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
@@ -326,27 +327,13 @@ export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, total
         </div>
       </div>
 
-      <section className="reveal surface-panel mt-8 p-5 sm:mt-10">
-        <SectionHeader
-          kicker="Catalog snapshot"
-          title="Coverage and delivery readiness"
-          description="A quick view of integration breadth and industry alignment."
-          size="md"
-        />
-        <div className="mt-5 grid gap-4 sm:grid-cols-3 sm:items-center sm:gap-6">
-          <Stat title="Servers" value={String(catalogTotal)} note="Curated library" />
-          <Stat
-            title="Industries"
-            value={String(industries.length)}
-            note="Domain-aware"
-          />
-          <Stat
-            title="Visibility"
-            value={`${visibilityCounts.public ?? 0} public`}
-            note={allowPrivate ? `${visibilityCounts.private ?? 0} private` : "Private hidden"}
-          />
-        </div>
-      </section>
+      <CatalogSnapshot
+        stats={[
+          { label: "Servers", value: catalogTotal.toLocaleString(), note: "Curated library" },
+          { label: "Industries", value: String(industries.length), note: "Domain-aware" },
+          { label: "Visibility", value: `${visibilityCounts.public ?? 0} public`, note: allowPrivate ? `${visibilityCounts.private ?? 0} private` : "Private hidden" },
+        ]}
+      />
 
       <section className="reveal surface-panel mt-6 p-6 sm:mt-8">
         <SectionHeader
@@ -737,12 +724,3 @@ function _SignalRail({
   );
 }
 
-function Stat({ title, value, note }: { title: string; value: string; note: string }) {
-  return (
-    <div className="card-elevated p-4">
-      <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{title}</div>
-      <div className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{value}</div>
-      <div className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">{note}</div>
-    </div>
-  );
-}
