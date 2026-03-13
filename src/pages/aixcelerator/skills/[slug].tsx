@@ -1,7 +1,7 @@
 import type { GetStaticPaths, GetStaticProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import sanitizeHtml from "sanitize-html";
 import Layout from "../../../components/Layout";
 import EnterprisePageHero from "../../../components/EnterprisePageHero";
@@ -634,13 +634,11 @@ function SkillMdViewer({ content, sourceUrl }: { content: string; sourceUrl?: st
 
 function ReviewsSection({ skillName, skillSlug, sourceUrl }: { skillName: string; skillSlug: string; sourceUrl?: string | null }) {
   const [copied, setCopied] = useState(false);
-  const [vote, setVote] = useState<"up" | "down" | null>(null);
-
-  // Load persisted vote on mount
-  useEffect(() => {
+  const [vote, setVote] = useState<"up" | "down" | null>(() => {
+    if (typeof window === "undefined") return null;
     const stored = localStorage.getItem(`agent-vote-${skillSlug}`);
-    if (stored === "up" || stored === "down") setVote(stored);
-  }, [skillSlug]);
+    return stored === "up" || stored === "down" ? stored : null;
+  });
 
   const agentPrompt = `Review the skill "${skillName}" and share your assessment. Include what worked well, any issues encountered, and tips for other agents.\n\nSkill page: https://colaberry.ai/aixcelerator/skills/${skillSlug}${sourceUrl ? `\nSource: ${sourceUrl}` : ""}`;
 
