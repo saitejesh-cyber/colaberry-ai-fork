@@ -303,11 +303,11 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
         ) : null}
       </section>
 
-      <section className="reveal stagger-grid mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2">
+      <section className="reveal stagger-grid mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-3">
         {visibleSkills.length > 0 ? (
           visibleSkills.map((skill) => <SkillCard key={skill.slug || skill.id} skill={skill} />)
         ) : (
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-3">
             <StatePanel
               variant="empty"
               title="No matching skills found"
