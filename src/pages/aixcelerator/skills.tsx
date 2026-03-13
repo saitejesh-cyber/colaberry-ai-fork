@@ -336,44 +336,48 @@ function SkillCard({ skill }: { skill: Skill }) {
   const sourceLabel = (skill.source || "internal").toLowerCase();
   const metadata = [category, provider, skill.industry].filter(Boolean).join(" · ");
   const relationCount = (skill.agents?.length || 0) + (skill.mcpServers?.length || 0) + (skill.useCases?.length || 0);
+  const href = `/aixcelerator/skills/${skill.slug || skill.id}`;
 
   return (
-    <article className="card-feature p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Skill</div>
-          <h2 className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-            <Link href={`/aixcelerator/skills/${skill.slug || skill.id}`} className="hover:text-red-600 dark:hover:text-red-400">
-              {skill.name}
-            </Link>
-          </h2>
+    <Link href={href} className="group block" aria-label={`View skill ${skill.name} details`}>
+      <div className="catalog-card p-6">
+        <div className="flex items-center justify-between gap-3">
+          <span className="chip chip-neutral rounded-full px-2.5 py-1 text-label font-semibold uppercase tracking-[0.12em]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#DC2626]" />
+            Skill
+          </span>
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="card-arrow h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-400 transition-colors group-hover:text-zinc-600 dark:group-hover:text-zinc-300">
+            <path d="M6.5 3.5 11 8l-4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          </svg>
         </div>
-        <span className="chip chip-muted rounded-md px-2.5 py-1 text-[11px] font-semibold">
-          {status.toUpperCase()}
-        </span>
-      </div>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        {skill.summary || "Skill profile summary will appear after content update."}
-      </p>
-      <div className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{metadata || "Category and provider pending"}</div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <span className="chip chip-brand rounded-md px-2.5 py-1 text-[11px] font-semibold">{category}</span>
-        <span className="chip chip-muted rounded-md px-2.5 py-1 text-[11px] font-semibold">
-          {sourceLabel.charAt(0).toUpperCase() + sourceLabel.slice(1)}
-        </span>
-        <span className="chip chip-muted rounded-md px-2.5 py-1 text-[11px] font-semibold">
-          {relationCount} linked assets
-        </span>
-      </div>
-      <div className="mt-4 flex items-center justify-between">
-        <div className="text-xs text-zinc-500 dark:text-zinc-400">
-          {skill.lastUpdated ? `Updated ${formatDate(skill.lastUpdated)}` : "Update date pending"}
+
+        <div className="mt-3">
+          <h2 className="truncate text-caption font-semibold text-zinc-900 dark:text-zinc-50">{skill.name}</h2>
+          <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+            {skill.summary || "Skill profile summary will appear after content update."}
+          </p>
         </div>
-        <Link href={`/aixcelerator/skills/${skill.slug || skill.id}`} className="btn btn-secondary btn-sm">
-          View detail
-        </Link>
+
+        <div className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{metadata || "Category and provider pending"}</div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="chip chip-neutral rounded-full px-2.5 py-1 text-xs font-semibold">{category}</span>
+          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${status === "live" ? "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:ring-emerald-800" : "bg-zinc-50 text-zinc-600 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:ring-zinc-700"}`}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </span>
+          <span className="chip chip-neutral rounded-full px-2.5 py-1 text-xs font-semibold">
+            {sourceLabel.charAt(0).toUpperCase() + sourceLabel.slice(1)}
+          </span>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between border-t border-zinc-200/60 pt-3 dark:border-zinc-700/50">
+          <div className="text-label font-semibold uppercase tracking-[0.1em] text-zinc-500 dark:text-zinc-400">
+            {skill.lastUpdated ? formatDate(skill.lastUpdated) : "Update pending"} · {relationCount} linked
+          </div>
+          <span className="text-label font-semibold text-zinc-400 dark:text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300">View →</span>
+        </div>
       </div>
-    </article>
+    </Link>
   );
 }
 
