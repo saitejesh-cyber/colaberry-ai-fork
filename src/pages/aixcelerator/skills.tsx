@@ -225,6 +225,18 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
             </svg>
             View skill graph
           </Link>
+          <Link
+            href="/aixcelerator/skills/ontology"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Ontology
+          </Link>
+          <Link
+            href="/aixcelerator/skills/collections"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Collections
+          </Link>
         </div>
       </div>
 
