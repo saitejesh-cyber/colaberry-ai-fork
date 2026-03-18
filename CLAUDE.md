@@ -52,11 +52,13 @@ src/
 - `src/styles/globals.css` — ALL CSS custom properties and component classes
 - `tailwind.config.ts` — Zinc color scale, Inter fonts, animation keyframes
 - `src/pages/_app.tsx` — Font loading (Inter), global layout wrapper
-- `src/lib/cms.ts` — CMS fetch functions, TypeScript types, `fetchRelatedSkills()`
+- `src/lib/cms.ts` — CMS fetch functions, TypeScript types, `fetchRelatedSkills()`, `fetchSkillCategoryCounts()`, `fetchAllSkillTags()`
 - `src/lib/catalogFormatters.ts` — Shared formatting helpers + `toSkillFamily()`
+- `src/lib/graphUtils.ts` — Shared graph utilities: `buildGraphData()`, `CATEGORY_COLORS`, `RELATIONSHIP_TYPE_COLORS`, `computeConvexHull()`, `topologicalSort()`
 - `src/components/Layout.tsx` — Header + footer + nav (1,750 lines)
 - `src/data/skill-taxonomy.ts` — 10-category SkillNet-inspired taxonomy + `classifySkill()`
-- `src/data/skill-collections.ts` — Curated skill bundles definition
+- `src/data/skill-collections.ts` — Curated + auto-generated skill bundles (extended type with `keywordTags`, `linkCount`, `generated`)
+- `src/data/generated-collections.json` — Build-time generated collections from CMS data
 
 ## Shared Components (used on 15+ pages)
 - `EnterprisePageHero` — Hero section with kicker badge, heading, description, image
@@ -64,13 +66,16 @@ src/
 - `EnterpriseCtaBand` — Dark CTA band at bottom of pages
 - `AgentCard` / `MCPCard` / `SkillCard` — Catalog listing cards (reusable components)
 
-## Skills Ontology (SkillNet-inspired)
+## Skills Ontology (SkillNet-inspired — Premium)
 - **Taxonomy:** 10-category classification in `src/data/skill-taxonomy.ts` (Development, AI & Generation, Research, Data & Science, Business, Testing & QA, Productivity, Security, Infrastructure, Other)
-- **Collections:** 6 curated skill bundles in `src/data/skill-collections.ts` (Data Pipeline, Web Automation, Content Generation, Security Audit, DevOps, Research Assistant)
+- **Collections:** 6 curated + auto-generated bundles in `src/data/skill-collections.ts` with `keywordTags`, `linkCount`, `generated` fields. Script: `scripts/generate-collections.mjs` clusters by tag co-occurrence
 - **Related Skills:** `fetchRelatedSkills()` in `src/lib/cms.ts` — ranks by shared tags, category, industry, skillType
-- **Graph Visualization:** `src/pages/aixcelerator/skills/graph.tsx` — interactive force-graph using `react-force-graph-2d`
-- **Category Pills:** Taxonomy-based filter pills on skills listing page with per-category counts
+- **Graph Visualization (Premium):** `src/pages/aixcelerator/skills/graph.tsx` — 500 skills, color-coded edges by 4 relationship types, search + zoom-to-node, edge type filtering checkboxes, fullscreen mode, animated directional particles on depend_on edges, dual legend (nodes + edges)
+- **Ontology Page (Interactive):** `src/pages/aixcelerator/skills/ontology.tsx` — interactive SVG 3-layer diagram with live CMS data (category counts, tag cloud), clickable nodes linking to catalog/detail/collection pages, architecture explanation cards with live stats
+- **Collections Page (Searchable):** `src/pages/aixcelerator/skills/collections/index.tsx` — search bar, category filter pills, enriched cards with keyword tags + "+N more" truncation
+- **Graph Utilities:** `src/lib/graphUtils.ts` — `buildGraphData()` computes all 4 relationship types, `CATEGORY_COLORS`, `RELATIONSHIP_TYPE_COLORS`, `computeConvexHull()`, `topologicalSort()`, `countLinksByType()`
 - **Relationship Types:** similar_to, depend_on, compose_with, belong_to (SkillNet ontology model)
+- **Import Scripts:** `scripts/import-clawhub-skills.mjs`, `scripts/import-ultimate-skills.mjs`, `scripts/import-anthropic-skills.mjs`, `scripts/import-github-skills.mjs`, `scripts/generate-collections.mjs`
 
 ## Build & Validation
 ```bash
