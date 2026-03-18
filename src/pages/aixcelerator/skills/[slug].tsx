@@ -12,14 +12,18 @@ import SpecCard from "../../../components/mcp/SpecCard";
 import BulletList from "../../../components/mcp/BulletList";
 import StatePanel from "../../../components/StatePanel";
 import SkillCard from "../../../components/SkillCard";
+import CollectionGraph from "../../../components/CollectionGraph";
 import { fetchSkillBySlug, fetchRelatedSkills, Skill } from "../../../lib/cms";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
+import { classifySkill } from "../../../data/skill-taxonomy";
+import { CATEGORY_COLORS, type GraphNode, type GraphLink } from "../../../lib/graphUtils";
+import type { SkillRelationType } from "../../../data/skill-taxonomy";
 
 /* -------------------------------------------------------------------------- */
 /*  Data fetching                                                             */
 /* -------------------------------------------------------------------------- */
 
-type SkillDetailProps = { skill: Skill; allowPrivate: boolean; skillMdContent: string | null; relatedSkills: Skill[] };
+type SkillDetailProps = { skill: Skill; allowPrivate: boolean; skillMdContent: string | null; relatedSkills: Skill[]; miniGraphNodes: GraphNode[]; miniGraphLinks: GraphLink[] };
 
 export const getStaticPaths: GetStaticPaths = async () => ({
   paths: [],
@@ -74,7 +78,51 @@ export const getStaticProps: GetStaticProps<SkillDetailProps> = async ({ params 
       relatedSkills = [];
     }
 
-    return { props: { skill, allowPrivate, skillMdContent, relatedSkills }, revalidate: 600 };
+    // Build mini-graph: current skill + related skills
+    const miniGraphNodes: GraphNode[] = [];
+    const miniGraphLinks: GraphLink[] = [];
+
+    const currentCat = classifySkill(skill);
+    miniGraphNodes.push({
+      id: skill.slug,
+      name: skill.name,
+      category: currentCat.slug,
+      color: CATEGORY_COLORS[currentCat.slug] || "#a1a1aa",
+      val: 3,
+      tags: (skill.tags || []).map((t) => (t.slug || t.name || "").toLowerCase()).filter(Boolean),
+    });
+
+    const linkSet = new Set<string>();
+    const addMiniLink = (src: string, tgt: string, type: SkillRelationType) => {
+      const key = [src, tgt].sort().join("|") + "|" + type;
+      if (!linkSet.has(key)) { linkSet.add(key); miniGraphLinks.push({ source: src, target: tgt, type }); }
+    };
+
+    for (const related of relatedSkills) {
+      const relCat = classifySkill(related);
+      miniGraphNodes.push({
+        id: related.slug,
+        name: related.name,
+        category: relCat.slug,
+        color: CATEGORY_COLORS[relCat.slug] || "#a1a1aa",
+        val: 1.5,
+        tags: (related.tags || []).map((t) => (t.slug || t.name || "").toLowerCase()).filter(Boolean),
+      });
+
+      // Determine relationship type
+      const currentTags = new Set((skill.tags || []).map((t) => (t.slug || t.name || "").toLowerCase()).filter(Boolean));
+      const relatedTags = (related.tags || []).map((t) => (t.slug || t.name || "").toLowerCase()).filter(Boolean);
+      const sharedTags = relatedTags.filter((t) => currentTags.has(t)).length;
+
+      if (relCat.slug === currentCat.slug) {
+        addMiniLink(skill.slug, related.slug, "belong_to");
+      }
+      if (sharedTags >= 1) {
+        addMiniLink(skill.slug, related.slug, "similar_to");
+      }
+    }
+
+    return { props: { skill, allowPrivate, skillMdContent, relatedSkills, miniGraphNodes, miniGraphLinks }, revalidate: 600 };
   } catch {
     return { notFound: true, revalidate: 120 };
   }
@@ -84,7 +132,7 @@ export const getStaticProps: GetStaticProps<SkillDetailProps> = async ({ params 
 /*  Page component                                                            */
 /* -------------------------------------------------------------------------- */
 
-export default function SkillDetailPage({ skill, skillMdContent, relatedSkills }: SkillDetailProps) {
+export default function SkillDetailPage({ skill, skillMdContent, relatedSkills, miniGraphNodes, miniGraphLinks }: SkillDetailProps) {
   /* ---- derived data ---- */
   const isPrivate = (skill.visibility || "public").toLowerCase() === "private";
   const status = (skill.status || "live").toLowerCase();
@@ -529,6 +577,32 @@ export default function SkillDetailPage({ skill, skillMdContent, relatedSkills }
               </div>
             )}
           </div>
+
+          {/* Mini-graph: current skill + related skills */}
+          {miniGraphNodes.length > 1 && (
+            <div className="mt-4 rounded-xl border border-zinc-200 dark:border-zinc-700">
+              <div className="p-4">
+                <h3 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+                  Skill Neighborhood
+                </h3>
+                <p className="mt-0.5 text-[10px] text-zinc-400 dark:text-zinc-500">
+                  Click a neighbor to explore
+                </p>
+              </div>
+              <CollectionGraph
+                nodes={miniGraphNodes}
+                links={miniGraphLinks}
+                height={250}
+                showLabels
+                highlightNodeId={skill.slug}
+                onNodeClick={(nodeId) => {
+                  if (nodeId !== skill.slug) {
+                    window.location.href = `/aixcelerator/skills/${nodeId}`;
+                  }
+                }}
+              />
+            </div>
+          )}
         </aside>
       </div>
 
