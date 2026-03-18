@@ -40,7 +40,7 @@
 ## Project Structure
 ```
 src/
-├── components/     # 29 React components (incl. SkillCard)
+├── components/     # 30 React components (incl. SkillCard, CollectionGraph)
 ├── pages/          # 33+ pages (Pages Router, incl. skills/graph, skills/collections/[slug])
 ├── styles/         # globals.css (design tokens + component classes)
 ├── lib/            # 14 utility modules (cms.ts, seo.ts, catalogFormatters.ts, etc.)
@@ -74,6 +74,9 @@ src/
 - **Ontology Page (Interactive):** `src/pages/aixcelerator/skills/ontology.tsx` — interactive SVG 3-layer diagram with live CMS data (category counts, tag cloud), clickable nodes linking to catalog/detail/collection pages, architecture explanation cards with live stats
 - **Collections Page (Searchable):** `src/pages/aixcelerator/skills/collections/index.tsx` — search bar, category filter pills, enriched cards with keyword tags + "+N more" truncation
 - **Graph Utilities:** `src/lib/graphUtils.ts` — `buildGraphData()` computes all 4 relationship types, `CATEGORY_COLORS`, `RELATIONSHIP_TYPE_COLORS`, `computeConvexHull()`, `topologicalSort()`, `countLinksByType()`
+- **Collection Detail (Interactive):** `src/pages/aixcelerator/skills/collections/[slug].tsx` — embedded force-graph of collection skills with labeled relationship edges, skill pipeline flow visualization, keyword tag chips
+- **Skill Detail Mini-Graph:** `src/pages/aixcelerator/skills/[slug].tsx` — sidebar "Skill Neighborhood" mini-graph showing current skill + 4 related skills with color-coded relationship edges, click-to-navigate
+- **CollectionGraph Component:** `src/components/CollectionGraph.tsx` — reusable embedded force-graph with configurable height, labels, highlight, click callbacks, relationship legend
 - **Relationship Types:** similar_to, depend_on, compose_with, belong_to (SkillNet ontology model)
 - **Import Scripts:** `scripts/import-clawhub-skills.mjs`, `scripts/import-ultimate-skills.mjs`, `scripts/import-anthropic-skills.mjs`, `scripts/import-github-skills.mjs`, `scripts/generate-collections.mjs`
 
