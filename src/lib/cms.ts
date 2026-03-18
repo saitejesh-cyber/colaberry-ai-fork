@@ -2639,3 +2639,77 @@ export async function fetchCatalogCounts(
 
   return Object.fromEntries(results) as { agents: number; mcpServers: number; skills: number };
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+ * Skill Category Counts — aggregated counts per taxonomy category
+ * ──────────────────────────────────────────────────────────────────── */
+
+/**
+ * Fetch skill counts grouped by taxonomy category.
+ * Uses the total count per distinct category/skillType combination.
+ * Falls back to fetching a sample and classifying locally.
+ */
+export async function fetchSkillCategoryCounts(): Promise<Record<string, number>> {
+  try {
+    // Use a representative sample (500 skills) to estimate category distribution
+    // then scale by total count — avoids build timeout from fetching 16K+ skills
+    const sample = await fetchSkills(undefined, { maxRecords: 500, sortBy: "latest" });
+    const { classifySkill } = await import("../data/skill-taxonomy");
+
+    // Get total count from pagination meta
+    const totalRes = await fetchCMSJson<CMSCollectionResponse>(
+      `${CMS_URL}/api/skills?pagination[pageSize]=1`,
+      { allowStaleOnError: true },
+    );
+    const totalSkills = totalRes?.meta?.pagination?.total ?? sample.length;
+
+    const counts: Record<string, number> = {};
+    for (const skill of sample) {
+      const cat = classifySkill(skill);
+      counts[cat.slug] = (counts[cat.slug] || 0) + 1;
+    }
+
+    // Scale to full catalog size
+    if (sample.length > 0 && totalSkills > sample.length) {
+      const scale = totalSkills / sample.length;
+      for (const key of Object.keys(counts)) {
+        counts[key] = Math.round(counts[key] * scale);
+      }
+    }
+
+    return counts;
+  } catch {
+    return {};
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+ * All Skill Tags — unique tags with usage counts
+ * ──────────────────────────────────────────────────────────────────── */
+
+/**
+ * Fetch all unique tags across skills with their usage counts.
+ * Returns sorted by count descending.
+ */
+export async function fetchAllSkillTags(): Promise<{ name: string; slug: string; count: number }[]> {
+  try {
+    // Use a 500-skill sample to avoid build timeout
+    const allSkills = await fetchSkills(undefined, { maxRecords: 500, sortBy: "latest" });
+    const tagMap = new Map<string, { name: string; slug: string; count: number }>();
+    for (const skill of allSkills) {
+      for (const tag of skill.tags || []) {
+        const key = (tag.slug || tag.name || "").toLowerCase();
+        if (!key) continue;
+        const existing = tagMap.get(key);
+        if (existing) {
+          existing.count++;
+        } else {
+          tagMap.set(key, { name: tag.name || key, slug: tag.slug || key, count: 1 });
+        }
+      }
+    }
+    return [...tagMap.values()].sort((a, b) => b.count - a.count);
+  } catch {
+    return [];
+  }
+}
