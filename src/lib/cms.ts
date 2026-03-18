@@ -2713,3 +2713,109 @@ export async function fetchAllSkillTags(): Promise<{ name: string; slug: string;
     return [];
   }
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+ * Skill Collections — CMS-managed collections
+ * ──────────────────────────────────────────────────────────────────── */
+
+export type CMSSkillCollection = {
+  id: number;
+  documentId: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  category: string | null;
+  difficulty: "beginner" | "intermediate" | "advanced" | null;
+  keywordTags: string[] | null;
+  featured: boolean;
+  sortOrder: number;
+  coverImageUrl: string | null;
+  skills: { id: number; slug: string; name: string }[];
+};
+
+/**
+ * Fetch all published skill collections from CMS.
+ * Returns empty array if CMS is unavailable (frontend falls back to static data).
+ */
+export async function fetchCMSCollections(): Promise<CMSSkillCollection[]> {
+  try {
+    const collections: CMSSkillCollection[] = [];
+    let page = 1;
+    const pageSize = 50;
+
+    while (true) {
+      const json = await fetchCMSJson<CMSCollectionResponse>(
+        `${CMS_URL}/api/skill-collections?pagination[page]=${page}&pagination[pageSize]=${pageSize}&populate[skills][fields][0]=slug&populate[skills][fields][1]=name&sort=sortOrder:asc,name:asc`,
+        { allowStaleOnError: true },
+      );
+
+      const batch = json?.data || [];
+      if (batch.length === 0) break;
+
+      for (const item of batch) {
+        collections.push({
+          id: item.id,
+          documentId: item.documentId || "",
+          name: item.name || "",
+          slug: item.slug || "",
+          description: item.description || null,
+          category: item.category || null,
+          difficulty: item.difficulty || null,
+          keywordTags: item.keywordTags || null,
+          featured: item.featured || false,
+          sortOrder: item.sortOrder || 0,
+          coverImageUrl: item.coverImageUrl || null,
+          skills: (item.skills || []).map((s: any) => ({
+            id: s.id,
+            slug: s.slug || "",
+            name: s.name || "",
+          })),
+        });
+      }
+
+      const pageCount = json?.meta?.pagination?.pageCount || 1;
+      if (page >= pageCount) break;
+      page++;
+    }
+
+    return collections;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch a single skill collection by slug from CMS.
+ */
+export async function fetchCMSCollectionBySlug(slug: string): Promise<CMSSkillCollection | null> {
+  try {
+    const json = await fetchCMSJson<CMSCollectionResponse>(
+      `${CMS_URL}/api/skill-collections?filters[slug][$eq]=${encodeURIComponent(slug)}&populate[skills][fields][0]=slug&populate[skills][fields][1]=name`,
+      { allowStaleOnError: true },
+    );
+
+    const item = json?.data?.[0];
+    if (!item) return null;
+
+    return {
+      id: item.id,
+      documentId: item.documentId || "",
+      name: item.name || "",
+      slug: item.slug || "",
+      description: item.description || null,
+      category: item.category || null,
+      difficulty: item.difficulty || null,
+      keywordTags: item.keywordTags || null,
+      featured: item.featured || false,
+      sortOrder: item.sortOrder || 0,
+      coverImageUrl: item.coverImageUrl || null,
+      skills: (item.skills || []).map((s: any) => ({
+        id: s.id,
+        slug: s.slug || "",
+        name: s.name || "",
+      })),
+    };
+  } catch {
+    return null;
+  }
+}

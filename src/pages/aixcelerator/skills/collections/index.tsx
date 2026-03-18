@@ -1,24 +1,72 @@
 import { useMemo, useState } from "react";
+import type { GetStaticProps, InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import Layout from "../../../../components/Layout";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../../lib/seo";
 import { SKILL_COLLECTIONS, type SkillCollection } from "../../../../data/skill-collections";
 import { SKILL_CATEGORIES } from "../../../../data/skill-taxonomy";
+import { fetchCMSCollections } from "../../../../lib/cms";
 
-export default function CollectionsIndexPage() {
+/* ── Data fetching — CMS-first with static fallback ─────────────────── */
+
+type CollectionsPageProps = {
+  collections: SkillCollection[];
+  source: "cms" | "static";
+};
+
+export const getStaticProps: GetStaticProps<CollectionsPageProps> = async () => {
+  try {
+    const cmsCollections = await fetchCMSCollections();
+
+    if (cmsCollections.length > 0) {
+      // Convert CMS collections to SkillCollection shape
+      const collections: SkillCollection[] = cmsCollections.map((c) => ({
+        slug: c.slug,
+        name: c.name,
+        description: c.description || "",
+        category: c.category || "other",
+        skillSlugs: c.skills.map((s) => s.slug),
+        difficulty: c.difficulty || "intermediate",
+        keywordTags: c.keywordTags || [],
+        linkCount: Math.max(0, c.skills.length - 1),
+        generated: false,
+      }));
+
+      // Merge: CMS collections + any static ones not in CMS
+      const cmsSlugs = new Set(collections.map((c) => c.slug));
+      const merged = [
+        ...collections,
+        ...SKILL_COLLECTIONS.filter((c) => !cmsSlugs.has(c.slug)),
+      ];
+
+      return { props: { collections: merged, source: "cms" }, revalidate: 600 };
+    }
+  } catch {
+    // CMS unavailable — fall through to static
+  }
+
+  // Fallback to static data
+  return { props: { collections: SKILL_COLLECTIONS, source: "static" }, revalidate: 600 };
+};
+
+/* ── Page component ─────────────────────────────────────────────────── */
+
+export default function CollectionsIndexPage({
+  collections: allCollections,
+}: InferGetStaticPropsType<typeof getStaticProps>) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Unique categories that have collections
   const categoryFilters = useMemo(() => {
-    const catSlugs = new Set(SKILL_COLLECTIONS.map((c) => c.category));
+    const catSlugs = new Set(allCollections.map((c) => c.category));
     return SKILL_CATEGORIES.filter((c) => catSlugs.has(c.slug));
-  }, []);
+  }, [allCollections]);
 
   // Filtered collections
   const filtered = useMemo(() => {
-    let result = SKILL_COLLECTIONS;
+    let result = allCollections;
 
     if (selectedCategory) {
       result = result.filter((c) => c.category === selectedCategory);
@@ -36,11 +84,11 @@ export default function CollectionsIndexPage() {
     }
 
     return result;
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, allCollections]);
 
   const totalSkills = useMemo(
-    () => new Set(SKILL_COLLECTIONS.flatMap((c) => c.skillSlugs)).size,
-    [],
+    () => new Set(allCollections.flatMap((c) => c.skillSlugs)).size,
+    [allCollections],
   );
 
   const seoMeta: SeoMeta = {
@@ -67,7 +115,7 @@ export default function CollectionsIndexPage() {
           Curated skill collections for real-world scenarios, each paired with a skill relation graph.
         </p>
         <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-zinc-200 px-4 py-2 text-sm dark:border-zinc-700">
-          <span className="font-bold text-zinc-900 dark:text-zinc-50">{SKILL_COLLECTIONS.length}</span>
+          <span className="font-bold text-zinc-900 dark:text-zinc-50">{allCollections.length}</span>
           <span className="text-zinc-500 dark:text-zinc-400">Collections</span>
           <span className="mx-1 text-zinc-300 dark:text-zinc-600">|</span>
           <span className="font-bold text-zinc-900 dark:text-zinc-50">{totalSkills}</span>
@@ -122,7 +170,7 @@ export default function CollectionsIndexPage() {
 
       <p className="reveal mt-4 text-sm text-zinc-500 dark:text-zinc-400">
         Showing {filtered.length} collections
-        {filtered.length !== SKILL_COLLECTIONS.length && ` of ${SKILL_COLLECTIONS.length}`}
+        {filtered.length !== allCollections.length && ` of ${allCollections.length}`}
         {" | "}
         {new Set(filtered.flatMap((c) => c.skillSlugs)).size} total skills
       </p>
