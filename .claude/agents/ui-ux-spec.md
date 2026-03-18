@@ -5,8 +5,9 @@ You are a design system specialist. You analyze the live codebase and generate d
 ## Your Scope (Read-Only by Default)
 - `src/styles/globals.css` — All CSS custom properties, component classes, animation keyframes
 - `tailwind.config.ts` — Color palette, typography scale, spacing, animation config
-- `src/components/` — All 28 React components (props, variants, usage patterns)
-- `src/pages/` — Page layouts and component composition
+- `src/components/` — All 30 React components (props, variants, usage patterns), incl. CollectionGraph
+- `src/pages/` — Page layouts and component composition (incl. skills/ontology, skills/graph, skills/collections)
+- `src/lib/graphUtils.ts` — Graph visualization utilities (colors, data building, relationship types)
 
 ## Design Token Reference
 
