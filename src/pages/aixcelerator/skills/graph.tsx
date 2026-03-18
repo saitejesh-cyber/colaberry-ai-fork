@@ -13,16 +13,16 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false 
 
 /* ── Category colors (zinc-based for monochrome design system) ──────── */
 const CATEGORY_COLORS: Record<string, string> = {
-  development: "#3f3f46",
-  "ai-generation": "#71717a",
-  research: "#52525b",
-  "data-science": "#a1a1aa",
-  business: "#27272a",
-  testing: "#d4d4d8",
-  productivity: "#52525b",
-  security: "#18181b",
-  infrastructure: "#3f3f46",
-  other: "#a1a1aa",
+  development: "#60a5fa",
+  "ai-generation": "#f87171",
+  research: "#a78bfa",
+  "data-science": "#34d399",
+  business: "#fbbf24",
+  testing: "#fb923c",
+  productivity: "#38bdf8",
+  security: "#f472b6",
+  infrastructure: "#a3e635",
+  other: "#94a3b8",
 };
 const ACCENT_COLOR = "#DC2626";
 
@@ -66,10 +66,18 @@ export const getStaticProps: GetStaticProps<GraphPageProps> = async () => {
       };
     });
 
-    // Build links based on shared tags (similar_to) and same category (belong_to)
+    // Build links based on shared tags and same category
     const links: GraphLink[] = [];
-    const slugSet = new Set(top.map((s) => s.slug));
+    const linkSet = new Set<string>();
+    const addLink = (src: string, tgt: string, type: string) => {
+      const key = [src, tgt].sort().join("|");
+      if (!linkSet.has(key)) {
+        linkSet.add(key);
+        links.push({ source: src, target: tgt, type });
+      }
+    };
 
+    // Phase 1: Shared tags (similar_to) — threshold of 1+
     for (let i = 0; i < top.length; i++) {
       const a = top[i];
       const aTags = new Set((a.tags || []).map((t) => (t.slug || t.name || "").toLowerCase()).filter(Boolean));
@@ -80,9 +88,21 @@ export const getStaticProps: GetStaticProps<GraphPageProps> = async () => {
         const bTags = (b.tags || []).map((t) => (t.slug || t.name || "").toLowerCase()).filter(Boolean);
         const shared = bTags.filter((t) => aTags.has(t)).length;
 
-        if (shared >= 2) {
-          links.push({ source: a.slug, target: b.slug, type: "similar_to" });
+        if (shared >= 1) {
+          addLink(a.slug, b.slug, "similar_to");
         }
+      }
+    }
+
+    // Phase 2: Same category links (belong_to) — connect each skill to up to 2 neighbors in same category
+    const byCategory: Record<string, typeof top> = {};
+    for (const skill of top) {
+      const cat = classifySkill(skill).slug;
+      (byCategory[cat] ??= []).push(skill);
+    }
+    for (const catSkills of Object.values(byCategory)) {
+      for (let i = 0; i < catSkills.length - 1 && i < 80; i++) {
+        addLink(catSkills[i].slug, catSkills[i + 1].slug, "belong_to");
       }
     }
 
