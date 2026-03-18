@@ -2400,6 +2400,86 @@ export async function fetchRelatedMCPServers(
   return rankRelatedMCPServers(mcp, Array.from(nameDeduped.values()), limit);
 }
 
+// ── Related skills ──
+
+function rankRelatedSkills(seed: Skill, candidates: Skill[], limit: number) {
+  const seedTagSet = new Set((seed.tags || []).map(normalizeTagKey).filter(Boolean));
+  return candidates
+    .filter((candidate) => candidate.slug && candidate.slug !== seed.slug)
+    .map((candidate) => {
+      const sharedTags = (candidate.tags || [])
+        .map(normalizeTagKey)
+        .filter((tag) => tag && seedTagSet.has(tag)).length;
+      const sameIndustry = candidate.industry && candidate.industry === seed.industry ? 3 : 0;
+      const sameCategory = candidate.category && candidate.category === seed.category ? 2 : 0;
+      const sameSkillType =
+        candidate.skillType && candidate.skillType === seed.skillType ? 1 : 0;
+      return { candidate, score: sharedTags * 4 + sameIndustry + sameCategory + sameSkillType };
+    })
+    .sort((a, b) => b.score - a.score || a.candidate.name.localeCompare(b.candidate.name))
+    .slice(0, limit)
+    .map((entry) => entry.candidate);
+}
+
+export async function fetchRelatedSkills(
+  skill: Skill,
+  options: { visibility?: "public" | "private"; limit?: number } = {}
+): Promise<Skill[]> {
+  if (!skill.slug) return [];
+  const limit = Math.max(options.limit || 4, 1);
+  const pageSize = Math.max(limit * 4, 16);
+  const visibilityFilter = options.visibility
+    ? `&filters[visibility][$eq]=${options.visibility}`
+    : "";
+  const basePopulate =
+    `&populate[tags][fields][0]=name` +
+    `&populate[tags][fields][1]=slug` +
+    `&populate[companies][fields][0]=name` +
+    `&populate[companies][fields][1]=slug` +
+    `&populate[coverImage][fields][0]=url` +
+    `&populate[coverImage][fields][1]=alternativeText`;
+
+  const industryFilter = skill.industry
+    ? `&filters[industry][$eq]=${encodeURIComponent(skill.industry)}`
+    : "";
+  const byCategoryAndIndustry = await fetchCMSJson<CMSCollectionResponse>(
+    `${CMS_URL}/api/skills` +
+      `?sort=updatedAt:desc` +
+      `${visibilityFilter}` +
+      `${industryFilter}` +
+      `${skill.category ? `&filters[category][$eq]=${encodeURIComponent(skill.category)}` : ""}` +
+      `&filters[slug][$ne]=${encodeURIComponent(skill.slug)}` +
+      `&publicationState=live` +
+      `&pagination[pageSize]=${pageSize}` +
+      basePopulate,
+    { cacheMs: CMS_CACHE_TTL_MS }
+  );
+  const primaryCandidates = (byCategoryAndIndustry?.data || []).map(mapSkill);
+  if (primaryCandidates.length >= limit) {
+    return rankRelatedSkills(skill, primaryCandidates, limit);
+  }
+
+  const byIndustry = await fetchCMSJson<CMSCollectionResponse>(
+    `${CMS_URL}/api/skills` +
+      `?sort=updatedAt:desc` +
+      `${visibilityFilter}` +
+      `${skill.industry ? `&filters[industry][$eq]=${encodeURIComponent(skill.industry)}` : ""}` +
+      `&filters[slug][$ne]=${encodeURIComponent(skill.slug)}` +
+      `&publicationState=live` +
+      `&pagination[pageSize]=${pageSize}` +
+      basePopulate,
+    { cacheMs: CMS_CACHE_TTL_MS }
+  );
+
+  const merged = new Map<number, Skill>();
+  primaryCandidates.forEach((candidate) => merged.set(candidate.id, candidate));
+  ((byIndustry?.data || []).map(mapSkill) || []).forEach((candidate) =>
+    merged.set(candidate.id, candidate)
+  );
+
+  return rankRelatedSkills(skill, Array.from(merged.values()), limit);
+}
+
 // ── Tool fetch functions ──
 
 export async function fetchTools(

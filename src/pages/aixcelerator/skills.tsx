@@ -6,7 +6,11 @@ import Layout from "../../components/Layout";
 import CatalogSnapshot from "../../components/CatalogSnapshot";
 import SectionHeader from "../../components/SectionHeader";
 import StatePanel from "../../components/StatePanel";
+import SkillCard from "../../components/SkillCard";
 import { fetchSkills, Skill } from "../../lib/cms";
+import { toSkillFamily } from "../../lib/catalogFormatters";
+import { SKILL_CATEGORIES, classifySkill } from "../../data/skill-taxonomy";
+import { SKILL_COLLECTIONS } from "../../data/skill-collections";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../lib/seo";
 
 type SkillsPageProps = {
@@ -49,6 +53,7 @@ export const getStaticProps: GetStaticProps<SkillsPageProps> = async () => {
 export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsPageProps) {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [taxonomyFilter, setTaxonomyFilter] = useState("all");
   const [providerFilter, setProviderFilter] = useState("all");
   const [visibility, setVisibility] = useState<VisibilityFilter>(allowPrivate ? "all" : "public");
   const [sortMode, setSortMode] = useState<SkillSortMode>("trending");
@@ -62,6 +67,15 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
         .sort((a, b) => a.localeCompare(b)),
     [skills]
   );
+
+  const taxonomyCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const skill of skills) {
+      const cat = classifySkill(skill);
+      counts[cat.slug] = (counts[cat.slug] ?? 0) + 1;
+    }
+    return counts;
+  }, [skills]);
 
   const providers = useMemo(
     () =>
@@ -93,6 +107,7 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
       const provider = item.provider || item.sourceName || "Unknown";
       const categoryMatch = categoryFilter === "all" ? true : category === categoryFilter;
       const providerMatch = providerFilter === "all" ? true : provider === providerFilter;
+      const taxonomyMatch = taxonomyFilter === "all" ? true : classifySkill(item).slug === taxonomyFilter;
       const queryMatch =
         query.length === 0
           ? true
@@ -118,9 +133,9 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
               .toLowerCase()
               .includes(query);
 
-      return categoryMatch && providerMatch && queryMatch;
+      return categoryMatch && providerMatch && taxonomyMatch && queryMatch;
     });
-  }, [categoryFilter, providerFilter, scopedSkills, search]);
+  }, [categoryFilter, providerFilter, taxonomyFilter, scopedSkills, search]);
 
   const sortedSkills = useMemo(
     () => sortSkills(filteredSkills, sortMode),
@@ -143,7 +158,7 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
           setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, sortedSkills.length));
         }
       },
-      { rootMargin: "320px" }
+      { rootMargin: "600px" }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -197,18 +212,93 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
             title="AI Skills Catalog"
             description="Reusable capability units for agents and workflows: official pre-built skills, developer workflow skills, domain skills, and orchestration skills."
           />
+          <Link
+            href="/aixcelerator/skills/graph"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true">
+              <circle cx="4" cy="4" r="2" fill="currentColor" />
+              <circle cx="12" cy="4" r="2" fill="currentColor" />
+              <circle cx="8" cy="12" r="2" fill="currentColor" />
+              <line x1="5.5" y1="5" x2="7" y2="10.5" stroke="currentColor" strokeWidth="1" />
+              <line x1="10.5" y1="5" x2="9" y2="10.5" stroke="currentColor" strokeWidth="1" />
+            </svg>
+            View skill graph
+          </Link>
         </div>
       </div>
 
       <CatalogSnapshot
         stats={[
           { label: "Skills", value: skills.length.toLocaleString(), note: "Reusable capability profiles" },
-          { label: "Categories", value: String(categories.length), note: "Modeled from current skill taxonomy" },
+          { label: "Categories", value: String(SKILL_CATEGORIES.filter((c) => (taxonomyCounts[c.slug] ?? 0) > 0).length), note: "SkillNet-inspired taxonomy" },
+          { label: "Collections", value: String(SKILL_COLLECTIONS.length), note: "Curated skill bundles" },
           { label: "Visibility", value: `${visibilityCounts.public ?? 0} public`, note: allowPrivate ? `${visibilityCounts.private ?? 0} private` : "Private hidden" },
         ]}
       />
 
-      <section className="reveal surface-panel mt-6 p-5 sm:mt-8">
+      {/* Featured Collections */}
+      <section className="reveal mt-6 sm:mt-8">
+        <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+          Featured Collections
+        </h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {SKILL_COLLECTIONS.map((collection) => (
+            <Link
+              key={collection.slug}
+              href={`/aixcelerator/skills/collections/${collection.slug}`}
+              className="group block"
+            >
+              <div className="catalog-card p-5">
+                <div className="flex items-center justify-between">
+                  <span className="chip chip-neutral rounded-full px-2.5 py-1 text-label font-semibold uppercase tracking-[0.12em]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#DC2626]" />
+                    Collection
+                  </span>
+                  <span className="text-xs font-medium text-zinc-400 capitalize">{collection.difficulty}</span>
+                </div>
+                <h3 className="mt-2.5 text-sm font-semibold text-zinc-900 dark:text-zinc-50">{collection.name}</h3>
+                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">{collection.description}</p>
+                <div className="mt-3 flex items-center justify-between border-t border-zinc-200/60 pt-2.5 dark:border-zinc-700/50">
+                  <span className="text-label font-semibold uppercase tracking-[0.1em] text-zinc-500 dark:text-zinc-400">{collection.skillSlugs.length} skills</span>
+                  <span className="text-label font-semibold text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300">View →</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Taxonomy category pills */}
+      <div className="reveal mt-6 flex flex-wrap gap-2 sm:mt-8">
+        <button
+          type="button"
+          onClick={() => { setTaxonomyFilter("all"); setVisibleCount(PAGE_SIZE); }}
+          className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+            taxonomyFilter === "all"
+              ? "bg-[#DC2626] text-white"
+              : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+          }`}
+        >
+          All · {skills.length.toLocaleString()}
+        </button>
+        {SKILL_CATEGORIES.filter((cat) => (taxonomyCounts[cat.slug] ?? 0) > 0).map((cat) => (
+          <button
+            key={cat.slug}
+            type="button"
+            onClick={() => { setTaxonomyFilter(cat.slug); setVisibleCount(PAGE_SIZE); }}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              taxonomyFilter === cat.slug
+                ? "bg-[#DC2626] text-white"
+                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            }`}
+          >
+            {cat.label} · {(taxonomyCounts[cat.slug] ?? 0).toLocaleString()}
+          </button>
+        ))}
+      </div>
+
+      <section className="reveal surface-panel mt-4 p-5">
         <div className="grid gap-3 md:grid-cols-[1.45fr_1fr_1fr_auto]">
           <input
             type="search"
@@ -311,64 +401,16 @@ export default function SkillsPage({ skills, allowPrivate, fetchError }: SkillsP
       <div ref={sentinelRef} className="h-8" />
 
       {hasMore ? (
-        <div className="mt-2 text-center text-xs font-semibold uppercase tracking-wide text-zinc-400">
-          Loading more skills...
+        <div className="mt-2 text-center text-xs font-medium text-zinc-400 dark:text-zinc-500">
+          Showing {shownCount.toLocaleString()} of {sortedSkills.length.toLocaleString()} skills — scroll for more
+        </div>
+      ) : sortedSkills.length > PAGE_SIZE ? (
+        <div className="mt-2 text-center text-xs font-medium text-zinc-400 dark:text-zinc-500">
+          Showing all {sortedSkills.length.toLocaleString()} skills
         </div>
       ) : null}
 
     </Layout>
-  );
-}
-
-function SkillCard({ skill }: { skill: Skill }) {
-  const category = skill.category || toSkillFamily(skill);
-  const provider = skill.provider || skill.sourceName || "Provider pending";
-  const status = (skill.status || "live").toLowerCase();
-  const sourceLabel = (skill.source || "internal").toLowerCase();
-  const metadata = [category, provider, skill.industry].filter(Boolean).join(" · ");
-  const relationCount = (skill.agents?.length || 0) + (skill.mcpServers?.length || 0) + (skill.useCases?.length || 0);
-  const href = `/aixcelerator/skills/${skill.slug || skill.id}`;
-
-  return (
-    <Link href={href} className="group block" aria-label={`View skill ${skill.name} details`}>
-      <div className="catalog-card p-6">
-        <div className="flex items-center justify-between gap-3">
-          <span className="chip chip-neutral rounded-full px-2.5 py-1 text-label font-semibold uppercase tracking-[0.12em]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#DC2626]" />
-            Skill
-          </span>
-          <svg aria-hidden="true" viewBox="0 0 16 16" className="card-arrow h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-400 transition-colors group-hover:text-zinc-600 dark:group-hover:text-zinc-300">
-            <path d="M6.5 3.5 11 8l-4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          </svg>
-        </div>
-
-        <div className="mt-3">
-          <h2 className="truncate text-caption font-semibold text-zinc-900 dark:text-zinc-50">{skill.name}</h2>
-          <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
-            {skill.summary || "Skill profile summary will appear after content update."}
-          </p>
-        </div>
-
-        <div className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{metadata || "Category and provider pending"}</div>
-
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="chip chip-neutral rounded-full px-2.5 py-1 text-xs font-semibold">{category}</span>
-          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${status === "live" ? "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:ring-emerald-800" : "bg-zinc-50 text-zinc-600 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:ring-zinc-700"}`}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
-          <span className="chip chip-neutral rounded-full px-2.5 py-1 text-xs font-semibold">
-            {sourceLabel.charAt(0).toUpperCase() + sourceLabel.slice(1)}
-          </span>
-        </div>
-
-        <div className="mt-4 flex items-center justify-between border-t border-zinc-200/60 pt-3 dark:border-zinc-700/50">
-          <div className="text-label font-semibold uppercase tracking-[0.1em] text-zinc-500 dark:text-zinc-400">
-            {skill.lastUpdated ? formatDate(skill.lastUpdated) : "Update pending"} · {relationCount} linked
-          </div>
-          <span className="text-label font-semibold text-zinc-400 dark:text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300">View →</span>
-        </div>
-      </div>
-    </Link>
   );
 }
 
@@ -421,23 +463,6 @@ function _SkillSignalRail({
       )}
     </article>
   );
-}
-
-function toSkillFamily(skill: Skill) {
-  const value = `${skill.category || ""} ${skill.skillType || ""}`.toLowerCase();
-  if (value.includes("official") || value.includes("pre-built") || value.includes("prebuilt")) {
-    return "Official pre-built skills";
-  }
-  if (value.includes("workflow") || value.includes("developer")) {
-    return "Developer workflow skills";
-  }
-  if (value.includes("orchestration") || value.includes("dispatch") || value.includes("meta")) {
-    return "Agent orchestration skills";
-  }
-  if (value.includes("domain") || value.includes("cloud") || value.includes("business")) {
-    return "Specialized domain skills";
-  }
-  return "Specialized domain skills";
 }
 
 function filterSkillsByVisibility(

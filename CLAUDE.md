@@ -40,11 +40,11 @@
 ## Project Structure
 ```
 src/
-├── components/     # 28 React components
-├── pages/          # 30+ pages (Pages Router)
+├── components/     # 29 React components (incl. SkillCard)
+├── pages/          # 33+ pages (Pages Router, incl. skills/graph, skills/collections/[slug])
 ├── styles/         # globals.css (design tokens + component classes)
-├── lib/            # 14 utility modules (cms.ts, seo.ts, etc.)
-├── data/           # Static JSON data (agents.json, mcps.json)
+├── lib/            # 14 utility modules (cms.ts, seo.ts, catalogFormatters.ts, etc.)
+├── data/           # Static data (agents.json, mcps.json, skill-taxonomy.ts, skill-collections.ts)
 └── hooks/          # Custom React hooks
 ```
 
@@ -52,14 +52,25 @@ src/
 - `src/styles/globals.css` — ALL CSS custom properties and component classes
 - `tailwind.config.ts` — Zinc color scale, Inter fonts, animation keyframes
 - `src/pages/_app.tsx` — Font loading (Inter), global layout wrapper
-- `src/lib/cms.ts` — CMS fetch functions and TypeScript types
+- `src/lib/cms.ts` — CMS fetch functions, TypeScript types, `fetchRelatedSkills()`
+- `src/lib/catalogFormatters.ts` — Shared formatting helpers + `toSkillFamily()`
 - `src/components/Layout.tsx` — Header + footer + nav (1,750 lines)
+- `src/data/skill-taxonomy.ts` — 10-category SkillNet-inspired taxonomy + `classifySkill()`
+- `src/data/skill-collections.ts` — Curated skill bundles definition
 
 ## Shared Components (used on 15+ pages)
 - `EnterprisePageHero` — Hero section with kicker badge, heading, description, image
 - `SectionHeader` — Section title with kicker, heading, description
 - `EnterpriseCtaBand` — Dark CTA band at bottom of pages
-- `AgentCard` / `MCPCard` — Catalog listing cards
+- `AgentCard` / `MCPCard` / `SkillCard` — Catalog listing cards (reusable components)
+
+## Skills Ontology (SkillNet-inspired)
+- **Taxonomy:** 10-category classification in `src/data/skill-taxonomy.ts` (Development, AI & Generation, Research, Data & Science, Business, Testing & QA, Productivity, Security, Infrastructure, Other)
+- **Collections:** 6 curated skill bundles in `src/data/skill-collections.ts` (Data Pipeline, Web Automation, Content Generation, Security Audit, DevOps, Research Assistant)
+- **Related Skills:** `fetchRelatedSkills()` in `src/lib/cms.ts` — ranks by shared tags, category, industry, skillType
+- **Graph Visualization:** `src/pages/aixcelerator/skills/graph.tsx` — interactive force-graph using `react-force-graph-2d`
+- **Category Pills:** Taxonomy-based filter pills on skills listing page with per-category counts
+- **Relationship Types:** similar_to, depend_on, compose_with, belong_to (SkillNet ontology model)
 
 ## Build & Validation
 ```bash
