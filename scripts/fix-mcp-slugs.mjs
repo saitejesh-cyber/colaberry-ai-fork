@@ -260,6 +260,7 @@ async function main() {
           body: JSON.stringify({ data: updates }),
         });
         fixed++;
+        if (fixed % 50 === 0) console.log(`  ... ${fixed} fixed so far`);
       } catch (err) {
         console.log(`  ❌ ${server.name}: ${err.message}`);
         failed++;

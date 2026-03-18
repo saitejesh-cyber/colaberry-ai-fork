@@ -11,14 +11,15 @@ import SectionHeading from "../../../components/mcp/SectionHeading";
 import SpecCard from "../../../components/mcp/SpecCard";
 import BulletList from "../../../components/mcp/BulletList";
 import StatePanel from "../../../components/StatePanel";
-import { fetchSkillBySlug, Skill } from "../../../lib/cms";
+import SkillCard from "../../../components/SkillCard";
+import { fetchSkillBySlug, fetchRelatedSkills, Skill } from "../../../lib/cms";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 
 /* -------------------------------------------------------------------------- */
 /*  Data fetching                                                             */
 /* -------------------------------------------------------------------------- */
 
-type SkillDetailProps = { skill: Skill; allowPrivate: boolean; skillMdContent: string | null };
+type SkillDetailProps = { skill: Skill; allowPrivate: boolean; skillMdContent: string | null; relatedSkills: Skill[] };
 
 export const getStaticPaths: GetStaticPaths = async () => ({
   paths: [],
@@ -65,7 +66,15 @@ export const getStaticProps: GetStaticProps<SkillDetailProps> = async ({ params 
     // Fetch SKILL.md content from source repo if available
     const skillMdContent = await fetchSkillMdFromSource(skill.sourceUrl);
 
-    return { props: { skill, allowPrivate, skillMdContent }, revalidate: 600 };
+    let relatedSkills: Skill[] = [];
+    try {
+      const visibilityFilter = allowPrivate ? undefined : "public";
+      relatedSkills = await fetchRelatedSkills(skill, { visibility: visibilityFilter, limit: 4 });
+    } catch {
+      relatedSkills = [];
+    }
+
+    return { props: { skill, allowPrivate, skillMdContent, relatedSkills }, revalidate: 600 };
   } catch {
     return { notFound: true, revalidate: 120 };
   }
@@ -75,7 +84,7 @@ export const getStaticProps: GetStaticProps<SkillDetailProps> = async ({ params 
 /*  Page component                                                            */
 /* -------------------------------------------------------------------------- */
 
-export default function SkillDetailPage({ skill, skillMdContent }: SkillDetailProps) {
+export default function SkillDetailPage({ skill, skillMdContent, relatedSkills }: SkillDetailProps) {
   /* ---- derived data ---- */
   const isPrivate = (skill.visibility || "public").toLowerCase() === "private";
   const status = (skill.status || "live").toLowerCase();
@@ -522,6 +531,18 @@ export default function SkillDetailPage({ skill, skillMdContent }: SkillDetailPr
           </div>
         </aside>
       </div>
+
+      {/* Related skills */}
+      {relatedSkills.length > 0 && (
+        <section className="surface-panel section-shell mt-12 p-6">
+          <SectionHeading title="Related Skills" />
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedSkills.map((related) => (
+              <SkillCard key={related.id} skill={related} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* CTA band */}
       <EnterpriseCtaBand

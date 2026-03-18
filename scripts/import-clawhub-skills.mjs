@@ -288,7 +288,7 @@ function transformToCMS(clawSkill) {
     visibility: "public",
     source: "external",
     sourceName: "ClawHub",
-    sourceUrl: `https://clawhub.ai/skills/${slug}`,
+    sourceUrl: slug ? `https://clawhub.ai/skills/${encodeURIComponent(slug)}` : null,
     verified: false,
     usageCount: stats?.downloads || 0,
     rating: stats?.stars ? Math.min(5, Math.round((stats.stars / 500) * 5 * 10) / 10) : null,
@@ -451,14 +451,11 @@ async function main() {
 
     try {
       if (existingSlugs.has(slug)) {
-        // Update existing — only update fields that are empty or add new data
+        // Update existing — only update stats, never overwrite source info
         const existingId = existingSlugs.get(slug);
         await updateSkill(existingId, {
           usageCount: cmsData.usageCount,
           rating: cmsData.rating,
-          sourceUrl: cmsData.sourceUrl,
-          sourceName: cmsData.sourceName,
-          source: cmsData.source,
           lastUpdated: cmsData.lastUpdated,
         });
         updated++;

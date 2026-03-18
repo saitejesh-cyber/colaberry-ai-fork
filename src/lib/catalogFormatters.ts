@@ -83,3 +83,29 @@ export function getSourceLabel(source?: string | null, sourceName?: string | nul
       : "";
   return `${label}${suffix}`;
 }
+
+/* ── Skill family classification ──────────────────────────────────────── */
+
+/**
+ * Derive a human-readable skill family from a skill's category / skillType.
+ * Used by SkillCard and the skills listing page for display and filtering.
+ */
+export function toSkillFamily(skill: {
+  category?: string | null;
+  skillType?: string | null;
+}): string {
+  const value = `${skill.category || ""} ${skill.skillType || ""}`.toLowerCase();
+  if (value.includes("official") || value.includes("pre-built") || value.includes("prebuilt")) {
+    return "Official pre-built skills";
+  }
+  if (value.includes("workflow") || value.includes("developer")) {
+    return "Developer workflow skills";
+  }
+  if (value.includes("orchestration") || value.includes("dispatch") || value.includes("meta")) {
+    return "Agent orchestration skills";
+  }
+  if (value.includes("domain") || value.includes("cloud") || value.includes("business")) {
+    return "Specialized domain skills";
+  }
+  return "Specialized domain skills";
+}
