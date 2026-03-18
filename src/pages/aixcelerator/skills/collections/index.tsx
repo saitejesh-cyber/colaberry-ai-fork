@@ -7,6 +7,8 @@ import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../
 import { SKILL_COLLECTIONS, type SkillCollection } from "../../../../data/skill-collections";
 import { SKILL_CATEGORIES } from "../../../../data/skill-taxonomy";
 import { fetchCMSCollections } from "../../../../lib/cms";
+import SectionHeader from "../../../../components/SectionHeader";
+import EnterpriseCtaBand from "../../../../components/EnterpriseCtaBand";
 
 /* ── Data fetching — CMS-first with static fallback ─────────────────── */
 
@@ -106,14 +108,15 @@ export default function CollectionsIndexPage({
         )}
       </Head>
 
-      {/* Header */}
-      <div className="reveal text-center">
-        <h1 className="text-display-md font-semibold text-zinc-900 dark:text-zinc-50">
-          Skill Collection
-        </h1>
-        <p className="mx-auto mt-3 max-w-2xl text-body-lg text-zinc-500 dark:text-zinc-400">
-          Curated skill collections for real-world scenarios, each paired with a skill relation graph.
-        </p>
+      {/* Hero */}
+      <div className="reveal">
+        <SectionHeader
+          as="h1"
+          size="xl"
+          kicker="Collections"
+          title="Skill Collections"
+          description="Curated skill collections for real-world scenarios, each paired with a skill relation graph."
+        />
         <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-zinc-200 px-4 py-2 text-sm dark:border-zinc-700">
           <span className="font-bold text-zinc-900 dark:text-zinc-50">{allCollections.length}</span>
           <span className="text-zinc-500 dark:text-zinc-400">Collections</span>
@@ -124,7 +127,7 @@ export default function CollectionsIndexPage({
       </div>
 
       {/* Search + Category Filter Bar */}
-      <div className="reveal mt-8 flex flex-wrap items-center gap-3">
+      <div className="reveal mt-8 surface-panel p-4 flex flex-wrap items-center gap-3">
         <input
           type="text"
           value={searchQuery}
@@ -176,7 +179,7 @@ export default function CollectionsIndexPage({
       </p>
 
       {/* Collection Cards Grid */}
-      <section className="reveal mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="reveal stagger-grid mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {filtered.map((collection) => (
           <CollectionCard key={collection.slug} collection={collection} />
         ))}
@@ -188,14 +191,16 @@ export default function CollectionsIndexPage({
         </div>
       )}
 
-      <div className="reveal mt-10 text-center">
-        <Link
-          href="/aixcelerator/skills"
-          className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-        >
-          ← Back to Skills Catalog
-        </Link>
-      </div>
+      <EnterpriseCtaBand
+        kicker="Skill collections"
+        title="Explore the full skills catalog"
+        description="Browse all AI skills with taxonomy filters, relationship graphs, and detailed specifications."
+        primaryHref="/aixcelerator/skills"
+        primaryLabel="Browse all skills"
+        secondaryHref="/aixcelerator/skills/graph"
+        secondaryLabel="View skill graph"
+        className="mt-16"
+      />
     </Layout>
   );
 }

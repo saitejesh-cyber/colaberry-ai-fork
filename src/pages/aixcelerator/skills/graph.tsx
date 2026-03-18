@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useMemo, useRef, useState } from "react";
 import Layout from "../../../components/Layout";
 import SectionHeader from "../../../components/SectionHeader";
+import EnterpriseCtaBand from "../../../components/EnterpriseCtaBand";
 import { fetchSkills, Skill } from "../../../lib/cms";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../lib/seo";
 import { SKILL_CATEGORIES, classifySkill, type SkillRelationType } from "../../../data/skill-taxonomy";
@@ -364,6 +365,19 @@ export default function SkillGraphPage({ nodes, links, categoryBreakdown, linkTy
             Showing top {nodes.length} skills · {filteredLinks.length} connections · {collectionGroups.length} collections represented
           </p>
         </div>
+      )}
+
+      {!isFullscreen && (
+        <EnterpriseCtaBand
+          kicker="Skill graph"
+          title="Explore skills in detail"
+          description="Browse the full catalog with taxonomy filters, collections, and detailed specifications."
+          primaryHref="/aixcelerator/skills"
+          primaryLabel="Browse all skills"
+          secondaryHref="/aixcelerator/skills/ontology"
+          secondaryLabel="View ontology"
+          className="mt-16"
+        />
       )}
     </Layout>
   );

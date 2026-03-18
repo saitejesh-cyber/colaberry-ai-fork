@@ -466,7 +466,7 @@ export default function OntologyPage({
         </div>
 
         {/* Interactive 3-Layer Architecture Diagram */}
-        <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="reveal-scale rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
           <OntologyDiagram
             categoryCounts={categoryCounts}
             totalSkills={totalSkills}
@@ -477,8 +477,8 @@ export default function OntologyPage({
 
       {/* Architecture Explanation Cards */}
       <section className="reveal mt-12">
-        <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">Architecture</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <SectionHeader size="md" kicker="Architecture" title="Three-Layer Design" description="How skills are organized from abstract taxonomy to deployable packages." />
+        <div className="mt-6 stagger-grid grid gap-4 sm:grid-cols-3">
           <div className="catalog-card p-6">
             <h3 className="text-sm font-bold text-blue-600 dark:text-blue-400">1. Skill Taxonomy</h3>
             <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-400">The Abstraction Layer</div>
@@ -539,7 +539,7 @@ export default function OntologyPage({
         <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Relationship Types
         </h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 stagger-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {RELATIONSHIP_TYPES.map((rel) => (
             <div key={rel.type} className="catalog-card p-5">
               <div className="flex items-center gap-2">
@@ -554,7 +554,7 @@ export default function OntologyPage({
       </section>
 
       {/* Quick links */}
-      <section className="reveal mt-12 grid gap-4 sm:grid-cols-3">
+      <section className="reveal mt-12 stagger-grid grid gap-4 sm:grid-cols-3">
         <Link href="/aixcelerator/skills/graph" className="group catalog-card p-5 text-center">
           <div className="text-lg">🔗</div>
           <div className="mt-2 text-sm font-bold text-zinc-900 dark:text-zinc-50">Skill Graph</div>
