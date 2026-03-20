@@ -23,7 +23,7 @@ export default function EnterpriseCtaBand({
 }: EnterpriseCtaBandProps) {
   return (
     <section
-      className={`reveal reveal-scale cta-band-enterprise mt-6 grid gap-6 rounded-2xl border border-zinc-200 p-5 dark:border-zinc-700 sm:p-6 lg:grid-cols-[1.4fr_1fr] lg:items-end lg:p-8 ${
+      className={`reveal cta-band-enterprise mt-6 grid gap-6 rounded-2xl border border-zinc-200 p-5 dark:border-zinc-700 sm:p-6 lg:grid-cols-[1.4fr_1fr] lg:items-end lg:p-8 ${
         className ?? ""
       }`}
     >

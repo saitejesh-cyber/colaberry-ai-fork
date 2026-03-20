@@ -1,0 +1,81 @@
+/**
+ * Curated agent collections — bundles of agents that work together.
+ * Part of the Colaberry AI Content Knowledge Graph Platform.
+ */
+
+import type { ContentCollection } from "../lib/ontologyTypes";
+
+export const AGENT_COLLECTIONS: ContentCollection[] = [
+  {
+    slug: "sales-pipeline-agents",
+    name: "Sales Pipeline Agents",
+    description: "End-to-end sales automation — lead generation, outreach, CRM management, and deal tracking agents.",
+    category: "sales-marketing",
+    itemSlugs: [],
+    difficulty: "intermediate",
+    keywordTags: ["sales", "crm", "lead generation", "outreach", "pipeline"],
+    linkCount: 0,
+    generated: false,
+    contentType: "agent",
+  },
+  {
+    slug: "content-creation-suite",
+    name: "Content Creation Suite",
+    description: "AI-powered content factory — writing, editing, SEO optimization, and social media agents.",
+    category: "content-writing",
+    itemSlugs: [],
+    difficulty: "beginner",
+    keywordTags: ["writing", "editing", "seo", "social media", "content"],
+    linkCount: 0,
+    generated: false,
+    contentType: "agent",
+  },
+  {
+    slug: "devops-automation-chain",
+    name: "DevOps Automation Chain",
+    description: "Full DevOps pipeline — CI/CD, deployment, monitoring, and infrastructure agents working in sequence.",
+    category: "code-development",
+    itemSlugs: [],
+    difficulty: "advanced",
+    keywordTags: ["devops", "ci/cd", "deploy", "monitoring", "infrastructure"],
+    linkCount: 0,
+    generated: false,
+    contentType: "agent",
+  },
+  {
+    slug: "research-assistant-stack",
+    name: "Research Assistant Stack",
+    description: "Research workflow — literature search, competitive analysis, report generation, and fact-checking agents.",
+    category: "research-analysis",
+    itemSlugs: [],
+    difficulty: "intermediate",
+    keywordTags: ["research", "analysis", "competitive intel", "reporting", "fact-checking"],
+    linkCount: 0,
+    generated: false,
+    contentType: "agent",
+  },
+  {
+    slug: "customer-service-fleet",
+    name: "Customer Service Fleet",
+    description: "Customer support automation — chatbot, ticket triage, escalation, and satisfaction survey agents.",
+    category: "customer-support",
+    itemSlugs: [],
+    difficulty: "intermediate",
+    keywordTags: ["chatbot", "ticket", "support", "escalation", "satisfaction"],
+    linkCount: 0,
+    generated: false,
+    contentType: "agent",
+  },
+  {
+    slug: "data-intelligence-pack",
+    name: "Data Intelligence Pack",
+    description: "Data-driven insights — analytics, visualization, ETL pipeline, and reporting agents.",
+    category: "data-analytics",
+    itemSlugs: [],
+    difficulty: "advanced",
+    keywordTags: ["analytics", "visualization", "etl", "reporting", "dashboard"],
+    linkCount: 0,
+    generated: false,
+    contentType: "agent",
+  },
+];

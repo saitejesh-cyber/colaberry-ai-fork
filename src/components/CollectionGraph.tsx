@@ -1,7 +1,13 @@
 /**
- * CollectionGraph — Reusable embedded force-graph for skill collections.
- * Shows a mini graph of skills with relationship edges, color-coded by type.
+ * CollectionGraph — Premium embedded force-graph for collections and detail sidebars.
+ * Shows a mini graph with relationship edges, color-coded by type.
  * Used on: Collection detail page, skill detail sidebar (mini-graph).
+ *
+ * Premium features:
+ * - Node outer glow for depth
+ * - Curved edges with particles
+ * - Text shadow labels for readability
+ * - Bottom gradient overlay
  */
 
 import dynamic from "next/dynamic";
@@ -13,22 +19,24 @@ import {
   type GraphNode,
   type GraphLink,
 } from "../lib/graphUtils";
-import type { SkillRelationType } from "../data/skill-taxonomy";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
 type CollectionGraphProps = {
   nodes: GraphNode[];
   links: GraphLink[];
-  /** Height in pixels */
   height?: number;
-  /** Whether to show labels on nodes (default: true) */
   showLabels?: boolean;
-  /** Highlight a specific node (e.g., the current skill in mini-graph) */
   highlightNodeId?: string;
-  /** Callback when a node is clicked */
   onNodeClick?: (nodeId: string) => void;
 };
+
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
 export default function CollectionGraph({
   nodes,
@@ -68,7 +76,7 @@ export default function CollectionGraph({
         className="flex items-center justify-center text-sm text-zinc-500 dark:text-zinc-400"
         style={{ height }}
       >
-        No skill data available for graph
+        No data available for graph
       </div>
     );
   }
@@ -76,7 +84,7 @@ export default function CollectionGraph({
   return (
     <div>
       <div
-        className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-950"
+        className="relative overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700"
         style={{ height }}
       >
         <ForceGraph2D
@@ -93,25 +101,44 @@ export default function CollectionGraph({
             return node.val || 2;
           }}
           linkColor={(link: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-            const color = RELATIONSHIP_TYPE_COLORS[link.type as SkillRelationType];
-            return color ? color + "88" : "rgba(113,113,122,0.3)";
+            const color = RELATIONSHIP_TYPE_COLORS[link.type];
+            return color ? hexToRgba(color, 0.5) : "rgba(113,113,122,0.25)";
           }}
           linkWidth={(link: any) => // eslint-disable-line @typescript-eslint/no-explicit-any
-            link.type === "compose_with" || link.type === "depend_on" ? 1.5 : 0.8
+            link.type === "compose_with" || link.type === "depend_on" ? 1.8 : 1.0
           }
+          linkCurvature={0.12}
           linkDirectionalParticles={(link: any) => link.type === "depend_on" ? 2 : 0} // eslint-disable-line @typescript-eslint/no-explicit-any
           linkDirectionalParticleSpeed={0.006}
+          linkDirectionalParticleWidth={2}
           linkDirectionalParticleColor={(link: any) => // eslint-disable-line @typescript-eslint/no-explicit-any
-            RELATIONSHIP_TYPE_COLORS[link.type as SkillRelationType] || "#f87171"
+            RELATIONSHIP_TYPE_COLORS[link.type] || "#f87171"
           }
           backgroundColor="#09090b"
           onNodeClick={handleClick}
+          cooldownTicks={60}
           nodeCanvasObjectMode={() => "after"}
           nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+            const x = node.x || 0;
+            const y = node.y || 0;
+            const nodeColor = node.color || CATEGORY_COLORS[node.category] || "#a1a1aa";
+            const isHighlighted = highlightNodeId === node.id;
+            const r = Math.sqrt(Math.max(node.val || 2, 0.5)) * 6;
+
+            // Outer glow
+            ctx.save();
+            ctx.shadowColor = isHighlighted ? "#DC2626" : nodeColor;
+            ctx.shadowBlur = isHighlighted ? 16 : 6;
+            ctx.beginPath();
+            ctx.arc(x, y, r / globalScale, 0, 2 * Math.PI);
+            ctx.fillStyle = isHighlighted ? "#DC2626" : nodeColor;
+            ctx.fill();
+            ctx.restore();
+
             // Highlight ring
-            if (highlightNodeId === node.id) {
+            if (isHighlighted) {
               ctx.beginPath();
-              ctx.arc(node.x || 0, node.y || 0, 10, 0, 2 * Math.PI);
+              ctx.arc(x, y, (r + 4) / globalScale, 0, 2 * Math.PI);
               ctx.strokeStyle = "#DC2626";
               ctx.lineWidth = 2 / globalScale;
               ctx.stroke();
@@ -120,14 +147,18 @@ export default function CollectionGraph({
             if (!showLabels) return;
             const label = node.name || "";
             const fontSize = Math.max(10 / globalScale, 3);
-            ctx.font = `${fontSize}px Inter, sans-serif`;
+            ctx.font = `500 ${fontSize}px Inter, system-ui, sans-serif`;
             ctx.textAlign = "center";
-            ctx.fillStyle = "#fafafa";
-            ctx.fillText(label, node.x || 0, (node.y || 0) + 10 / globalScale);
+            ctx.textBaseline = "top";
+
+            // Text shadow
+            ctx.fillStyle = "rgba(9,9,11,0.7)";
+            ctx.fillText(label, x + 0.3, y + (r + 3) / globalScale + 0.3);
+            ctx.fillStyle = "#e4e4e7";
+            ctx.fillText(label, x, y + (r + 3) / globalScale);
           }}
           linkCanvasObjectMode={() => "after"}
           linkCanvasObject={(link: any, ctx: CanvasRenderingContext2D, globalScale: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-            // Show edge label
             if (globalScale < 1.2) return;
             const source = link.source;
             const target = link.target;
@@ -137,22 +168,25 @@ export default function CollectionGraph({
             const midY = (source.y + target.y) / 2;
             const fontSize = Math.max(7 / globalScale, 2.5);
 
-            ctx.font = `${fontSize}px Inter, sans-serif`;
+            ctx.font = `500 ${fontSize}px Inter, system-ui, sans-serif`;
             ctx.textAlign = "center";
-            ctx.fillStyle = RELATIONSHIP_TYPE_COLORS[link.type as SkillRelationType] || "#a1a1aa";
-            ctx.fillText(link.type, midX, midY - 3 / globalScale);
+            ctx.fillStyle = RELATIONSHIP_TYPE_COLORS[link.type] || "#a1a1aa";
+            ctx.fillText(RELATIONSHIP_TYPE_LABELS[link.type] || link.type, midX, midY - 3 / globalScale);
           }}
         />
+
+        {/* Bottom gradient for depth */}
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-zinc-950/40 to-transparent" />
       </div>
 
       {/* Relationship legend below graph */}
-      <div className="mt-3 flex flex-wrap gap-3">
-        {(Object.keys(RELATIONSHIP_TYPE_COLORS) as SkillRelationType[])
+      <div className="mt-2.5 flex flex-wrap gap-3">
+        {Object.keys(RELATIONSHIP_TYPE_COLORS)
           .filter((type) => (linkTypeCounts[type] || 0) > 0)
           .map((type) => (
             <div key={type} className="flex items-center gap-1.5">
               <span
-                className="inline-block h-0.5 w-4 rounded"
+                className="inline-block h-0.5 w-4 rounded-full"
                 style={{ backgroundColor: RELATIONSHIP_TYPE_COLORS[type] }}
               />
               <span className="text-[10px] text-zinc-500 dark:text-zinc-400">

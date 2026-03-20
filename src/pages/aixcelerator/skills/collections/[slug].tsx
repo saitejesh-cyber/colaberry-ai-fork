@@ -262,7 +262,7 @@ export default function CollectionDetailPage({
                   {skill.name}
                 </Link>
                 {index < skills.length - 1 && (
-                  <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-blue-400" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-500" aria-hidden="true">
                     <path d="M5 12h14m0 0l-4-4m4 4l-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                   </svg>
                 )}

@@ -442,7 +442,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                       logPodcastEvent("share", "copy", { slug: episode.slug, title: episode.title });
                     }
                   }}
-                  className={`btn btn-compact ${copiedLink ? "text-emerald-600 dark:text-emerald-400" : "btn-secondary"}`}
+                  className={`btn btn-compact ${copiedLink ? "text-zinc-600 dark:text-zinc-300" : "btn-secondary"}`}
                 >
                   {copiedLink ? (
                     <>
@@ -629,7 +629,7 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
                       By subscribing you agree to receive podcast notifications from Colaberry AI.
                     </p>
                     {sidebarSubMessage ? (
-                      <p className={`mt-2 text-xs ${sidebarSubState === "error" ? "text-red-600" : "text-emerald-600"}`}>
+                      <p className={`mt-2 text-xs ${sidebarSubState === "error" ? "text-red-600" : "text-zinc-600 dark:text-zinc-400"}`}>
                         {sidebarSubMessage}
                       </p>
                     ) : null}

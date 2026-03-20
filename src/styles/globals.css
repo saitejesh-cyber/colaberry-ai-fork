@@ -330,27 +330,27 @@ select:disabled {
 }
 
 .chip-neutral {
-  border-color: #E2E8F0;
-  background: #F1F5F9;
-  color: #475569;
+  border-color: #E4E4E7;
+  background: #F4F4F5;
+  color: #52525B;
 }
 
 .dark .chip-neutral {
-  border-color: #334155;
-  background: #1E293B;
-  color: #CBD5E1;
+  border-color: #3F3F46;
+  background: #27272A;
+  color: #D4D4D8;
 }
 
 .chip-neutral:hover {
-  border-color: #CBD5E1;
-  background: #E2E8F0;
-  color: #334155;
+  border-color: #D4D4D8;
+  background: #E4E4E7;
+  color: #3F3F46;
 }
 
 .dark .chip-neutral:hover {
-  border-color: #475569;
-  background: #334155;
-  color: #E2E8F0;
+  border-color: #52525B;
+  background: #3F3F46;
+  color: #E4E4E7;
 }
 
 .chip:hover {

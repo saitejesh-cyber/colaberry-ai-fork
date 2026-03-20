@@ -436,7 +436,7 @@ export default function Podcasts({
                             setTimeout(() => setCopiedSlug(null), 2000);
                             logPodcastEvent("share", "hero-copy", { slug: hero.slug });
                           }}
-                          className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${copiedSlug === hero.slug ? "text-emerald-500" : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"}`}
+                          className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${copiedSlug === hero.slug ? "text-zinc-600 dark:text-zinc-300" : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"}`}
                           title={copiedSlug === hero.slug ? "Copied!" : "Copy link"}
                         >
                           {copiedSlug === hero.slug ? (
@@ -545,7 +545,7 @@ export default function Podcasts({
                               setTimeout(() => setCopiedSlug(null), 2000);
                               logPodcastEvent("share", "list-copy", { slug: episode.slug });
                             }}
-                            className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${copiedSlug === episode.slug ? "text-emerald-500" : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"}`}
+                            className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${copiedSlug === episode.slug ? "text-zinc-600 dark:text-zinc-300" : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"}`}
                             title={copiedSlug === episode.slug ? "Copied!" : "Copy link"}
                           >
                             {copiedSlug === episode.slug ? (
@@ -704,7 +704,7 @@ export default function Podcasts({
                   By subscribing you agree to receive podcast notifications from Colaberry AI.
                 </p>
                 {sidebarSubMessage ? (
-                  <p className={`mt-2 text-xs ${sidebarSubState === "error" ? "text-red-600" : "text-emerald-600"}`}>
+                  <p className={`mt-2 text-xs ${sidebarSubState === "error" ? "text-red-600" : "text-zinc-600 dark:text-zinc-400"}`}>
                     {sidebarSubMessage}
                   </p>
                 ) : null}

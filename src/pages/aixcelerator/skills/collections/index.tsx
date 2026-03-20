@@ -224,7 +224,7 @@ function CollectionCard({ collection }: { collection: SkillCollection }) {
           <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
             {collection.slug}
           </h2>
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
             <svg viewBox="0 0 16 16" className="h-3 w-3" aria-hidden="true">
               <path d="M8 2a6 6 0 100 12A6 6 0 008 2z" fill="currentColor" opacity="0.2" />
               <path d="M8 4v4l3 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />

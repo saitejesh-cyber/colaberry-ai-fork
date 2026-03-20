@@ -274,8 +274,8 @@ function RoadmapItem({
     <div className="card-elevated p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="text-[0.9375rem] font-semibold text-zinc-900 dark:text-zinc-100">{title}</div>
-        <span className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] ${isLive ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"}`}>
-          {isLive ? <span className="trending-dot" style={{ background: "#10b981" }} /> : null}
+        <span className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] ${isLive ? "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300" : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"}`}>
+          {isLive ? <span className="trending-dot" style={{ background: "#a1a1aa" }} /> : null}
           {status}
         </span>
       </div>
