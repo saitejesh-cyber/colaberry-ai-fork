@@ -1,9 +1,13 @@
 /**
- * Shared graph utilities for skill relationship visualizations.
- * Used by: graph page, collection detail, ontology diagram, skill detail mini-graph.
+ * Shared graph utilities for content relationship visualizations.
+ * Used by: graph pages, collection detail, ontology diagrams, detail mini-graphs.
+ *
+ * Supports all content types via generic OntologyItem/OntologyCollection types.
+ * Skills-specific backward-compatible wrappers are kept for existing code.
  */
 
 import type { SkillRelationType } from "../data/skill-taxonomy";
+import type { OntologyItem, ContentOntologyConfig } from "./ontologyTypes";
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
@@ -15,12 +19,14 @@ export type GraphNode = {
   val: number;
   tags?: string[];
   collections?: string[];
+  /** Content type for cross-type graphs */
+  contentType?: string;
 };
 
 export type GraphLink = {
   source: string;
   target: string;
-  type: SkillRelationType;
+  type: string;
 };
 
 export type GraphData = {
@@ -32,6 +38,7 @@ export type GraphData = {
 
 /** Category node colors (zinc-friendly for monochrome design system) */
 export const CATEGORY_COLORS: Record<string, string> = {
+  // Skills
   development: "#60a5fa",
   "ai-generation": "#f87171",
   research: "#a78bfa",
@@ -42,53 +49,122 @@ export const CATEGORY_COLORS: Record<string, string> = {
   security: "#f472b6",
   infrastructure: "#a3e635",
   other: "#94a3b8",
+  // MCP Servers
+  "database-storage": "#60a5fa",
+  communication: "#a78bfa",
+  "developer-tools": "#34d399",
+  "ai-ml": "#f87171",
+  "cloud-infra": "#fbbf24",
+  "search-knowledge": "#38bdf8",
+  "file-document": "#fb923c",
+  "monitoring-analytics": "#f472b6",
+  // Agents
+  "code-development": "#60a5fa",
+  "content-writing": "#a78bfa",
+  "data-analytics": "#34d399",
+  "research-analysis": "#fbbf24",
+  "sales-marketing": "#f87171",
+  "operations-workflow": "#38bdf8",
+  "customer-support": "#fb923c",
+  // Podcasts
+  "business-strategy": "#a78bfa",
+  "tech-engineering": "#34d399",
+  "education-career": "#38bdf8",
+  industry: "#fbbf24",
+  "product-design": "#f472b6",
 };
 
-/** Relationship edge colors — distinct from node colors */
-export const RELATIONSHIP_TYPE_COLORS: Record<SkillRelationType, string> = {
+/** Relationship edge colors — works for any content type */
+export const RELATIONSHIP_TYPE_COLORS: Record<string, string> = {
+  // Universal
   similar_to: "#34d399",  // emerald
   belong_to: "#fbbf24",   // amber
   compose_with: "#60a5fa", // blue
   depend_on: "#f87171",    // red
+  // MCP-specific
+  interop_with: "#60a5fa",  // blue
+  complement: "#fbbf24",    // amber
+  // Agent-specific
+  chains_with: "#60a5fa",   // blue
+  integrates_with: "#fbbf24", // amber
+  // Podcast-specific
+  sequel_to: "#60a5fa",    // blue
+  references: "#fbbf24",   // amber
+  // Cross-type
+  uses: "#60a5fa",         // blue
+  connects_via: "#a78bfa", // violet
+  provides: "#34d399",     // emerald
+  implemented_by: "#fbbf24", // amber
+  discusses: "#fb923c",    // orange
 };
 
 /** Relationship type display labels */
-export const RELATIONSHIP_TYPE_LABELS: Record<SkillRelationType, string> = {
+export const RELATIONSHIP_TYPE_LABELS: Record<string, string> = {
+  // Universal
   similar_to: "Similar To",
   belong_to: "Belongs To",
   compose_with: "Composes With",
   depend_on: "Depends On",
+  // MCP-specific
+  interop_with: "Interoperates With",
+  complement: "Complements",
+  // Agent-specific
+  chains_with: "Chains With",
+  integrates_with: "Integrates With",
+  // Podcast-specific
+  sequel_to: "Sequel To",
+  references: "References",
+  // Cross-type
+  uses: "Uses",
+  connects_via: "Connects Via",
+  provides: "Provides",
+  implemented_by: "Implemented By",
+  discusses: "Discusses",
 };
 
-/* ── Graph Data Builder ──────────────────────────────────────────────── */
+/* ── Generic Graph Data Builder ────────────────────────────────────────── */
 
-type SkillLike = {
+/** Generic item shape for graph building (backward-compatible with old SkillLike) */
+type GraphBuildableItem = {
   slug: string;
   name: string;
   tags?: { slug?: string; name?: string }[] | null;
   category?: string | null;
   skillType?: string | null;
   prerequisites?: string | null;
+  [key: string]: unknown;
 };
 
-type CollectionLike = {
+/** Generic collection shape for graph building */
+type GraphBuildableCollection = {
   slug: string;
-  skillSlugs: string[];
+  itemSlugs?: string[];
+  skillSlugs?: string[];
 };
+
+/** Callback type for custom relationship computation */
+export type RelationshipComputer = (
+  items: GraphBuildableItem[],
+  collections: GraphBuildableCollection[],
+  addLink: (src: string, tgt: string, type: string) => void,
+  nodeMap: Map<string, GraphNode>,
+) => void;
 
 /**
- * Build graph data from skills and optional collection context.
- * Computes all 4 relationship types: similar_to, belong_to, compose_with, depend_on.
+ * Build graph data from items and optional collection context.
+ * Default behavior computes all 4 SkillNet relationship types.
+ * Pass custom `computeRelationships` to override for different content types.
  */
 export function buildGraphData(
-  skills: SkillLike[],
-  collections: CollectionLike[],
+  skills: GraphBuildableItem[],
+  collections: GraphBuildableCollection[],
   classifyFn: (s: { category?: string | null; skillType?: string | null }) => { slug: string },
+  computeRelationships?: RelationshipComputer,
 ): GraphData {
   const linkSet = new Set<string>();
   const links: GraphLink[] = [];
 
-  const addLink = (src: string, tgt: string, type: SkillRelationType) => {
+  const addLink = (src: string, tgt: string, type: string) => {
     const key = [src, tgt].sort().join("|") + "|" + type;
     if (!linkSet.has(key)) {
       linkSet.add(key);
@@ -96,33 +172,57 @@ export function buildGraphData(
     }
   };
 
+  // Normalize collection shape (support both itemSlugs and skillSlugs)
+  const normalizedCollections = collections.map((c) => ({
+    slug: c.slug,
+    itemSlugs: c.itemSlugs || c.skillSlugs || [],
+  }));
+
   // Build slug → collection membership map
-  const skillCollections: Record<string, string[]> = {};
-  for (const col of collections) {
-    for (const slug of col.skillSlugs) {
-      (skillCollections[slug] ??= []).push(col.slug);
+  const itemCollections: Record<string, string[]> = {};
+  for (const col of normalizedCollections) {
+    for (const slug of col.itemSlugs) {
+      (itemCollections[slug] ??= []).push(col.slug);
     }
   }
 
   // Build nodes
-  const nodes: GraphNode[] = skills.map((skill) => {
-    const cat = classifyFn(skill);
-    const tagStrings = (skill.tags || [])
+  const nodes: GraphNode[] = skills.map((item) => {
+    const cat = classifyFn(item);
+    const tagStrings = (item.tags || [])
       .map((t) => (t.slug || t.name || "").toLowerCase())
       .filter(Boolean);
     return {
-      id: skill.slug,
-      name: skill.name,
+      id: item.slug,
+      name: item.name,
       category: cat.slug,
       color: CATEGORY_COLORS[cat.slug] || "#a1a1aa",
       val: 1 + tagStrings.length * 0.5,
       tags: tagStrings,
-      collections: skillCollections[skill.slug] || [],
+      collections: itemCollections[item.slug] || [],
     };
   });
 
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 
+  // Use custom relationship computation if provided
+  if (computeRelationships) {
+    computeRelationships(skills, normalizedCollections, addLink, nodeMap);
+  } else {
+    // Default: compute all 4 SkillNet relationship types
+    computeDefaultRelationships(skills, normalizedCollections, addLink, nodeMap);
+  }
+
+  return { nodes, links };
+}
+
+/** Default relationship computation (SkillNet 4-type model) */
+function computeDefaultRelationships(
+  skills: GraphBuildableItem[],
+  collections: { slug: string; itemSlugs: string[] }[],
+  addLink: (src: string, tgt: string, type: string) => void,
+  nodeMap: Map<string, GraphNode>,
+): void {
   // Phase 1: similar_to — shared tags ≥ 1
   for (let i = 0; i < skills.length; i++) {
     const a = skills[i];
@@ -144,44 +244,70 @@ export function buildGraphData(
   }
 
   // Phase 2: belong_to — same category sequential links
-  const byCategory: Record<string, SkillLike[]> = {};
-  for (const skill of skills) {
-    const cat = classifyFn(skill).slug;
-    (byCategory[cat] ??= []).push(skill);
+  const classifyFromNode = (item: GraphBuildableItem) => {
+    const node = nodeMap.get(item.slug);
+    return node?.category || "other";
+  };
+
+  const byCategory: Record<string, GraphBuildableItem[]> = {};
+  for (const item of skills) {
+    const cat = classifyFromNode(item);
+    (byCategory[cat] ??= []).push(item);
   }
-  for (const catSkills of Object.values(byCategory)) {
-    for (let i = 0; i < catSkills.length - 1 && i < 80; i++) {
-      addLink(catSkills[i].slug, catSkills[i + 1].slug, "belong_to");
+  for (const catItems of Object.values(byCategory)) {
+    for (let i = 0; i < catItems.length - 1 && i < 80; i++) {
+      addLink(catItems[i].slug, catItems[i + 1].slug, "belong_to");
     }
   }
 
-  // Phase 3: compose_with — skills in the same collection
+  // Phase 3: compose_with — items in the same collection
   for (const col of collections) {
-    const slugsInGraph = col.skillSlugs.filter((s) => nodeMap.has(s));
+    const slugsInGraph = col.itemSlugs.filter((s) => nodeMap.has(s));
     for (let i = 0; i < slugsInGraph.length - 1; i++) {
       addLink(slugsInGraph[i], slugsInGraph[i + 1], "compose_with");
     }
   }
 
-  // Phase 4: depend_on — parse prerequisites text for skill slug references
-  for (const skill of skills) {
-    if (!skill.prerequisites) continue;
-    const prereqText = skill.prerequisites.toLowerCase();
+  // Phase 4: depend_on — parse prerequisites text for item slug references
+  for (const item of skills) {
+    if (!item.prerequisites) continue;
+    const prereqText = (item.prerequisites as string).toLowerCase();
     for (const other of skills) {
-      if (other.slug === skill.slug) continue;
+      if (other.slug === item.slug) continue;
       if (!nodeMap.has(other.slug)) continue;
-      // Check if the prerequisite mentions the other skill's name or slug
       const otherName = other.name.toLowerCase();
       if (
         prereqText.includes(other.slug) ||
         (otherName.length > 4 && prereqText.includes(otherName))
       ) {
-        addLink(other.slug, skill.slug, "depend_on");
+        addLink(other.slug, item.slug, "depend_on");
       }
     }
   }
+}
 
-  return { nodes, links };
+/* ── Content-Type-Specific Graph Builder ──────────────────────────────── */
+
+/**
+ * Build graph data using an ontology config's classify function and relationship types.
+ * Convenience wrapper around buildGraphData for non-skill content types.
+ */
+export function buildGraphDataForType(
+  items: OntologyItem[],
+  collections: GraphBuildableCollection[],
+  config: ContentOntologyConfig,
+  customRelationships?: RelationshipComputer,
+): GraphData {
+  const classifyFn = (item: { category?: string | null; skillType?: string | null }) => {
+    return config.classifyItem(item as OntologyItem);
+  };
+
+  return buildGraphData(
+    items as GraphBuildableItem[],
+    collections,
+    classifyFn,
+    customRelationships,
+  );
 }
 
 /* ── Convex Hull ──────────────────────────────────────────────────────── */
@@ -282,3 +408,13 @@ export function countLinksByType(links: GraphLink[]): Record<string, number> {
   }
   return counts;
 }
+
+/* ── Backward Compatibility ──────────────────────────────────────────── */
+
+/** @deprecated Use GraphBuildableItem instead */
+export type SkillLike = GraphBuildableItem;
+/** @deprecated Use GraphBuildableCollection instead */
+export type CollectionLike = GraphBuildableCollection;
+
+// Re-export SkillRelationType for backward compatibility
+export type { SkillRelationType } from "../data/skill-taxonomy";

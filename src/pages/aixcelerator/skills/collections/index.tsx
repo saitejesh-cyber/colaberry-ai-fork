@@ -1,24 +1,74 @@
 import { useMemo, useState } from "react";
+import type { GetStaticProps, InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import Layout from "../../../../components/Layout";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../../../../lib/seo";
 import { SKILL_COLLECTIONS, type SkillCollection } from "../../../../data/skill-collections";
 import { SKILL_CATEGORIES } from "../../../../data/skill-taxonomy";
+import { fetchCMSCollections } from "../../../../lib/cms";
+import SectionHeader from "../../../../components/SectionHeader";
+import EnterpriseCtaBand from "../../../../components/EnterpriseCtaBand";
 
-export default function CollectionsIndexPage() {
+/* ── Data fetching — CMS-first with static fallback ─────────────────── */
+
+type CollectionsPageProps = {
+  collections: SkillCollection[];
+  source: "cms" | "static";
+};
+
+export const getStaticProps: GetStaticProps<CollectionsPageProps> = async () => {
+  try {
+    const cmsCollections = await fetchCMSCollections();
+
+    if (cmsCollections.length > 0) {
+      // Convert CMS collections to SkillCollection shape
+      const collections: SkillCollection[] = cmsCollections.map((c) => ({
+        slug: c.slug,
+        name: c.name,
+        description: c.description || "",
+        category: c.category || "other",
+        skillSlugs: c.skills.map((s) => s.slug),
+        difficulty: c.difficulty || "intermediate",
+        keywordTags: c.keywordTags || [],
+        linkCount: Math.max(0, c.skills.length - 1),
+        generated: false,
+      }));
+
+      // Merge: CMS collections + any static ones not in CMS
+      const cmsSlugs = new Set(collections.map((c) => c.slug));
+      const merged = [
+        ...collections,
+        ...SKILL_COLLECTIONS.filter((c) => !cmsSlugs.has(c.slug)),
+      ];
+
+      return { props: { collections: merged, source: "cms" }, revalidate: 600 };
+    }
+  } catch {
+    // CMS unavailable — fall through to static
+  }
+
+  // Fallback to static data
+  return { props: { collections: SKILL_COLLECTIONS, source: "static" }, revalidate: 600 };
+};
+
+/* ── Page component ─────────────────────────────────────────────────── */
+
+export default function CollectionsIndexPage({
+  collections: allCollections,
+}: InferGetStaticPropsType<typeof getStaticProps>) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Unique categories that have collections
   const categoryFilters = useMemo(() => {
-    const catSlugs = new Set(SKILL_COLLECTIONS.map((c) => c.category));
+    const catSlugs = new Set(allCollections.map((c) => c.category));
     return SKILL_CATEGORIES.filter((c) => catSlugs.has(c.slug));
-  }, []);
+  }, [allCollections]);
 
   // Filtered collections
   const filtered = useMemo(() => {
-    let result = SKILL_COLLECTIONS;
+    let result = allCollections;
 
     if (selectedCategory) {
       result = result.filter((c) => c.category === selectedCategory);
@@ -36,11 +86,11 @@ export default function CollectionsIndexPage() {
     }
 
     return result;
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, allCollections]);
 
   const totalSkills = useMemo(
-    () => new Set(SKILL_COLLECTIONS.flatMap((c) => c.skillSlugs)).size,
-    [],
+    () => new Set(allCollections.flatMap((c) => c.skillSlugs)).size,
+    [allCollections],
   );
 
   const seoMeta: SeoMeta = {
@@ -58,16 +108,17 @@ export default function CollectionsIndexPage() {
         )}
       </Head>
 
-      {/* Header */}
-      <div className="reveal text-center">
-        <h1 className="text-display-md font-semibold text-zinc-900 dark:text-zinc-50">
-          Skill Collection
-        </h1>
-        <p className="mx-auto mt-3 max-w-2xl text-body-lg text-zinc-500 dark:text-zinc-400">
-          Curated skill collections for real-world scenarios, each paired with a skill relation graph.
-        </p>
+      {/* Hero */}
+      <div className="reveal">
+        <SectionHeader
+          as="h1"
+          size="xl"
+          kicker="Collections"
+          title="Skill Collections"
+          description="Curated skill collections for real-world scenarios, each paired with a skill relation graph."
+        />
         <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-zinc-200 px-4 py-2 text-sm dark:border-zinc-700">
-          <span className="font-bold text-zinc-900 dark:text-zinc-50">{SKILL_COLLECTIONS.length}</span>
+          <span className="font-bold text-zinc-900 dark:text-zinc-50">{allCollections.length}</span>
           <span className="text-zinc-500 dark:text-zinc-400">Collections</span>
           <span className="mx-1 text-zinc-300 dark:text-zinc-600">|</span>
           <span className="font-bold text-zinc-900 dark:text-zinc-50">{totalSkills}</span>
@@ -76,7 +127,7 @@ export default function CollectionsIndexPage() {
       </div>
 
       {/* Search + Category Filter Bar */}
-      <div className="reveal mt-8 flex flex-wrap items-center gap-3">
+      <div className="reveal mt-8 surface-panel p-4 flex flex-wrap items-center gap-3">
         <input
           type="text"
           value={searchQuery}
@@ -122,13 +173,13 @@ export default function CollectionsIndexPage() {
 
       <p className="reveal mt-4 text-sm text-zinc-500 dark:text-zinc-400">
         Showing {filtered.length} collections
-        {filtered.length !== SKILL_COLLECTIONS.length && ` of ${SKILL_COLLECTIONS.length}`}
+        {filtered.length !== allCollections.length && ` of ${allCollections.length}`}
         {" | "}
         {new Set(filtered.flatMap((c) => c.skillSlugs)).size} total skills
       </p>
 
       {/* Collection Cards Grid */}
-      <section className="reveal mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="reveal stagger-grid mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {filtered.map((collection) => (
           <CollectionCard key={collection.slug} collection={collection} />
         ))}
@@ -140,14 +191,16 @@ export default function CollectionsIndexPage() {
         </div>
       )}
 
-      <div className="reveal mt-10 text-center">
-        <Link
-          href="/aixcelerator/skills"
-          className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-        >
-          ← Back to Skills Catalog
-        </Link>
-      </div>
+      <EnterpriseCtaBand
+        kicker="Skill collections"
+        title="Explore the full skills catalog"
+        description="Browse all AI skills with taxonomy filters, relationship graphs, and detailed specifications."
+        primaryHref="/aixcelerator/skills"
+        primaryLabel="Browse all skills"
+        secondaryHref="/aixcelerator/skills/graph"
+        secondaryLabel="View skill graph"
+        className="mt-16"
+      />
     </Layout>
   );
 }
@@ -171,7 +224,7 @@ function CollectionCard({ collection }: { collection: SkillCollection }) {
           <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
             {collection.slug}
           </h2>
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
             <svg viewBox="0 0 16 16" className="h-3 w-3" aria-hidden="true">
               <path d="M8 2a6 6 0 100 12A6 6 0 008 2z" fill="currentColor" opacity="0.2" />
               <path d="M8 4v4l3 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />

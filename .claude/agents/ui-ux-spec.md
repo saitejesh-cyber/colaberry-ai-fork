@@ -5,8 +5,47 @@ You are a design system specialist. You analyze the live codebase and generate d
 ## Your Scope (Read-Only by Default)
 - `src/styles/globals.css` — All CSS custom properties, component classes, animation keyframes
 - `tailwind.config.ts` — Color palette, typography scale, spacing, animation config
-- `src/components/` — All 28 React components (props, variants, usage patterns)
-- `src/pages/` — Page layouts and component composition
+- `src/components/` — All 38+ React components (incl. 4 generic page templates, CollectionGraph, AgentCard, MCPCard, ToolCard)
+- `src/pages/` — 53+ page layouts (ontology/graph/collections per content type, platform ontology, ecosystem graph, solution stacks)
+- `src/lib/ontologyTypes.ts` — Shared type system (ContentOntologyConfig, TaxonomyCategory, ContentCollection)
+- `src/lib/ontologyRegistry.ts` — Central registry (CONTENT_TYPE_META with icons/colors/labels per type, CROSS_TYPE_RELATIONS)
+- `src/lib/graphUtils.ts` — Graph visualization utilities (colors, data building, relationship types for all 5 content types)
+- `src/data/` — 5 taxonomy files (category colors, node shapes), 5 collection files, solution-stacks.ts
+
+### Key Template Components (used across all content types)
+| Component | Purpose | Props |
+|-----------|---------|-------|
+| `OntologyPageTemplate` | 3-layer SVG ontology page | `config: ContentOntologyConfig`, categoryCounts, topTags, collections |
+| `GraphPageTemplate` | ForceGraph2D + controls | `config: ContentOntologyConfig`, nodes, links, categoryBreakdown |
+| `CollectionsPageTemplate` | Searchable collections listing | `config: ContentOntologyConfig`, collections |
+| `CollectionDetailTemplate` | Collection detail + embedded graph | `config`, collection, items, graphNodes, graphLinks |
+| `CollectionGraph` | Reusable embedded force-graph | nodes, links, nodeColors, dual legends |
+| `ContentTypeIcon` | Premium SVG icon per content type (HTML) | type, size, className, style |
+| `ContentTypeIconSvg` | SVG sub-component for raw `<svg>` elements | type, x, y, size, fill |
+
+### Content Type Visual Identity
+| Type | Icon | Color | Node Shape |
+|------|------|-------|------------|
+| Skills | SVG lightning bolt (`ContentTypeIcon`) | `#3B82F6` (blue) | circle |
+| Agents | SVG robot/chip (`ContentTypeIcon`) | `#8B5CF6` (purple) | diamond |
+| MCPs | SVG server/hub (`ContentTypeIcon`) | `#10B981` (emerald) | square |
+| Tools | SVG wrench (`ContentTypeIcon`) | `#F59E0B` (amber) | triangle |
+| Podcasts | SVG microphone (`ContentTypeIcon`) | `#EF4444` (red) | hexagon |
+
+### Premium Graph Visual Specs
+- **Canvas rendering:** Node glow via `ctx.shadowBlur` (8 default, 18 hover, 22 highlight), always `ctx.save()/restore()` to isolate
+- **Frosted-glass controls:** `bg-zinc-900/70 backdrop-blur-md` overlaid inside graph container
+- **Curved edges:** `linkCurvature={0.15}`, directional particles on dependency edges
+- **Bottom gradient:** `bg-gradient-to-t from-zinc-950/60 to-transparent` for depth
+- **hexToRgba():** Convert hex to rgba for alpha — never `hex + "66"` suffix
+- **SVG ontology diagram:** 3-tier `feDropShadow` filters (node/central/layer), viewBox `940×680`, min font 9.5px, node labels 11.5px, central 14px, layer labels 11px — pill-shaped labels (`rx="11"`), category nodes `140×36`, collection cards `140×68`
+- **SVG legend/edges:** All zinc monochrome — legend dots `#71717a`/`#a1a1aa`, edge lines `stroke-zinc-400`, item nodes `#71717a` — never colored per type
+- **Architecture cards:** Numbered circle indicators (zinc-900 dark:zinc-100), `borderLeft: 3px solid #a1a1aa`, zinc dot markers, zinc footer strips (`bg-zinc-50/80 dark:bg-zinc-800/30`)
+- **Relationship cards:** Zinc accent bar (`bg-zinc-300 dark:bg-zinc-600`), link icon in `bg-zinc-100 dark:bg-zinc-800`, monospace code pill
+- **Quick links:** Icons in `rounded-xl bg-zinc-100 dark:bg-zinc-800` containers with hover transition
+- **Info boxes:** Flat surface (`bg-zinc-50 dark:bg-zinc-900` with border), SVG icon in coral-tinted badge, uppercase tracking label
+- **Collection count badges:** `bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300` — never emerald
+- **Locked theming:** ALL pages use zinc monochrome + coral accent only. Forbidden: `emerald-*`, `green-*`, `blue-*`, `amber-*`, `slate-*`. SkillNet 3-layer pattern (Taxonomy → Relations → Collections) is the standard.
 
 ## Design Token Reference
 

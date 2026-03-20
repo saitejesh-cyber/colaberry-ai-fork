@@ -325,10 +325,10 @@ export default function Updates({ ratings, briefing, fetchError }: UpdatesProps)
 function ratingTone(rating: string) {
   const normalized = rating.toLowerCase();
   if (normalized.includes("essential")) {
-    return "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-900/35 dark:text-emerald-100 dark:ring-emerald-500/35";
+    return "bg-zinc-100 text-zinc-700 ring-1 ring-inset ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:ring-zinc-700";
   }
   if (normalized.includes("important")) {
-    return "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/30 dark:text-amber-100 dark:ring-amber-500/35";
+    return "bg-zinc-100 text-zinc-600 ring-1 ring-inset ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:ring-zinc-700";
   }
   if (normalized.includes("watch") || normalized.includes("optional")) {
     return "bg-zinc-100 text-zinc-600 ring-1 ring-inset ring-zinc-200 dark:bg-zinc-800/75 dark:text-zinc-100 dark:ring-zinc-600/70";

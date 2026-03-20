@@ -118,3 +118,38 @@ export function classifySkill(skill: {
 
 /** Relationship types between skills (SkillNet ontology) */
 export type SkillRelationType = "similar_to" | "depend_on" | "compose_with" | "belong_to";
+
+/* ── Ontology Config Export ────────────────────────────────────────────── */
+
+import type { ContentOntologyConfig, OntologyItem } from "../lib/ontologyTypes";
+
+/** Skill ontology config for the content knowledge graph platform */
+export const SKILL_ONTOLOGY_CONFIG: ContentOntologyConfig = {
+  contentType: "skill",
+  label: "Skills",
+  labelSingular: "Skill",
+  icon: "⚡",
+  basePath: "/aixcelerator/skills",
+  catalogPath: "/aixcelerator/skills",
+  nodeShape: "circle",
+  categories: SKILL_CATEGORIES,
+  relationTypes: [
+    { type: "similar_to", label: "Similar To", description: "Skills that share common tags or functionality.", color: "#34d399", directional: false },
+    { type: "depend_on", label: "Depends On", description: "Skills that require other skills as prerequisites.", color: "#f87171", directional: true },
+    { type: "compose_with", label: "Composes With", description: "Skills that work together in the same collection.", color: "#60a5fa", directional: false },
+    { type: "belong_to", label: "Belongs To", description: "Skills in the same taxonomy category.", color: "#fbbf24", directional: false },
+  ],
+  categoryColors: {
+    development: "#60a5fa",
+    "ai-generation": "#f87171",
+    research: "#a78bfa",
+    "data-science": "#34d399",
+    business: "#fbbf24",
+    testing: "#fb923c",
+    productivity: "#38bdf8",
+    security: "#f472b6",
+    infrastructure: "#a3e635",
+    other: "#94a3b8",
+  },
+  classifyItem: (item: OntologyItem) => classifySkill(item as { category?: string | null; skillType?: string | null }),
+};

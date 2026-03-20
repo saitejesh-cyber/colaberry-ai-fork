@@ -2713,3 +2713,311 @@ export async function fetchAllSkillTags(): Promise<{ name: string; slug: string;
     return [];
   }
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+ * Skill Collections — CMS-managed collections
+ * ──────────────────────────────────────────────────────────────────── */
+
+export type CMSSkillCollection = {
+  id: number;
+  documentId: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  category: string | null;
+  difficulty: "beginner" | "intermediate" | "advanced" | null;
+  keywordTags: string[] | null;
+  featured: boolean;
+  sortOrder: number;
+  coverImageUrl: string | null;
+  skills: { id: number; slug: string; name: string }[];
+};
+
+/**
+ * Fetch all published skill collections from CMS.
+ * Returns empty array if CMS is unavailable (frontend falls back to static data).
+ */
+export async function fetchCMSCollections(): Promise<CMSSkillCollection[]> {
+  try {
+    const collections: CMSSkillCollection[] = [];
+    let page = 1;
+    const pageSize = 50;
+
+    while (true) {
+      const json = await fetchCMSJson<CMSCollectionResponse>(
+        `${CMS_URL}/api/skill-collections?pagination[page]=${page}&pagination[pageSize]=${pageSize}&populate[skills][fields][0]=slug&populate[skills][fields][1]=name&sort=sortOrder:asc,name:asc`,
+        { allowStaleOnError: true },
+      );
+
+      const batch = json?.data || [];
+      if (batch.length === 0) break;
+
+      for (const item of batch) {
+        collections.push({
+          id: item.id,
+          documentId: item.documentId || "",
+          name: item.name || "",
+          slug: item.slug || "",
+          description: item.description || null,
+          category: item.category || null,
+          difficulty: item.difficulty || null,
+          keywordTags: item.keywordTags || null,
+          featured: item.featured || false,
+          sortOrder: item.sortOrder || 0,
+          coverImageUrl: item.coverImageUrl || null,
+          skills: (item.skills || []).map((s: any) => ({
+            id: s.id,
+            slug: s.slug || "",
+            name: s.name || "",
+          })),
+        });
+      }
+
+      const pageCount = json?.meta?.pagination?.pageCount || 1;
+      if (page >= pageCount) break;
+      page++;
+    }
+
+    return collections;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch a single skill collection by slug from CMS.
+ */
+/* ──────────────────────────────────────────────────────────────────────
+ * Generic Category Counts & Tags — for any content type
+ * ──────────────────────────────────────────────────────────────────── */
+
+/**
+ * Compute category counts for MCP servers using the MCP taxonomy.
+ * Uses a 500-item sample scaled to total count.
+ */
+export async function fetchMCPCategoryCounts(): Promise<Record<string, number>> {
+  try {
+    const sample = await fetchMCPServers(undefined, { maxRecords: 500, sortBy: "latest" });
+    const { classifyMCP } = await import("../data/mcp-taxonomy");
+    const totalRes = await fetchCMSJson<CMSCollectionResponse>(
+      `${CMS_URL}/api/mcp-servers?pagination[pageSize]=1`,
+      { allowStaleOnError: true },
+    );
+    const total = totalRes?.meta?.pagination?.total ?? sample.length;
+    const counts: Record<string, number> = {};
+    for (const mcp of sample) {
+      const cat = classifyMCP(mcp);
+      counts[cat.slug] = (counts[cat.slug] || 0) + 1;
+    }
+    if (sample.length > 0 && total > sample.length) {
+      const scale = total / sample.length;
+      for (const key of Object.keys(counts)) {
+        counts[key] = Math.round(counts[key] * scale);
+      }
+    }
+    return counts;
+  } catch {
+    return {};
+  }
+}
+
+/** Compute tag frequency for MCP servers. */
+export async function fetchAllMCPTags(): Promise<{ name: string; slug: string; count: number }[]> {
+  try {
+    const all = await fetchMCPServers(undefined, { maxRecords: 500, sortBy: "latest" });
+    const tagMap = new Map<string, { name: string; slug: string; count: number }>();
+    for (const mcp of all) {
+      for (const tag of mcp.tags || []) {
+        const key = (tag.slug || tag.name || "").toLowerCase();
+        if (!key) continue;
+        const existing = tagMap.get(key);
+        if (existing) existing.count++;
+        else tagMap.set(key, { name: tag.name || key, slug: tag.slug || key, count: 1 });
+      }
+    }
+    return [...tagMap.values()].sort((a, b) => b.count - a.count);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Compute category counts for agents using the agent taxonomy.
+ */
+export async function fetchAgentCategoryCounts(): Promise<Record<string, number>> {
+  try {
+    const sample = await fetchAgents(undefined, { maxRecords: 500, sortBy: "latest" });
+    const { classifyAgent } = await import("../data/agent-taxonomy");
+    const totalRes = await fetchCMSJson<CMSCollectionResponse>(
+      `${CMS_URL}/api/agents?pagination[pageSize]=1`,
+      { allowStaleOnError: true },
+    );
+    const total = totalRes?.meta?.pagination?.total ?? sample.length;
+    const counts: Record<string, number> = {};
+    for (const agent of sample) {
+      const cat = classifyAgent(agent);
+      counts[cat.slug] = (counts[cat.slug] || 0) + 1;
+    }
+    if (sample.length > 0 && total > sample.length) {
+      const scale = total / sample.length;
+      for (const key of Object.keys(counts)) {
+        counts[key] = Math.round(counts[key] * scale);
+      }
+    }
+    return counts;
+  } catch {
+    return {};
+  }
+}
+
+/** Compute tag frequency for agents. */
+export async function fetchAllAgentTags(): Promise<{ name: string; slug: string; count: number }[]> {
+  try {
+    const all = await fetchAgents(undefined, { maxRecords: 500, sortBy: "latest" });
+    const tagMap = new Map<string, { name: string; slug: string; count: number }>();
+    for (const agent of all) {
+      for (const tag of agent.tags || []) {
+        const key = (tag.slug || tag.name || "").toLowerCase();
+        if (!key) continue;
+        const existing = tagMap.get(key);
+        if (existing) existing.count++;
+        else tagMap.set(key, { name: tag.name || key, slug: tag.slug || key, count: 1 });
+      }
+    }
+    return [...tagMap.values()].sort((a, b) => b.count - a.count);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Compute category counts for podcast episodes using the podcast taxonomy.
+ */
+export async function fetchPodcastCategoryCounts(): Promise<Record<string, number>> {
+  try {
+    const sample = await fetchPodcastEpisodes({ maxRecords: 500, sortBy: "latest" });
+    const { classifyPodcast } = await import("../data/podcast-taxonomy");
+    const totalRes = await fetchCMSJson<CMSCollectionResponse>(
+      `${CMS_URL}/api/podcast-episodes?pagination[pageSize]=1`,
+      { allowStaleOnError: true },
+    );
+    const total = totalRes?.meta?.pagination?.total ?? sample.length;
+    const counts: Record<string, number> = {};
+    for (const ep of sample) {
+      // classifyPodcast expects {tags, description, title}; PodcastEpisode has these
+      const cat = classifyPodcast(ep as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      counts[cat.slug] = (counts[cat.slug] || 0) + 1;
+    }
+    if (sample.length > 0 && total > sample.length) {
+      const scale = total / sample.length;
+      for (const key of Object.keys(counts)) {
+        counts[key] = Math.round(counts[key] * scale);
+      }
+    }
+    return counts;
+  } catch {
+    return {};
+  }
+}
+
+/** Compute tag frequency for podcast episodes. */
+export async function fetchAllPodcastTags(): Promise<{ name: string; slug: string; count: number }[]> {
+  try {
+    const all = await fetchPodcastEpisodes({ maxRecords: 500, sortBy: "latest" });
+    const tagMap = new Map<string, { name: string; slug: string; count: number }>();
+    for (const ep of all) {
+      for (const tag of ep.tags || []) {
+        const key = (tag.slug || tag.name || "").toLowerCase();
+        if (!key) continue;
+        const existing = tagMap.get(key);
+        if (existing) existing.count++;
+        else tagMap.set(key, { name: tag.name || key, slug: tag.slug || key, count: 1 });
+      }
+    }
+    return [...tagMap.values()].sort((a, b) => b.count - a.count);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Compute category counts for tools using the tool taxonomy.
+ */
+export async function fetchToolCategoryCounts(): Promise<Record<string, number>> {
+  try {
+    const sample = await fetchTools({ maxRecords: 500 });
+    const { classifyTool } = await import("../data/tool-taxonomy");
+    const totalRes = await fetchCMSJson<CMSCollectionResponse>(
+      `${CMS_URL}/api/tools?pagination[pageSize]=1`,
+      { allowStaleOnError: true },
+    );
+    const total = totalRes?.meta?.pagination?.total ?? sample.length;
+    const counts: Record<string, number> = {};
+    for (const tool of sample) {
+      const cat = classifyTool(tool as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      counts[cat.slug] = (counts[cat.slug] || 0) + 1;
+    }
+    if (sample.length > 0 && total > sample.length) {
+      const scale = total / sample.length;
+      for (const key of Object.keys(counts)) {
+        counts[key] = Math.round(counts[key] * scale);
+      }
+    }
+    return counts;
+  } catch {
+    return {};
+  }
+}
+
+/** Compute tag frequency for tools (tools may not have tags — check toolCategory). */
+export async function fetchAllToolTags(): Promise<{ name: string; slug: string; count: number }[]> {
+  try {
+    const all = await fetchTools({ maxRecords: 500 });
+    const tagMap = new Map<string, { name: string; slug: string; count: number }>();
+    for (const tool of all) {
+      // Tools use toolCategory as their main tag
+      if (tool.toolCategory) {
+        const key = tool.toolCategory.toLowerCase();
+        const existing = tagMap.get(key);
+        if (existing) existing.count++;
+        else tagMap.set(key, { name: tool.toolCategory, slug: key, count: 1 });
+      }
+    }
+    return [...tagMap.values()].sort((a, b) => b.count - a.count);
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchCMSCollectionBySlug(slug: string): Promise<CMSSkillCollection | null> {
+  try {
+    const json = await fetchCMSJson<CMSCollectionResponse>(
+      `${CMS_URL}/api/skill-collections?filters[slug][$eq]=${encodeURIComponent(slug)}&populate[skills][fields][0]=slug&populate[skills][fields][1]=name`,
+      { allowStaleOnError: true },
+    );
+
+    const item = json?.data?.[0];
+    if (!item) return null;
+
+    return {
+      id: item.id,
+      documentId: item.documentId || "",
+      name: item.name || "",
+      slug: item.slug || "",
+      description: item.description || null,
+      category: item.category || null,
+      difficulty: item.difficulty || null,
+      keywordTags: item.keywordTags || null,
+      featured: item.featured || false,
+      sortOrder: item.sortOrder || 0,
+      coverImageUrl: item.coverImageUrl || null,
+      skills: (item.skills || []).map((s: any) => ({
+        id: s.id,
+        slug: s.slug || "",
+        name: s.name || "",
+      })),
+    };
+  } catch {
+    return null;
+  }
+}

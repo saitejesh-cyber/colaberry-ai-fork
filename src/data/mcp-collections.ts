@@ -1,0 +1,81 @@
+/**
+ * Curated MCP server collections — bundles of MCP servers that work together.
+ * Part of the Colaberry AI Content Knowledge Graph Platform.
+ */
+
+import type { ContentCollection } from "../lib/ontologyTypes";
+
+export const MCP_COLLECTIONS: ContentCollection[] = [
+  {
+    slug: "database-mcp-suite",
+    name: "Database MCP Suite",
+    description: "Complete database connectivity stack — SQL, NoSQL, and caching MCP servers for any data layer.",
+    category: "database-storage",
+    itemSlugs: [],
+    difficulty: "intermediate",
+    keywordTags: ["database", "sql", "nosql", "postgres", "redis", "mongodb"],
+    linkCount: 0,
+    generated: false,
+    contentType: "mcp",
+  },
+  {
+    slug: "communication-hub",
+    name: "Communication Hub",
+    description: "Unified messaging stack — Slack, Email, Discord, and Teams connectors for omnichannel communication.",
+    category: "communication",
+    itemSlugs: [],
+    difficulty: "beginner",
+    keywordTags: ["slack", "email", "discord", "teams", "messaging"],
+    linkCount: 0,
+    generated: false,
+    contentType: "mcp",
+  },
+  {
+    slug: "developer-workflow",
+    name: "Developer Workflow",
+    description: "End-to-end development pipeline — source control, CI/CD, code review, and project management MCP servers.",
+    category: "developer-tools",
+    itemSlugs: [],
+    difficulty: "intermediate",
+    keywordTags: ["github", "git", "ci/cd", "code review", "jira"],
+    linkCount: 0,
+    generated: false,
+    contentType: "mcp",
+  },
+  {
+    slug: "ai-ml-pipeline",
+    name: "AI/ML Pipeline",
+    description: "AI-powered stack — LLM providers, embedding services, vector databases, and RAG MCP servers.",
+    category: "ai-ml",
+    itemSlugs: [],
+    difficulty: "advanced",
+    keywordTags: ["llm", "embedding", "vector", "rag", "openai"],
+    linkCount: 0,
+    generated: false,
+    contentType: "mcp",
+  },
+  {
+    slug: "cloud-operations",
+    name: "Cloud Operations",
+    description: "Cloud infrastructure management — AWS, Azure, GCP, Terraform, and serverless MCP servers.",
+    category: "cloud-infra",
+    itemSlugs: [],
+    difficulty: "advanced",
+    keywordTags: ["aws", "azure", "gcp", "terraform", "serverless"],
+    linkCount: 0,
+    generated: false,
+    contentType: "mcp",
+  },
+  {
+    slug: "knowledge-search",
+    name: "Knowledge & Search",
+    description: "Information retrieval stack — web search, knowledge bases, wiki, and RAG retrieval MCP servers.",
+    category: "search-knowledge",
+    itemSlugs: [],
+    difficulty: "beginner",
+    keywordTags: ["search", "brave", "wikipedia", "rag", "knowledge base"],
+    linkCount: 0,
+    generated: false,
+    contentType: "mcp",
+  },
+];

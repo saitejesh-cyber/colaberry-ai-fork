@@ -11,6 +11,7 @@ import { SKILL_CATEGORIES } from "../../../data/skill-taxonomy";
 import { SKILL_COLLECTIONS } from "../../../data/skill-collections";
 import { fetchSkillCategoryCounts, fetchAllSkillTags } from "../../../lib/cms";
 import { RELATIONSHIP_TYPE_COLORS, RELATIONSHIP_TYPE_LABELS } from "../../../lib/graphUtils";
+import ContentTypeIcon from "../../../components/ContentTypeIcon";
 
 /* ── Relationship metadata ─────────────────────────────────────────── */
 
@@ -255,11 +256,11 @@ function OntologyDiagram({
               y1="214"
               x2={540 + i * 100}
               y2="214"
-              stroke={rel.color}
+              className="stroke-zinc-400 dark:stroke-zinc-500"
               strokeWidth="1.5"
               strokeDasharray={rel.dash || "none"}
             />
-            <text x={544 + i * 100} y="217" fontSize="7" className="fill-zinc-500 dark:fill-zinc-400">{rel.type}</text>
+            <text x={544 + i * 100} y="217" fontSize="7" className="fill-zinc-500 dark:fill-zinc-400">{rel.label}</text>
           </g>
         ))}
 
@@ -275,7 +276,7 @@ function OntologyDiagram({
               y1={from.y + 234}
               x2={to.x + 50}
               y2={to.y + 234}
-              stroke={rel?.color || "#a1a1aa"}
+              className="stroke-zinc-400 dark:stroke-zinc-500"
               strokeWidth="1"
               strokeDasharray={rel?.dash || "none"}
               opacity="0.6"
@@ -310,7 +311,7 @@ function OntologyDiagram({
                 textAnchor="middle"
                 fontSize="9"
                 fontWeight="500"
-                className="fill-emerald-700 dark:fill-emerald-400"
+                className="fill-zinc-700 dark:fill-zinc-300"
               >
                 {skill.name}
               </text>
@@ -388,8 +389,8 @@ function OntologyDiagram({
         <rect x="12" y="454" width="200" height="58" rx="6" className="fill-zinc-50 dark:fill-zinc-800/50" />
         <rect x="12" y="454" width="200" height="58" rx="6" fill="none" className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="0.5" />
         {[
-          { shape: "circle", label: "Category", fill: "#60a5fa" },
-          { shape: "rect", label: "Skill", fill: "#34d399" },
+          { shape: "circle", label: "Category", fill: "#71717a" },
+          { shape: "rect", label: "Skill", fill: "#71717a" },
           { shape: "dashed-rect", label: "Package", fill: "#a1a1aa" },
         ].map((item, i) => (
           <g key={item.label}>
@@ -401,8 +402,8 @@ function OntologyDiagram({
         ))}
         {RELATIONSHIP_TYPES.map((rel, i) => (
           <g key={rel.type}>
-            <line x1="120" y1={470 + i * 14} x2="138" y2={470 + i * 14} stroke={rel.color} strokeWidth="1.2" strokeDasharray={rel.dash || "none"} />
-            <text x="144" y={473 + i * 14} fontSize="8" className="fill-zinc-600 dark:fill-zinc-400">{rel.type}</text>
+            <line x1="120" y1={470 + i * 14} x2="138" y2={470 + i * 14} className="stroke-zinc-400 dark:stroke-zinc-500" strokeWidth="1.2" strokeDasharray={rel.dash || "none"} />
+            <text x="144" y={473 + i * 14} fontSize="8" className="fill-zinc-600 dark:fill-zinc-400">{rel.label}</text>
           </g>
         ))}
 
@@ -466,7 +467,7 @@ export default function OntologyPage({
         </div>
 
         {/* Interactive 3-Layer Architecture Diagram */}
-        <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="reveal-scale rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
           <OntologyDiagram
             categoryCounts={categoryCounts}
             totalSkills={totalSkills}
@@ -477,10 +478,10 @@ export default function OntologyPage({
 
       {/* Architecture Explanation Cards */}
       <section className="reveal mt-12">
-        <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">Architecture</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <SectionHeader size="md" kicker="Architecture" title="Three-Layer Design" description="How skills are organized from abstract taxonomy to deployable packages." />
+        <div className="mt-6 stagger-grid grid gap-4 sm:grid-cols-3">
           <div className="catalog-card p-6">
-            <h3 className="text-sm font-bold text-blue-600 dark:text-blue-400">1. Skill Taxonomy</h3>
+            <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">1. Skill Taxonomy</h3>
             <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-400">The Abstraction Layer</div>
             <p className="mt-3 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
               The top layer defines the broad categorization and detailed tags of skills. It organizes capabilities into categories such as:
@@ -496,7 +497,7 @@ export default function OntologyPage({
           </div>
 
           <div className="catalog-card p-6">
-            <h3 className="text-sm font-bold text-emerald-600 dark:text-emerald-400">2. Skill Relation Graph</h3>
+            <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">2. Skill Relation Graph</h3>
             <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-400">The Semantic Layer</div>
             <p className="mt-3 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
               The middle layer instantiates specific skills and defines how they interact. It maps relationships using edges like:
@@ -513,7 +514,7 @@ export default function OntologyPage({
           </div>
 
           <div className="catalog-card p-6">
-            <h3 className="text-sm font-bold text-[#DC2626] dark:text-[#F87171]">3. Skill Collection</h3>
+            <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">3. Skill Collection</h3>
             <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-400">The Execution Layer</div>
             <p className="mt-3 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
               Groups related skills into deployable units. These are the actual functional toolkits agents load at runtime. Examples:
@@ -539,11 +540,11 @@ export default function OntologyPage({
         <h2 className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Relationship Types
         </h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 stagger-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {RELATIONSHIP_TYPES.map((rel) => (
             <div key={rel.type} className="catalog-card p-5">
               <div className="flex items-center gap-2">
-                <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: rel.color }} />
+                <span className="inline-block h-3 w-3 rounded-full bg-zinc-400 dark:bg-zinc-500" />
                 <span className="text-sm font-bold text-zinc-900 dark:text-zinc-50">{rel.label}</span>
               </div>
               <code className="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">{rel.type}</code>
@@ -554,21 +555,21 @@ export default function OntologyPage({
       </section>
 
       {/* Quick links */}
-      <section className="reveal mt-12 grid gap-4 sm:grid-cols-3">
+      <section className="reveal mt-12 stagger-grid grid gap-4 sm:grid-cols-3">
         <Link href="/aixcelerator/skills/graph" className="group catalog-card p-5 text-center">
-          <div className="text-lg">🔗</div>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="mx-auto text-zinc-500 dark:text-zinc-400" aria-hidden="true"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           <div className="mt-2 text-sm font-bold text-zinc-900 dark:text-zinc-50">Skill Graph</div>
           <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Interactive force-graph with {totalSkills.toLocaleString()}+ skills</div>
           <div className="mt-2 text-xs font-semibold text-[#DC2626] group-hover:underline dark:text-[#F87171]">Explore →</div>
         </Link>
         <Link href="/aixcelerator/skills/collections" className="group catalog-card p-5 text-center">
-          <div className="text-lg">📦</div>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="mx-auto text-zinc-500 dark:text-zinc-400" aria-hidden="true"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           <div className="mt-2 text-sm font-bold text-zinc-900 dark:text-zinc-50">Collections</div>
           <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{totalCollections} curated skill bundles</div>
           <div className="mt-2 text-xs font-semibold text-[#DC2626] group-hover:underline dark:text-[#F87171]">Browse →</div>
         </Link>
         <Link href="/aixcelerator/skills" className="group catalog-card p-5 text-center">
-          <div className="text-lg">⚡</div>
+          <ContentTypeIcon type="skill" size={22} className="mx-auto text-zinc-500 dark:text-zinc-400" />
           <div className="mt-2 text-sm font-bold text-zinc-900 dark:text-zinc-50">Skills Catalog</div>
           <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Browse all skills with taxonomy filters</div>
           <div className="mt-2 text-xs font-semibold text-[#DC2626] group-hover:underline dark:text-[#F87171]">Browse →</div>

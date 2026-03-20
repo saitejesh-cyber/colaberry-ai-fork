@@ -38,6 +38,9 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Skills", href: "/aixcelerator/skills", order: 3 },
         { label: "Tools", href: "/aixcelerator/tools", order: 4 },
         { label: "Use Cases", href: "/use-cases", order: 5 },
+        { label: "Platform Ontology", href: "/aixcelerator/ontology", order: 6 },
+        { label: "Ecosystem Graph", href: "/aixcelerator/ecosystem", order: 7 },
+        { label: "Solution Stacks", href: "/aixcelerator/solution-stacks", order: 8 },
       ],
     },
     {
@@ -1582,7 +1585,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   </span>
                 </label>
                 {footerSubMessage ? (
-                  <p className={`mt-3 text-xs ${footerSubState === "error" ? "text-red-600" : "text-emerald-600"}`}>
+                  <p className={`mt-3 text-xs ${footerSubState === "error" ? "text-red-600" : "text-zinc-600 dark:text-zinc-400"}`}>
                     {footerSubMessage}
                   </p>
                 ) : null}

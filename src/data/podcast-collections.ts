@@ -1,0 +1,81 @@
+/**
+ * Curated podcast collections — themed episode bundles.
+ * Part of the Colaberry AI Content Knowledge Graph Platform.
+ */
+
+import type { ContentCollection } from "../lib/ontologyTypes";
+
+export const PODCAST_COLLECTIONS: ContentCollection[] = [
+  {
+    slug: "ai-leadership-series",
+    name: "AI Leadership Series",
+    description: "Executive perspectives on AI strategy, enterprise adoption, and the future of AI-driven organizations.",
+    category: "business-strategy",
+    itemSlugs: [],
+    difficulty: "intermediate",
+    keywordTags: ["ai strategy", "leadership", "enterprise", "ceo", "transformation"],
+    linkCount: 0,
+    generated: false,
+    contentType: "podcast",
+  },
+  {
+    slug: "developer-deep-dives",
+    name: "Developer Deep Dives",
+    description: "Technical deep dives into software engineering, architecture patterns, and developer productivity.",
+    category: "tech-engineering",
+    itemSlugs: [],
+    difficulty: "advanced",
+    keywordTags: ["engineering", "architecture", "devops", "cloud", "microservices"],
+    linkCount: 0,
+    generated: false,
+    contentType: "podcast",
+  },
+  {
+    slug: "data-science-masterclass",
+    name: "Data Science Masterclass",
+    description: "Episodes covering analytics, machine learning, data visualization, and data-driven decision making.",
+    category: "data-analytics",
+    itemSlugs: [],
+    difficulty: "intermediate",
+    keywordTags: ["data science", "analytics", "ml", "visualization", "statistics"],
+    linkCount: 0,
+    generated: false,
+    contentType: "podcast",
+  },
+  {
+    slug: "industry-transformation",
+    name: "Industry Transformation",
+    description: "How AI is transforming specific industries — healthcare, finance, retail, manufacturing, and more.",
+    category: "industry",
+    itemSlugs: [],
+    difficulty: "beginner",
+    keywordTags: ["healthcare", "finance", "retail", "manufacturing", "adoption"],
+    linkCount: 0,
+    generated: false,
+    contentType: "podcast",
+  },
+  {
+    slug: "startup-innovation",
+    name: "Startup & Innovation",
+    description: "Founder stories, venture capital insights, and the latest in AI startup innovation.",
+    category: "business-strategy",
+    itemSlugs: [],
+    difficulty: "beginner",
+    keywordTags: ["startup", "venture", "founder", "innovation", "growth"],
+    linkCount: 0,
+    generated: false,
+    contentType: "podcast",
+  },
+  {
+    slug: "career-learning",
+    name: "Career & Learning",
+    description: "Professional development, upskilling paths, certifications, and career advice in the AI era.",
+    category: "education-career",
+    itemSlugs: [],
+    difficulty: "beginner",
+    keywordTags: ["career", "learning", "upskill", "certification", "mentorship"],
+    linkCount: 0,
+    generated: false,
+    contentType: "podcast",
+  },
+];
