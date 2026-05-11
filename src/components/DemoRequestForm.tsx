@@ -27,6 +27,14 @@ export default function DemoRequestForm({
     event.preventDefault();
     if (state === "submitting") return;
 
+    // Fast client-side guard so a missing company name doesn't round-trip a
+    // 400 from /api/demo-request. The API enforces the same rule server-side.
+    if (!company.trim()) {
+      setState("error");
+      setStatusMessage("Please add your company name so we can route your request.");
+      return;
+    }
+
     setState("submitting");
     setStatusMessage(null);
 
@@ -100,7 +108,7 @@ export default function DemoRequestForm({
           />
         </label>
         <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-          Work email
+          Work email *
           <input
             type="email"
             name="email"
@@ -113,11 +121,12 @@ export default function DemoRequestForm({
           />
         </label>
         <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-          Company
+          Company *
           <input
             type="text"
             name="company"
             autoComplete="organization"
+            required
             value={company}
             onChange={(event) => setCompany(event.target.value)}
             className="mt-2 w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-blue/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:placeholder:text-slate-500"
