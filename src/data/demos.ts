@@ -57,6 +57,30 @@ export interface DemoConfig {
   releaseVersion?: string;
   /** ISO date of last update */
   lastUpdated?: string;
+  /**
+   * Optional iframe embed URL for a walkthrough video shown in the hero's
+   * right column (YouTube, Vimeo, or Loom — any provider that supports an
+   * iframe embed). When set, a 16:9 video card renders next to the hero copy
+   * on `lg+` and stacks above the tech stack on mobile. When omitted, a
+   * subtle placeholder card renders in the same slot.
+   *
+   * Use the **embed** URL, not the watch URL:
+   *   - YouTube: `https://www.youtube.com/embed/VIDEO_ID`
+   *   - Vimeo:   `https://player.vimeo.com/video/VIDEO_ID`
+   *   - Loom:    `https://www.loom.com/embed/VIDEO_ID`
+   */
+  videoEmbedUrl?: string;
+  /**
+   * Optional poster image shown while the video loads (or in place of the
+   * video if `videoEmbedUrl` is omitted). Path under `/public` or an absolute
+   * URL. Recommended 16:9 aspect, ≥1280×720.
+   */
+  videoPoster?: string;
+  /**
+   * Optional human-readable caption shown under the video (e.g. "2-min
+   * walkthrough" or "Full live demo recording — 4:32").
+   */
+  videoCaption?: string;
 }
 
 export const demos: DemoConfig[] = [
@@ -73,6 +97,17 @@ export const demos: DemoConfig[] = [
     releaseVersion: "v2.0",
     lastUpdated: "2026-03-28",
     architectureDocHref: "/demo/lens",
+    // Auto-generated explainer video (Playwright drives the live VTON app
+    // with a Y4M fake-camera feed through the LangGraph pipeline: detect ->
+    // classify -> fit -> recommend -> render). Refresh via:
+    //   node scripts/prepare-fake-camera.mjs --input <face-clip.mp4>
+    //   node scripts/generate-demo-walkthrough.mjs --mode=explainer
+    // (Path B — see docs/demo-walkthrough-video-brief.md §14.) The legacy
+    // `goggle-vton-walkthrough.mp4` (22s page tour) is retained for
+    // fallback but the explainer leads.
+    videoEmbedUrl: "/videos/goggle-vton-explainer.mp4",
+    videoPoster: "/videos/goggle-vton-explainer-poster.jpg",
+    videoCaption: "Automated product explainer · MediaPipe face mesh + Three.js overlay in action",
     metrics: [
       { value: "30–60 FPS", label: "Real-time overlay" },
       { value: "478-point", label: "Face mesh" },

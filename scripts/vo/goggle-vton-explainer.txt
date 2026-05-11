@@ -1,0 +1,18 @@
+[[slnc 400]]
+Virtual Lens Try-On.
+[[slnc 300]]
+A real-time try-on proof of concept for smart eyewear.
+[[slnc 200]]
+MediaPipe's four hundred seventy-eight point face mesh tracks your head at up to sixty frames per second.
+[[slnc 200]]
+One photo classifies your face shape — oval, round, square, heart, or oblong.
+[[slnc 200]]
+Fit analysis compares your dimensions against every frame in the catalog.
+[[slnc 100]]
+Three J S renders each goggle on your face in real time.
+[[slnc 200]]
+A LangGraph pipeline wraps G P T four with an expert-optician persona, surfacing the picks most likely to suit your shape.
+[[slnc 200]]
+Preview any lens tint. See the fit live.
+[[slnc 300]]
+Try it at colaberry dot A I.

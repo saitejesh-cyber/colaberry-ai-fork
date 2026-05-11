@@ -96,41 +96,114 @@ export default function DemoDetailPage({ demo }: DemoDetailPageProps) {
       </nav>
 
       {/* Hero */}
-      <div className="reveal">
-        <SectionHeader
-          as="h1"
-          size="xl"
-          kicker={demo.category}
-          title={demo.title}
-          description={demo.summary}
-        />
+      <div className="reveal grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:items-start lg:gap-12">
+        <div>
+          <SectionHeader
+            as="h1"
+            size="xl"
+            kicker={demo.category}
+            title={demo.title}
+            description={demo.summary}
+          />
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          {isLive ? (
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            {isLive ? (
+              <Link
+                href={demo.launchUrl}
+                className="inline-flex items-center gap-2 rounded-full bg-[#DC2626] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#B91C1C] dark:bg-[#F87171] dark:text-zinc-950 dark:hover:bg-[#EF4444]"
+              >
+                Launch live demo
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+                Coming soon
+              </span>
+            )}
             <Link
-              href={demo.launchUrl}
-              className="inline-flex items-center gap-2 rounded-full bg-[#DC2626] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#B91C1C] dark:bg-[#F87171] dark:text-zinc-950 dark:hover:bg-[#EF4444]"
+              href="/request-demo"
+              className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-900 transition-colors hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
             >
-              Launch live demo
-              <span aria-hidden="true">&rarr;</span>
+              Request a walkthrough
             </Link>
-          ) : (
-            <span className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-              Coming soon
-            </span>
-          )}
-          <Link
-            href="/request-demo"
-            className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-900 transition-colors hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-100 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
+            {demo.releaseVersion ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#DC2626]" aria-hidden="true" />
+                {demo.releaseVersion}
+                {demo.lastUpdated ? ` · ${demo.lastUpdated}` : ""}
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Walkthrough video — right column on lg+, stacks below CTAs on mobile */}
+        <div className="flex flex-col gap-3">
+          <div
+            className="relative aspect-video w-full overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900"
+            data-testid="demo-video-slot"
           >
-            Request a walkthrough
-          </Link>
-          {demo.releaseVersion ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#DC2626]" aria-hidden="true" />
-              {demo.releaseVersion}
-              {demo.lastUpdated ? ` · ${demo.lastUpdated}` : ""}
-            </span>
+            {demo.videoEmbedUrl ? (
+              // Self-hosted files (.mp4 / .webm / .ogg / .mov) render via
+              // <video>; provider URLs (YouTube / Vimeo / Loom embed URLs)
+              // render via <iframe>. Detection is by file extension on the
+              // URL path (strip query/hash first).
+              /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(demo.videoEmbedUrl) ? (
+                <video
+                  src={demo.videoEmbedUrl}
+                  poster={demo.videoPoster}
+                  controls
+                  preload="metadata"
+                  playsInline
+                  className="absolute inset-0 h-full w-full bg-zinc-950 object-cover"
+                >
+                  Your browser does not support HTML5 video. You can still
+                  <Link href={demo.launchUrl} className="underline"> launch the live demo</Link>.
+                </video>
+              ) : (
+                <iframe
+                  src={demo.videoEmbedUrl}
+                  title={`${demo.title} walkthrough video`}
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="absolute inset-0 h-full w-full border-0"
+                />
+              )
+            ) : demo.videoPoster ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={demo.videoPoster}
+                alt={`${demo.title} walkthrough preview`}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+                <span
+                  aria-hidden="true"
+                  className="flex h-14 w-14 items-center justify-center rounded-full border border-zinc-300 bg-white text-zinc-500 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-400"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="h-6 w-6"
+                  >
+                    <path d="M8 5.5v13l11-6.5-11-6.5Z" />
+                  </svg>
+                </span>
+                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  Walkthrough video coming soon
+                </p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Prefer a live session? Use &ldquo;Request a walkthrough&rdquo; above.
+                </p>
+              </div>
+            )}
+          </div>
+          {demo.videoCaption ? (
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              {demo.videoCaption}
+            </p>
           ) : null}
         </div>
       </div>

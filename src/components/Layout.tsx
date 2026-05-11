@@ -38,6 +38,7 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Agents", href: "/aixcelerator/agents", order: 1 },
         { label: "MCP Servers", href: "/aixcelerator/mcp", order: 2 },
         { label: "Skills", href: "/aixcelerator/skills", order: 3 },
+        { label: "LLM Architectures", href: "/aixcelerator/llm-architectures", order: 4 },
         { label: "Platform Ontology", href: "/aixcelerator/ontology", order: 6 },
         { label: "Ecosystem Graph", href: "/aixcelerator/ecosystem", order: 7 },
         { label: "Solution Stacks", href: "/aixcelerator/solution-stacks", order: 8 },
@@ -80,7 +81,8 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Agents", href: "/aixcelerator/agents", order: 2, group: "Product" },
         { label: "MCP servers", href: "/aixcelerator/mcp", order: 3, group: "Product" },
         { label: "Skills", href: "/aixcelerator/skills", order: 4, group: "Product" },
-        { label: "Discovery assistant", href: "/assistant", order: 5, group: "Product" },
+        { label: "LLM Architectures", href: "/aixcelerator/llm-architectures", order: 5, group: "Product" },
+        { label: "Discovery assistant", href: "/assistant", order: 6, group: "Product" },
         { label: "Industries", href: "/industries", order: 9, group: "Product" },
       ],
     },
@@ -252,7 +254,6 @@ function isActiveNavPath(currentPath: string, href: string, navPaths: string[]) 
 const SHOW_ALL_NAV = process.env.NEXT_PUBLIC_SHOW_ALL_NAV === "true";
 const RELEASE_HIDDEN_PATHS = SHOW_ALL_NAV ? new Set<string>() : new Set([
   "/aixcelerator/tools",
-  "/aixcelerator/llm-architectures",
   "/use-cases",
   "/solutions",
   "/resources/articles",
@@ -462,6 +463,9 @@ function getSidebarIcon(href: string): ReactNode {
   if (p.startsWith("/aixcelerator/agents") || p === "/aixcelerator/agents") return <svg {...sidebarIconProps}><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="3" /><line x1="8" y1="16" x2="8" y2="16.01" /><line x1="16" y1="16" x2="16" y2="16.01" /><line x1="12" y1="16" x2="12" y2="18" /></svg>;
   if (p.startsWith("/aixcelerator/mcp")) return <svg {...sidebarIconProps}><rect x="2" y="2" width="20" height="8" rx="2" /><rect x="2" y="14" width="20" height="8" rx="2" /><circle cx="6" cy="6" r="1" /><circle cx="6" cy="18" r="1" /></svg>;
   if (p.startsWith("/aixcelerator/skills")) return <svg {...sidebarIconProps}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>;
+  // LLM Architectures: two transformer-style layers connected by three
+  // "attention" nodes — visual shorthand for a layered neural-net blueprint.
+  if (p.startsWith("/aixcelerator/llm-architectures")) return <svg {...sidebarIconProps}><rect x="3" y="3" width="18" height="5" rx="1" /><rect x="3" y="16" width="18" height="5" rx="1" /><circle cx="8" cy="12" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="16" cy="12" r="1.2" /><line x1="8" y1="8" x2="8" y2="10.8" /><line x1="12" y1="8" x2="12" y2="10.8" /><line x1="16" y1="8" x2="16" y2="10.8" /><line x1="8" y1="13.2" x2="8" y2="16" /><line x1="12" y1="13.2" x2="12" y2="16" /><line x1="16" y1="13.2" x2="16" y2="16" /></svg>;
   if (p.startsWith("/use-cases")) return <svg {...sidebarIconProps}><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a4 4 0 0 0-8 0v2" /></svg>;
   if (p === "/search") return <svg {...sidebarIconProps}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>;
   if (p === "/assistant") return <svg {...sidebarIconProps}><path d="M12 3l1.912 5.813L20 12l-6.088 3.187L12 21l-1.912-5.813L4 12l6.088-3.187z" /><path d="M20 3l.75 2.25L23 6l-2.25.75L20 9l-.75-2.25L17 6l2.25-.75z" /></svg>;

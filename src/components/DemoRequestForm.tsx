@@ -19,6 +19,7 @@ type SubmissionState = "idle" | "submitting" | "success" | "error";
 type FieldErrors = {
   name?: string;
   email?: string;
+  company?: string;
   consent?: string;
 };
 
@@ -32,6 +33,7 @@ export default function DemoRequestForm({
 }: DemoRequestFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [teamSize, setTeamSize] = useState("");
@@ -79,6 +81,11 @@ export default function DemoRequestForm({
     return undefined;
   }
 
+  function validateCompany(value: string): string | undefined {
+    if (!value.trim()) return "Company is required.";
+    return undefined;
+  }
+
   function validateConsent(value: boolean): string | undefined {
     if (!value) return "Please confirm you agree to be contacted.";
     return undefined;
@@ -92,6 +99,9 @@ export default function DemoRequestForm({
     if (field === "name") {
       setFieldErrors((prev) => ({ ...prev, name: validateName(name) }));
     }
+    if (field === "company") {
+      setFieldErrors((prev) => ({ ...prev, company: validateCompany(company) }));
+    }
     if (field === "consent") {
       setFieldErrors((prev) => ({ ...prev, consent: validateConsent(consent) }));
     }
@@ -104,11 +114,17 @@ export default function DemoRequestForm({
     // Validate all required fields before submit
     const nameError = validateName(name);
     const emailError = validateEmail(email);
+    const companyError = validateCompany(company);
     const consentError = validateConsent(consent);
-    setFieldErrors({ name: nameError, email: emailError, consent: consentError });
-    setTouched({ name: true, email: true, consent: true });
+    setFieldErrors({
+      name: nameError,
+      email: emailError,
+      company: companyError,
+      consent: consentError,
+    });
+    setTouched({ name: true, email: true, company: true, consent: true });
 
-    if (nameError || emailError || consentError) return;
+    if (nameError || emailError || companyError || consentError) return;
 
     setState("submitting");
     setStatusMessage(null);
@@ -117,6 +133,7 @@ export default function DemoRequestForm({
       const payload = await submitDemoRequest({
         name,
         email,
+        phone,
         company,
         role,
         teamSize,
@@ -145,6 +162,7 @@ export default function DemoRequestForm({
       setStatusMessage(payload.message);
       setName("");
       setEmail("");
+      setPhone("");
       setCompany("");
       setRole("");
       setTeamSize("");
@@ -256,18 +274,60 @@ export default function DemoRequestForm({
           ) : null}
         </div>
 
-        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
-          Company
+        <div>
+          <label
+            htmlFor="demo-phone"
+            className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400"
+          >
+            Phone
+          </label>
           <input
+            id="demo-phone"
+            type="tel"
+            name="phone"
+            autoComplete="tel"
+            inputMode="tel"
+            maxLength={64}
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            className={inputBaseClass}
+            placeholder="+1 555 123 4567"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="demo-company"
+            className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400"
+          >
+            Company <span className="text-[var(--failure-text)]" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="demo-company"
             type="text"
             name="company"
             autoComplete="organization"
+            required
+            aria-required="true"
+            aria-invalid={touched.company && !!fieldErrors.company}
+            aria-describedby={touched.company && fieldErrors.company ? "demo-company-error" : undefined}
             value={company}
-            onChange={(event) => setCompany(event.target.value)}
-            className={inputBaseClass}
+            onChange={(event) => {
+              setCompany(event.target.value);
+              if (touched.company) {
+                setFieldErrors((prev) => ({ ...prev, company: validateCompany(event.target.value) }));
+              }
+            }}
+            onBlur={() => handleBlur("company")}
+            className={touched.company && fieldErrors.company ? inputErrorClass : inputBaseClass}
             placeholder="Company name"
           />
-        </label>
+          {touched.company && fieldErrors.company ? (
+            <p id="demo-company-error" className="mt-1 text-xs text-[var(--failure-text)] dark:text-[var(--failure-text)]" role="alert">
+              {fieldErrors.company}
+            </p>
+          ) : null}
+        </div>
         <label className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Role
           <input

@@ -15,12 +15,18 @@ import {
   CmsWriteError,
   type CreateDemoRequestInput,
 } from "../../lib/demoRequestStore";
+import {
+  buildEnterprisePayload,
+  forwardToEnterprise,
+  isEnterpriseIngestConfigured,
+} from "../../lib/enterpriseLeadIngest";
 import { resolveSenderProvider, sendNewsletterEmail } from "../../lib/newsletterSender";
 import { checkRateLimit, getClientIp } from "../../lib/rate-limit";
 
 type DemoRequestPayload = {
   name?: string;
   email?: string;
+  phone?: string;
   company?: string;
   role?: string;
   teamSize?: string;
@@ -251,6 +257,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const name = normalizeText(payload.name, 120);
   const company = normalizeText(payload.company, 160);
+
+  // Layer 11 — P2: company is required. The Enterprise Accelerator
+  // ingestion endpoint (Step 4) contract requires email + company, and
+  // making it a pure CMS-optional field on our side would silently ship
+  // Strapi leads that the enterprise CRM then rejects. Enforce here as
+  // the belt-and-suspenders server guard — the real validation is
+  // client-side in DemoRequestForm (fail-fast before fetch).
+  if (!company) {
+    return res.status(400).json({
+      ok: false,
+      message: "Please include your company name so we can prepare the right walkthrough.",
+    });
+  }
+  // Phone is optional. Normalize to strip control chars + length-cap at
+  // 64 (safe margin for international formats with country code +
+  // separators). Format validation stays loose — we'd rather accept a
+  // slightly unusual legit number than reject a real buyer because of
+  // regex theatre.
+  const phone = normalizeText(payload.phone, 64);
   const role = normalizeText(payload.role, 120);
   const teamSize = normalizeText(payload.teamSize, 120);
   const timeline = normalizeText(payload.timeline, 120);
@@ -267,6 +292,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const subject = `Demo request${company ? ` — ${company}` : ""}`;
   const htmlName = escapeHtml(name || "Not provided");
   const htmlEmail = escapeHtml(email);
+  const htmlPhone = escapeHtml(phone || "Not provided");
   const htmlCompany = escapeHtml(company || "Not provided");
   const htmlRole = escapeHtml(role || "Not provided");
   const htmlTeamSize = escapeHtml(teamSize || "Not provided");
@@ -283,6 +309,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const detailLines = [
     `Name: ${name || "Not provided"}`,
     `Email: ${email}`,
+    `Phone: ${phone || "Not provided"}`,
     `Company: ${company || "Not provided"}`,
     `Role: ${role || "Not provided"}`,
     `Team size: ${teamSize || "Not provided"}`,
@@ -307,6 +334,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       <table style="border-collapse:collapse;font-size:14px;line-height:1.5;">
         <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Name</td><td>${htmlName}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Email</td><td>${htmlEmail}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Phone</td><td>${htmlPhone}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Company</td><td>${htmlCompany}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Role</td><td>${htmlRole}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;font-weight:600;">Team size</td><td>${htmlTeamSize}</td></tr>
@@ -334,6 +362,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const createInput: CreateDemoRequestInput = {
     name,
     email,
+    phone,
     company,
     role,
     teamSize,
@@ -411,6 +440,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } catch (error) {
       const message = error instanceof CmsWriteError ? error.message : "unknown CMS error";
       console.error(`[demo-request] ${requestId} delivery-update failed: ${message}`);
+    }
+  }
+
+  // Step 4 — forward to the Enterprise Accelerator lead ingestion
+  // endpoint. Kill-switch via ENTERPRISE_LEAD_INGEST_ENABLED so we can
+  // dark-launch and roll back from Cloud Run env without redeploying.
+  // Fire-and-forget: the lead is already durable in Strapi (Step 1)
+  // and delivered to the sales inbox (Step 2) — a 5xx here never
+  // fails the user's submission.
+  if (
+    process.env.ENTERPRISE_LEAD_INGEST_ENABLED === "true" &&
+    isEnterpriseIngestConfigured()
+  ) {
+    try {
+      const enterprisePayload = buildEnterprisePayload(createInput);
+      const result = await forwardToEnterprise(enterprisePayload);
+      if (result.ok) {
+        console.log(
+          `[demo-request] ${requestId} enterprise accepted lead_id=${result.leadId ?? "(none)"} is_new=${result.isNew ?? "(unknown)"}`,
+        );
+      } else if (result.missingFields && result.missingFields.length > 0) {
+        console.error(
+          `[demo-request] ${requestId} enterprise rejected missing_fields=[${result.missingFields.join(",")}]`,
+        );
+      } else {
+        console.error(
+          `[demo-request] ${requestId} enterprise forward failed: status=${result.status} ${result.error ?? ""}`.trim(),
+        );
+      }
+    } catch (error) {
+      // forwardToEnterprise is documented as non-throwing, so a throw
+      // here would indicate a bug — log with full context so we can
+      // fix it without masking a Step 1/2/3 success.
+      const message = error instanceof Error ? error.message : "unknown error";
+      console.error(
+        `[demo-request] ${requestId} enterprise forward threw unexpectedly: ${message}`,
+      );
     }
   }
 

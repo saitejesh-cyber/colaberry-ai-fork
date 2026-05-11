@@ -45,6 +45,13 @@ skills-lock.json
 test-results/
 playwright-report/
 
+# demo walkthrough generator scratch (Y4M fake-camera inputs, raw recordings)
+tmp/
+
+# silent-backup MP4s from scripts/add-explainer-audio.mjs — regenerable by
+# re-running Playwright, no reason to double repo weight
+public/videos/*-silent.mp4
+
 # large screenshot directories (local capture artifacts)
 screenshots-linkedin-launch/
 screenshots-notebooklm/
