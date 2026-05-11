@@ -529,7 +529,7 @@ export default function Home({
       <section className="mt-12">
         <SectionHeader
           kicker="Explore the catalog"
-          title="A structured destination for agents, MCPs, podcasts, and research"
+          title="A structured destination for agents, MCPs, skills, podcasts, and research"
           description="Give teams and LLMs a single place to discover, compare, and deploy intelligence."
         />
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -1,5 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { resolveSenderProvider, sendNewsletterEmail } from "../../lib/newsletterSender";
+import {
+  forwardToEnterprise,
+  isEnterpriseIngestConfigured,
+  isEnterpriseIngestEnabled,
+} from "../../lib/enterpriseLeadIngest";
 
 type DemoRequestPayload = {
   name?: string;
@@ -80,6 +85,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const name = normalizeText(payload.name, 120);
   const company = normalizeText(payload.company, 160);
+  if (!company) {
+    return res.status(400).json({ ok: false, message: "Company name is required." });
+  }
   const role = normalizeText(payload.role, 120);
   const teamSize = normalizeText(payload.teamSize, 120);
   const timeline = normalizeText(payload.timeline, 120);
@@ -121,6 +129,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     </div>
   `;
 
+  // Short opaque correlation id for log-line stitching across email + enterprise paths.
+  const requestId = `dr_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+
   try {
     const delivery = await withTimeout(
       sendNewsletterEmail({
@@ -133,8 +144,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       REQUEST_TIMEOUT_MS
     );
 
+    // Fire-and-forget forward to the Enterprise Accelerator lead ingest.
+    // Runs after email so a successful internal notification is the first
+    // source of truth. The forward swallows its own errors and never throws,
+    // so it is safe to await without an extra try/catch here. Honors the
+    // ENTERPRISE_LEAD_INGEST_ENABLED kill-switch.
+    if (isEnterpriseIngestConfigured() && isEnterpriseIngestEnabled()) {
+      const fwd = await forwardToEnterprise({
+        name,
+        email,
+        company,
+        role,
+        teamSize,
+        timeline,
+        message,
+        sourcePage,
+        sourcePath,
+        metadata: { requestId },
+      });
+      if (fwd.ok) {
+        console.log(
+          `[demo-request] ${requestId} enterprise accepted lead_id=${fwd.leadId ?? "-"} is_new=${fwd.isNew ?? "-"}`
+        );
+      } else {
+        console.error(
+          `[demo-request] ${requestId} enterprise forward failed status=${fwd.status} error=${fwd.error ?? "-"}${
+            fwd.missingFields && fwd.missingFields.length > 0
+              ? ` missing=${fwd.missingFields.join(",")}`
+              : ""
+          }`
+        );
+      }
+    }
+
     if (!delivery.ok) {
-      console.error("[demo-request] send failed", delivery.error);
+      console.error(`[demo-request] ${requestId} send failed`, delivery.error);
       return res.status(200).json({
         ok: true,
         message:
@@ -157,7 +201,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
   } catch (error) {
-    console.error("[demo-request] error", error);
+    console.error(`[demo-request] ${requestId} error`, error);
     return res.status(500).json({ ok: false, message: "Unable to send request right now." });
   }
 }
