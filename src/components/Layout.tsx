@@ -13,7 +13,6 @@ import {
 import { useRouter } from "next/router";
 import { fetchGlobalNavigation, GlobalNavigation } from "../lib/cms";
 import NewsletterSignup from "./NewsletterSignup";
-import CookieConsentBanner from "./CookieConsentBanner";
 import DemoRequestWizardModal from "./DemoRequestWizardModal";
 
 const fallbackNavigation: GlobalNavigation = {
@@ -1559,7 +1558,6 @@ export default function Layout({ children }: { children: ReactNode }) {
           </form>
         </div>
       ) : null}
-      <CookieConsentBanner />
       <DemoRequestWizardModal
         open={demoWizardOpen}
         onClose={() => setDemoWizardOpen(false)}
