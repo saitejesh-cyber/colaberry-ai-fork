@@ -19,9 +19,6 @@ import AnimatedSignalBanner from "./AnimatedSignalBanner";
 import SubstackEmbedSignup from "./SubstackEmbedSignup";
 import { usePodcastPlayer } from "../contexts/PodcastPlayerContext";
 
-const CookieConsentBanner = dynamic(() => import("./CookieConsentBanner"), {
-  ssr: false,
-});
 const DemoRequestWizardModal = dynamic(
   () => import("./DemoRequestWizardModal"),
   { ssr: false },
@@ -1925,7 +1922,6 @@ export default function Layout({ children }: { children: ReactNode }) {
           </form>
         </div>
       ) : null}
-      <CookieConsentBanner />
       <DemoRequestWizardModal
         open={demoWizardOpen}
         onClose={() => setDemoWizardOpen(false)}
