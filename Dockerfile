@@ -14,12 +14,14 @@ COPY . .
 ARG NEXT_PUBLIC_CMS_URL=https://colaberry-ai-cms-prod-956818257204.us-east1.run.app/
 ARG NEXT_PUBLIC_SITE_URL=https://www.colaberry.ai
 ARG NEXT_PUBLIC_VTON_DEMO_URL=https://vton-demo-956818257204.us-east1.run.app
+ARG NEXT_PUBLIC_VOICE_AGENT_URL=https://voice-agent-demo-ucwuixvwga-ue.a.run.app/voiceagent/demo
 # CMS_API_TOKEN is needed at build time for getStaticProps to fetch content
 # Pass via: --build-arg CMS_API_TOKEN=<token> or set in Cloud Build substitutions
 ARG CMS_API_TOKEN
 ENV NEXT_PUBLIC_CMS_URL=$NEXT_PUBLIC_CMS_URL
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_VTON_DEMO_URL=$NEXT_PUBLIC_VTON_DEMO_URL
+ENV NEXT_PUBLIC_VOICE_AGENT_URL=$NEXT_PUBLIC_VOICE_AGENT_URL
 ENV CMS_API_TOKEN=$CMS_API_TOKEN
 
 RUN npm run build

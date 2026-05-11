@@ -9,6 +9,8 @@ steps:
       - "build"
       - "--build-arg"
       - "CMS_API_TOKEN=${_CMS_API_TOKEN}"
+      - "--build-arg"
+      - "NEXT_PUBLIC_VOICE_AGENT_URL=${_NEXT_PUBLIC_VOICE_AGENT_URL}"
       - "-t"
       - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/colaberry-ai:${SHORT_SHA}"
       - "-t"
@@ -58,6 +60,11 @@ substitutions:
   _REPO: cloud-run-source-deploy
   _CMS_API_TOKEN: ""
   _SERVICE_NAME: colaberry-ai-prod
+  # Voice Agent demo Cloud Run URL. Empty string by default — the iframe
+  # wrapper falls back to localhost. Set via Cloud Build trigger
+  # substitution (or `--substitutions=_NEXT_PUBLIC_VOICE_AGENT_URL=...`)
+  # once the `voice-agent-demo` service is deployed.
+  _NEXT_PUBLIC_VOICE_AGENT_URL: ""
 
 options:
   logging: CLOUD_LOGGING_ONLY

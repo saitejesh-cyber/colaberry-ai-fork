@@ -51,6 +51,7 @@ export type DemoRequestSourcePage =
 export interface CreateDemoRequestInput {
   readonly name: string;
   readonly email: string;
+  readonly phone: string;
   readonly company: string;
   readonly role: string;
   readonly teamSize: string;
@@ -141,6 +142,7 @@ export function buildCreatePayload(input: CreateDemoRequestInput): {
     data: {
       name: input.name,
       email: input.email,
+      phone: input.phone || null,
       company: input.company || null,
       role: input.role || null,
       teamSize: input.teamSize || null,

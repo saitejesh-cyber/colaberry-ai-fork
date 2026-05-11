@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1584, initial-scale=1">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    width: 1584px;
+    height: 396px;
+    overflow: hidden;
+    background: #09090B;
+    color: #FAFAFA;
+    position: relative;
+  }
+  .bg-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.25;
+  }
+  .glow-1 {
+    width: 500px; height: 500px;
+    top: -200px; right: 100px;
+    background: radial-gradient(circle, #0d9488 0%, transparent 70%);
+  }
+  .glow-2 {
+    width: 400px; height: 400px;
+    bottom: -150px; left: 200px;
+    background: radial-gradient(circle, #DC2626 0%, transparent 70%);
+    opacity: 0.15;
+  }
+  .glow-3 {
+    width: 350px; height: 350px;
+    top: -100px; left: 600px;
+    background: radial-gradient(circle, #6366f1 0%, transparent 70%);
+    opacity: 0.12;
+  }
+  .content {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 80px;
+    gap: 60px;
+  }
+  .left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #A1A1AA;
+    width: fit-content;
+  }
+  .badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #DC2626;
+  }
+  h1 {
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: #FAFAFA;
+  }
+  h1 span { color: #F87171; }
+  .subtitle {
+    font-size: 17px;
+    color: #71717A;
+    font-weight: 400;
+    line-height: 1.5;
+    max-width: 520px;
+  }
+  .right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .stat-row {
+    display: flex;
+    gap: 12px;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px 22px;
+    min-width: 155px;
+  }
+  .stat-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #52525B;
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: #FAFAFA;
+    letter-spacing: -0.02em;
+  }
+  .stat-value.coral { color: #F87171; }
+  .url-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 100px;
+    padding: 8px 18px;
+    width: fit-content;
+    margin-top: 4px;
+  }
+  .url-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
+  .url-text { font-size: 13px; color: #A1A1AA; font-weight: 500; }
+  .grid-pattern {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+  <div class="grid-pattern"></div>
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+  <div class="bg-glow glow-3"></div>
+  <div class="content">
+    <div class="left">
+      <div class="badge">
+        <div class="badge-dot"></div>
+        Enterprise AI Platform
+      </div>
+      <h1>Discover, govern,<br>and scale <span>enterprise AI</span></h1>
+      <div class="subtitle">
+        37 AI agents · 85 pages · 16,900+ knowledge graph nodes<br>
+        Built solo in 90 days with Spec-Driven Development
+      </div>
+      <div class="url-bar">
+        <div class="url-dot"></div>
+        <span class="url-text">colaberry.ai</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-label">AI Agents</div>
+          <div class="stat-value coral">37</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pages</div>
+          <div class="stat-value">85</div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-label">Components</div>
+          <div class="stat-value">56</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Commits</div>
+          <div class="stat-value">532</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

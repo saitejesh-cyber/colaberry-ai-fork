@@ -146,7 +146,7 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
       }
     }
 
-    const typeCounts: Record<ContentTypeName, number> = { skill: 0, mcp: 0, agent: 0, tool: 0, podcast: 0 };
+    const typeCounts: Record<ContentTypeName, number> = { skill: 0, mcp: 0, agent: 0, tool: 0, podcast: 0, "llm-architecture": 0 };
     for (const n of nodes) typeCounts[n.contentType]++;
     const typeBreakdown = (Object.entries(CONTENT_TYPE_META) as [ContentTypeName, typeof CONTENT_TYPE_META[ContentTypeName]][])
       .filter(([type]) => typeCounts[type] > 0)
@@ -165,7 +165,7 @@ export default function EcosystemPage({ nodes, links, typeBreakdown }: InferGetS
   const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [enabledTypes, setEnabledTypes] = useState<Record<ContentTypeName, boolean>>({
-    skill: true, mcp: true, agent: true, tool: true, podcast: true,
+    skill: true, mcp: true, agent: true, tool: true, podcast: true, "llm-architecture": true,
   });
   const graphRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const hoveredNodeIdRef = useRef<string | null>(null);
@@ -264,8 +264,12 @@ export default function EcosystemPage({ nodes, links, typeBreakdown }: InferGetS
         </div>
       )}
 
-      {/* Graph container with overlaid controls */}
-      <div className={graphContainerClass} style={{ height: isFullscreen ? "100vh" : "680px" }}>
+      {/* Graph container with overlaid controls.
+       * Responsive height: on short/mobile viewports the fixed 680px
+       * combined with the absolute-positioned control bar would cover
+       * most of the canvas. Clamp to 70vh (min 420, max 680) so the
+       * graph stays usable from iPhone SE (667h) through desktop. */}
+      <div className={graphContainerClass} style={{ height: isFullscreen ? "100vh" : "clamp(420px, 70vh, 680px)" }}>
         {/* Overlaid control bar — frosted glass */}
         <div className={`absolute top-0 left-0 right-0 z-10 flex flex-wrap items-center gap-2.5 px-4 py-3 ${isFullscreen ? "bg-zinc-950/80" : "bg-zinc-900/70"} backdrop-blur-md`}>
           {/* Search */}
@@ -276,8 +280,8 @@ export default function EcosystemPage({ nodes, links, typeBreakdown }: InferGetS
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="Search across all types..."
-                className="h-8 w-48 rounded-lg border border-zinc-600/50 bg-zinc-800/60 pl-8 pr-3 text-xs text-zinc-100 placeholder-zinc-500 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/50"
+                placeholder="Search…"
+                className="h-8 w-32 rounded-lg border border-zinc-600/50 bg-zinc-800/60 pl-8 pr-3 text-xs text-zinc-100 placeholder-zinc-500 outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/50 sm:w-48 sm:placeholder-shown:truncate"
               />
               <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500">
                 <IconSearch />
@@ -290,7 +294,7 @@ export default function EcosystemPage({ nodes, links, typeBreakdown }: InferGetS
 
           {/* Type toggles */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Types</span>
+            <span className="hidden lg:inline text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Types</span>
             {typeBreakdown.map(({ type, label, count, color }) => (
               <button
                 key={type}
@@ -319,8 +323,11 @@ export default function EcosystemPage({ nodes, links, typeBreakdown }: InferGetS
               onClick={() => setIsFullscreen((prev) => !prev)}
               className={ctrlBtnWide}
               title={isFullscreen ? "Exit fullscreen (Esc)" : "Fullscreen"}
+              aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
             >
-              {isFullscreen ? <><IconMinimize /> Exit</> : <><IconMaximize /> Fullscreen</>}
+              {isFullscreen
+                ? <><IconMinimize /> <span className="hidden sm:inline">Exit</span></>
+                : <><IconMaximize /> <span className="hidden sm:inline">Fullscreen</span></>}
             </button>
           </div>
         </div>

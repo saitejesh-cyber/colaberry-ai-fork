@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Layout from "../components/Layout";
+import KineticHeading from "../components/KineticHeading";
 import { seoTags, canonicalUrl as buildCanonical, type SeoMeta } from "../lib/seo";
 
 export default function PrivacyPolicyPage() {
@@ -31,9 +32,11 @@ export default function PrivacyPolicyPage() {
           <div className="inline-flex items-center gap-2 rounded-md border border-[#DC2626]/15 bg-[#DC2626]/5 px-3 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[#DC2626] dark:border-[#F87171]/20 dark:bg-[#F87171]/5 dark:text-[#F87171]">
             Legal
           </div>
-          <h1 className="mt-4 font-sans text-display-sm sm:text-display-md font-bold text-zinc-900 dark:text-zinc-100">
-            Privacy Policy
-          </h1>
+          <KineticHeading
+            as="h1"
+            text="Privacy Policy"
+            className="mt-4 font-sans text-display-sm sm:text-display-md font-bold text-zinc-900 dark:text-zinc-100"
+          />
           <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">
             Last updated: March 27, 2026
           </p>

@@ -3,6 +3,11 @@ import { getMcpRedirects } from "./src/lib/mcp-slug-aliases";
 
 const cmsUrl = process.env.NEXT_PUBLIC_CMS_URL;
 const vtonUrl = process.env.NEXT_PUBLIC_VTON_URL || "https://vton-demo-956818257204.us-east1.run.app";
+// Voice Agent demo Cloud Run service in colaberryaiwebsite. Origin only
+// (no path) — used for CSP frame-src + Permissions-Policy microphone allowlist.
+const voiceAgentOrigin =
+  process.env.NEXT_PUBLIC_VOICE_AGENT_ORIGIN ||
+  "https://voice-agent-demo-ucwuixvwga-ue.a.run.app";
 const cmsRemotePattern = (() => {
   if (!cmsUrl) return null;
   try {
@@ -89,7 +94,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Permissions-Policy",
-            value: `camera=(self "${vtonUrl}"), microphone=(self "${vtonUrl}"), geolocation=(), interest-cohort=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()`,
+            value: `camera=(self "${vtonUrl}"), microphone=(self "${vtonUrl}" "${voiceAgentOrigin}"), geolocation=(), interest-cohort=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()`,
           },
           ...(process.env.NODE_ENV === "production"
             ? [
@@ -107,7 +112,7 @@ const nextConfig: NextConfig = {
                     `img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com ${cmsUrl ? new URL(cmsUrl).origin : ""}`.trim(),
                     `connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com https://www.buzzsprout.com https://www.buzzsprout.com ${cmsUrl || ""}`.trim(),
                     "media-src 'self' https://www.buzzsprout.com https://www.buzzsprout.com",
-                    `frame-src 'self' https://www.buzzsprout.com https://substack.com https://www.colaberry.online ${vtonUrl}`,
+                    `frame-src 'self' https://www.buzzsprout.com https://substack.com https://www.colaberry.online ${vtonUrl} ${voiceAgentOrigin}`,
                     "object-src 'none'",
                     "frame-ancestors 'self'",
                     "base-uri 'self'",

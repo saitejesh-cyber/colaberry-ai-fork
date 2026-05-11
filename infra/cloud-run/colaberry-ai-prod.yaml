@@ -1,0 +1,107 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/build-enable-automatic-updates: 'false'
+    run.googleapis.com/build-id: a6d47853-d76e-4738-af95-5d1c857c3cd9
+    run.googleapis.com/build-image-uri: us-east1-docker.pkg.dev/colaberryaiwebsite/cloud-run-source-deploy/colaberry-ai-prod
+    run.googleapis.com/build-name: projects/956818257204/locations/us-east1/builds/a6d47853-d76e-4738-af95-5d1c857c3cd9
+    run.googleapis.com/build-source-location: gs://run-sources-colaberryaiwebsite-us-east1/services/colaberry-ai-prod/1775727975.333601-23ffe89f275641ef8fa4a3736d42f57f.zip#1775727990485369
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/maxScale: '20'
+    run.googleapis.com/urls: '["https://colaberry-ai-prod-956818257204.us-east1.run.app","https://colaberry-ai-prod-ucwuixvwga-ue.a.run.app"]'
+  labels:
+    cloud.googleapis.com/location: us-east1
+    commit-sha: 817c5f9e536d74a51b9f67223c5873403a46ac17
+    gcb-build-id: da8cd272-cc36-4ccc-90f5-c139178493f1
+    gcb-trigger-id: 4ed7a0c2-03ea-435e-99bf-6c3fdd9a266d
+    gcb-trigger-region: global
+    managed-by: gcp-cloud-build-deploy-cloud-run
+  name: colaberry-ai-prod
+  namespace: '956818257204'
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '3'
+        run.googleapis.com/client-name: gcloud
+        run.googleapis.com/client-version: 554.0.0
+        run.googleapis.com/startup-cpu-boost: 'true'
+      labels:
+        commit-sha: 817c5f9e536d74a51b9f67223c5873403a46ac17
+        gcb-build-id: da8cd272-cc36-4ccc-90f5-c139178493f1
+        gcb-trigger-id: 4ed7a0c2-03ea-435e-99bf-6c3fdd9a266d
+        gcb-trigger-region: global
+        managed-by: gcp-cloud-build-deploy-cloud-run
+        run.googleapis.com/startupProbeType: Default
+      name: colaberry-ai-prod-00180-toh
+    spec:
+      containerConcurrency: 80
+      containers:
+      - env:
+        - name: CMS_URL
+          value: https://colaberry-ai-cms-prod-956818257204.us-east1.run.app
+        - name: NEWSLETTER_FROM_EMAIL
+          value: Colaberry AI <no-reply@colaberry.com>
+        - name: NEWSLETTER_PROVIDER
+          value: resend
+        - name: NEWSLETTER_REPLY_TO_EMAIL
+          value: info@colaberry.com
+        - name: NEWSLETTER_SEND_DRY_RUN
+          value: 'false'
+        - name: NEXT_PUBLIC_CMS_URL
+          value: https://colaberry-ai-cms-prod-956818257204.us-east1.run.app
+        - name: NEXT_PUBLIC_GA_MEASUREMENT_ID
+          value: G-F9YN432TTH
+        - name: NEXT_PUBLIC_SHOW_PRIVATE
+          value: 'true'
+        - name: NEXT_PUBLIC_SITE_URL
+          value: https://colaberry.ai
+        - name: NODE_ENV
+          value: production
+        - name: PODCAST_SYNC_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: podcast-sync-secret
+        - name: BUZZSPROUT_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: buzzsprout-api-token
+        - name: CMS_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: cms-api-token-prod
+        - name: NEWSLETTER_UNSUBSCRIBE_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: newsletter-unsubscribe-secret
+        - name: NEWSLETTER_REPORT_API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: newsletter-report-api-key
+        image: us-east1-docker.pkg.dev/colaberryaiwebsite/cloud-run-source-deploy/colaberry-ai/colaberry-ai-prod:817c5f9e536d74a51b9f67223c5873403a46ac17
+        name: colaberry-ai-prod-1
+        ports:
+        - containerPort: 3000
+          name: http1
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 3000
+          timeoutSeconds: 240
+      serviceAccountName: 956818257204-compute@developer.gserviceaccount.com
+      timeoutSeconds: 300
+  traffic:
+  - latestRevision: true
+    percent: 100

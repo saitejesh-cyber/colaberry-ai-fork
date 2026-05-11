@@ -157,13 +157,17 @@ export default function Skills({ skills: initialSkills, allowPrivate, fetchError
     ogImageAlt: `Colaberry AI — ${countLabel} reusable AI skills library`,
   };
   const canonicalUrl = seoMeta.canonical!;
+  // Surface the top 50 skills (was 12) so AI engines have a richer corpus to
+  // ground citations in. Each entry carries name + description + URL — the
+  // citation body LLMs index. 50 keeps the JSON-LD payload under ~30 KB.
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "Colaberry AI Skills Catalog",
     url: canonicalUrl,
     description: metaDescription,
-    itemListElement: allSkills.slice(0, 12).map((skill, index) => ({
+    numberOfItems: allSkills.length,
+    itemListElement: allSkills.slice(0, 50).map((skill, index) => ({
       "@type": "ListItem",
       position: index + 1,
       item: {
@@ -174,6 +178,17 @@ export default function Skills({ skills: initialSkills, allowPrivate, fetchError
         url: `${siteUrl}/aixcelerator/skills/${skill.slug || skill.id}`,
       },
     })),
+  };
+  // BreadcrumbList — gives AI engines the "Home → Platform → AI Skills"
+  // navigation path for contextual relevance on branded + navigational queries.
+  const breadcrumbsLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "AIXcelerator Platform", item: `${siteUrl}/aixcelerator` },
+      { "@type": "ListItem", position: 3, name: "AI Skills", item: canonicalUrl },
+    ],
   };
 
   const hasResults = allSkills.length > 0;
@@ -298,6 +313,7 @@ export default function Skills({ skills: initialSkills, allowPrivate, fetchError
           "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
         ))}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsLd).replace(/</g, "\\u003c") }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "FAQPage",

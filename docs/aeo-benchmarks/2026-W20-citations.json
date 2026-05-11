@@ -1,0 +1,230 @@
+{
+  "week": "2026-W20",
+  "engine": "perplexity.ai",
+  "date": "2026-05-11",
+  "queries_attempted": 14,
+  "queries_with_data": 13,
+  "stats": {
+    "colaberry.ai": {
+      "total": 5,
+      "branded": 5,
+      "unbranded": 0,
+      "competitive": 0,
+      "adjacent": 0,
+      "queries": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5"
+      ]
+    }
+  },
+  "queries_data": [
+    {
+      "id": "A1",
+      "category": "branded",
+      "text": "What is colaberry.ai",
+      "domains": [
+        "colaberry.ai",
+        "backslash.security",
+        "linkedin.com",
+        "modelcontextprotocol.io",
+        "k2view.com",
+        "mindstudio.ai",
+        "truefoundry.com",
+        "skywork.ai"
+      ]
+    },
+    {
+      "id": "A2",
+      "category": "branded",
+      "text": "Colaberry AI agents catalog",
+      "domains": [
+        "colaberry.ai",
+        "colaberry.com",
+        "agentcory.ai",
+        "training.colaberry.com",
+        "app.colaberry.com",
+        "moderndata101.com"
+      ]
+    },
+    {
+      "id": "A3",
+      "category": "branded",
+      "text": "Colaberry MCP server directory",
+      "domains": [
+        "mcp.directory",
+        "reddit.com",
+        "colaberry.ai",
+        "bloomberry.com",
+        "dev.to",
+        "linkedin.com",
+        "mcp.so",
+        "mcpshowcase.com",
+        "mcpservers.org",
+        "perplexity.com"
+      ]
+    },
+    {
+      "id": "A4",
+      "category": "branded",
+      "text": "Colaberry AI knowledge graph",
+      "domains": [
+        "colaberry.ai",
+        "colaberry.com",
+        "colabsoftware.com",
+        "youtube.com",
+        "deeplearning.ai",
+        "training.colaberry.com",
+        "linkedin.com"
+      ]
+    },
+    {
+      "id": "A5",
+      "category": "branded",
+      "text": "Colaberry AI skills",
+      "domains": [
+        "colaberry.com",
+        "colaberry.ai",
+        "training.colaberry.com",
+        "linkedin.com",
+        "facebook.com",
+        "instagram.com"
+      ]
+    },
+    {
+      "id": "B1",
+      "category": "unbranded",
+      "text": "Best AI agent catalog 2026",
+      "domains": [
+        "springpeople.com",
+        "lindy.ai",
+        "blaxel.ai",
+        "knowlee.ai",
+        "arahi.ai",
+        "agentconference.com",
+        "github.com",
+        "dust.tt",
+        "aiagentslist.com",
+        "stackone.com"
+      ]
+    },
+    {
+      "id": "B2",
+      "category": "unbranded",
+      "text": "MCP server registry",
+      "domains": [
+        "github.com",
+        "modelcontextprotocol.info",
+        "learn.microsoft.com",
+        "machalliance.org",
+        "registry.modelcontextprotocol.io",
+        "konghq.com",
+        "blog.modelcontextprotocol.io"
+      ]
+    },
+    {
+      "id": "B3",
+      "category": "unbranded",
+      "text": "Where can I discover AI skills for enterprise",
+      "domains": [
+        "ai.google",
+        "microsoft.com",
+        "learn.microsoft.com",
+        "coursera.org",
+        "learning.linkedin.com",
+        "moveworks.com",
+        "gpstrategies.com",
+        "atlassystems.com"
+      ]
+    },
+    {
+      "id": "B4",
+      "category": "unbranded",
+      "text": "Open source AI agent marketplace",
+      "domains": [
+        "kore.ai",
+        "reddit.com",
+        "agentkart.ai",
+        "aiagentstore.ai",
+        "gorilla.cs.berkeley.edu",
+        "pypi.org",
+        "aimultiple.com",
+        "budibase.com",
+        "payanagent.com"
+      ]
+    },
+    {
+      "id": "B5",
+      "category": "unbranded",
+      "text": "AI agent knowledge graph",
+      "domains": [
+        "reddit.com",
+        "github.com",
+        "learn.deeplearning.ai",
+        "stardog.com",
+        "surrealdb.com",
+        "youtube.com",
+        "memgraph.com",
+        "artefact.com",
+        "llamaindex.ai"
+      ]
+    },
+    {
+      "id": "C1",
+      "category": "competitive",
+      "text": "Alternatives to huggingface for AI agents",
+      "domains": [
+        "youtube.com",
+        "reddit.com",
+        "infrabase.ai",
+        "producthunt.com",
+        "northflank.com",
+        "eesel.ai",
+        "langfuse.com",
+        "clickup.com"
+      ]
+    },
+    {
+      "id": "C2",
+      "category": "competitive",
+      "text": "Replicate vs Modal vs Together for AI inference",
+      "domains": [
+        "sfailabs.com",
+        "toolhalla.ai",
+        "respan.ai",
+        "nightwatcherai.com",
+        "getdeploying.com",
+        "blog.images.cv",
+        "rywalker.com",
+        "infrabase.ai",
+        "sourceforge.net"
+      ]
+    },
+    {
+      "id": "C3",
+      "category": "competitive",
+      "text": "LangChain agents vs CrewAI comparison",
+      "domains": [
+        "draftnrun.com",
+        "reddit.com",
+        "instinctools.com",
+        "scalekit.com",
+        "orq.ai",
+        "nxcode.io",
+        "smythos.com",
+        "gocodeo.com",
+        "sparkco.ai",
+        "muoro.io"
+      ]
+    },
+    {
+      "id": "C4",
+      "category": "competitive",
+      "text": "AI catalogs that index MCP servers",
+      "domains": [],
+      "note": "perplexity returned no results / hit auth wall"
+    }
+  ]
+}

@@ -162,13 +162,17 @@ export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, total
     ogImageAlt: `Colaberry AI — ${countLabel} MCP servers directory`,
   };
   const canonicalUrl = seoMeta.canonical!;
+  // Surface the top 50 MCP servers (was 12) so AI engines have a richer corpus
+  // to ground citations in. Each entry carries name + description + URL — the
+  // citation body LLMs index. 50 keeps the JSON-LD payload under ~30 KB.
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "Colaberry AI MCP Servers Catalog",
     url: canonicalUrl,
     description: metaDescription,
-    itemListElement: allMCPs.slice(0, 12).map((mcp, index) => ({
+    numberOfItems: allMCPs.length,
+    itemListElement: allMCPs.slice(0, 50).map((mcp, index) => ({
       "@type": "ListItem",
       position: index + 1,
       item: {
@@ -179,6 +183,17 @@ export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, total
         url: `${siteUrl}/aixcelerator/mcp/${mcp.slug || mcp.id}`,
       },
     })),
+  };
+  // BreadcrumbList — gives AI engines the "Home → Platform → MCP Servers"
+  // navigation path for contextual relevance on branded + navigational queries.
+  const breadcrumbsLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "AIXcelerator Platform", item: `${siteUrl}/aixcelerator` },
+      { "@type": "ListItem", position: 3, name: "MCP Servers", item: canonicalUrl },
+    ],
   };
 
   // Build API query params from current filters
@@ -315,6 +330,7 @@ export default function MCP({ mcps: initialMCPs, allowPrivate, fetchError, total
           "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
         ))}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsLd).replace(/</g, "\\u003c") }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "FAQPage",

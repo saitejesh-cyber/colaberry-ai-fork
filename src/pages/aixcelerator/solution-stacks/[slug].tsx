@@ -36,6 +36,7 @@ const TYPE_PATHS: Record<ContentTypeName, string> = {
   mcp: "/aixcelerator/mcp",
   tool: "/aixcelerator/tools",
   podcast: "/resources/podcasts",
+  "llm-architecture": "/aixcelerator/llm-architectures",
 };
 
 export default function SolutionStackDetailPage({ stack }: Props) {

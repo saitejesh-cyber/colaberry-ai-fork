@@ -145,7 +145,7 @@ export default function AIXcelerator({ counts }: AIXceleratorProps) {
       </div>
 
       {/* ── Live catalog metrics ──────────────────────────────────── */}
-      <div className="reveal mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700 sm:grid-cols-4">
+      <div className="reveal mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700 md:grid-cols-4">
         {METRICS.map(({ key, label, type, href }) => (
           <Link
             key={key}
@@ -171,7 +171,7 @@ export default function AIXcelerator({ counts }: AIXceleratorProps) {
           description="The trusted foundation for agent delivery, governance, and observability."
           size="md"
         />
-        <div className="stagger-grid mt-6 grid gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700 sm:grid-cols-3">
+        <div className="stagger-grid mt-6 grid gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700 sm:grid-cols-2 lg:grid-cols-3">
           {visibleCore.map((capability) => {
             const iconType = ICON_MAP[capability.title];
             return (
@@ -214,7 +214,7 @@ export default function AIXcelerator({ counts }: AIXceleratorProps) {
             Explore ontology
           </Link>
         </div>
-        <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700 sm:grid-cols-3">
+        <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700 sm:grid-cols-2 lg:grid-cols-3">
           {GRAPH_LAYERS.map((layer) => (
             <div key={layer.step} className="flex items-start gap-3 bg-zinc-50 p-6 dark:bg-zinc-900">
               <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-950 text-xs font-bold text-white dark:bg-zinc-100 dark:text-zinc-950">
@@ -254,7 +254,7 @@ export default function AIXcelerator({ counts }: AIXceleratorProps) {
             View all stacks
           </Link>
         </div>
-        <div className="stagger-grid mt-6 grid gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700 sm:grid-cols-3">
+        <div className="stagger-grid mt-6 grid gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700 sm:grid-cols-2 lg:grid-cols-3">
           {featuredStacks.map((stack) => {
             const typeCounts = stack.items.reduce<Record<string, number>>((acc, item) => {
               acc[item.type] = (acc[item.type] || 0) + 1;
@@ -301,7 +301,7 @@ export default function AIXcelerator({ counts }: AIXceleratorProps) {
           </Link>
         </div>
 
-        <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700 sm:grid-cols-2 xl:grid-cols-4">
           {modularLayers.map((capability) => {
             const iconType = ICON_MAP[capability.title];
             return (

@@ -28,6 +28,8 @@ function loadRegistry(): Record<ContentTypeName, ContentOntologyConfig> {
   const { AGENT_ONTOLOGY_CONFIG } = require("../data/agent-taxonomy");
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { TOOL_ONTOLOGY_CONFIG } = require("../data/tool-taxonomy");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { LLM_ARCHITECTURE_ONTOLOGY_CONFIG } = require("../data/llm-architecture-taxonomy");
 
   _registry = {
     skill: SKILL_ONTOLOGY_CONFIG,
@@ -35,6 +37,7 @@ function loadRegistry(): Record<ContentTypeName, ContentOntologyConfig> {
     podcast: PODCAST_ONTOLOGY_CONFIG,
     agent: AGENT_ONTOLOGY_CONFIG,
     tool: TOOL_ONTOLOGY_CONFIG,
+    "llm-architecture": LLM_ARCHITECTURE_ONTOLOGY_CONFIG,
   };
 
   return _registry;
@@ -49,7 +52,7 @@ export function getOntologyConfig(type: ContentTypeName): ContentOntologyConfig 
 
 /** Get all registered content type names */
 export function getAllContentTypes(): ContentTypeName[] {
-  return ["skill", "agent", "mcp", "podcast"];
+  return ["skill", "agent", "mcp", "podcast", "llm-architecture"];
 }
 
 /** Get all ontology configs */
@@ -122,4 +125,5 @@ export const CONTENT_TYPE_META: Record<ContentTypeName, {
   mcp: { label: "MCP Servers", icon: "🔌", nodeShape: "square", color: "#34d399" },
   tool: { label: "Tools", icon: "🔧", nodeShape: "triangle", color: "#fbbf24" },
   podcast: { label: "Podcasts", icon: "🎙️", nodeShape: "hexagon", color: "#fb923c" },
+  "llm-architecture": { label: "LLM Architectures", icon: "🧠", nodeShape: "hexagon", color: "#818cf8" },
 };

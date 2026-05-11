@@ -10,7 +10,7 @@
 
 /* ── Content Type Identifiers ──────────────────────────────────────────── */
 
-export type ContentTypeName = "skill" | "agent" | "mcp" | "tool" | "podcast";
+export type ContentTypeName = "skill" | "agent" | "mcp" | "tool" | "podcast" | "llm-architecture";
 
 /* ── Taxonomy Category ─────────────────────────────────────────────────── */
 

@@ -57,11 +57,23 @@
 6. Use `ContentTypeIcon` for content type icons — never emoji
 
 **Locked Component Classes:**
-- `.catalog-card` — listing cards (1px border, no hover lift)
+- `.catalog-card` — listing cards (1px border, **Sprint v5:** 2px soft-UI micro-lift on hover via `translate3d(0, -2px, 0)` + `var(--shadow-lg)`)
 - `.surface-panel` — filter/search panels
 - `.chip-brand` — active filter (coral accent)
 - `.chip-neutral` — default filter (zinc scale)
 - `.detail-section` — content sections on detail pages
+
+**Kinetic-Pacing Easing Tokens (Sprint v5 — use, never hard-code a cubic-bezier):**
+- `--ease-entry: cubic-bezier(0.22, 1, 0.36, 1)` — content entering frame (reveal, KineticHeading, HeroGraphBloom)
+- `--ease-exit: cubic-bezier(0.64, 0, 0.78, 0)` — content leaving frame
+- `--ease-soft-ui: cubic-bezier(0.4, 0, 0.2, 1)` — hover, press, lift (`.btn`, `.catalog-card`) — zero overshoot
+- `--ease-magnetic: cubic-bezier(0.34, 1.56, 0.64, 1)` — pointer springs ONLY, never content
+
+**Reveal classes:** `.reveal`, `.reveal-left`, `.reveal-right`, `.reveal-scale`, `.reveal-wipe`, `.stagger-grid` — all observed by `Layout.tsx` IntersectionObserver. `.reveal-wipe` (editorial left-to-right clip-path, reserved for flagship H2s) opts in via `<SectionHeader wipeTitle />`.
+
+**Framer Motion:** Installed for Sprint v5. `_app.tsx` wraps everything in `<LazyMotion features={domAnimation} strict>`. Import `{ m, useScroll, useTransform, useReducedMotion } from "framer-motion"` — use lowercase `m.*` components (smaller bundle than full `motion.*`). All motion components must respect `useReducedMotion()`.
+
+**Global reduced-motion guard:** `@media (prefers-reduced-motion: reduce)` block at end of `globals.css` collapses all animation / transition durations to 0.01ms and nukes reveal-class transforms. Framer Motion components additionally check `useReducedMotion()`.
 
 **3-Layer Ontology Pattern (standard for all content types):**
 The 3-layer ontology approach (Taxonomy → Relation Graph → Collections) is Colaberry's unique knowledge graph method. All 5 content types use generic templates (`OntologyPageTemplate`, `GraphPageTemplate`, `CollectionsPageTemplate`, `CollectionDetailTemplate`) with `ContentOntologyConfig`.
@@ -73,6 +85,19 @@ These routes exist but are hidden from navigation until approved:
 - `/solutions` — Solutions page
 - `/resources/articles` — Articles listing
 - `/resources/case-studies` — Case Studies listing
+
+**Interactive Demos (`/demo/*`):**
+Client-facing interactive AI demos live under `/demo` and have their own top-level nav item ("Demos", order 2, between Platform and Industries). The surface is intentionally thin to keep future demo onboarding cheap:
+
+| Route | Purpose |
+|-------|---------|
+| `/demo` | Hub listing all demos (static cards from `src/data/demos.ts`) |
+| `/demo/[slug]` | SSG detail page template (hero + metrics + features + tech stack + launch CTA). ISR `revalidate: 3600`, `fallback: "blocking"`. Currently pre-renders `/demo/goggle-vton`. |
+| `/demo/lens` | Existing static iframe wrapper for the Goggle VTON app (unchanged; preserved URL for production demo share-links). Contains a "← Details" breadcrumb back to `/demo/goggle-vton`. |
+
+Adding a new demo = one record in `src/data/demos.ts`. The hub + detail pages pick it up automatically; no code changes required. If the demo lives at a different embed URL (not `/demo/lens`), set `launchUrl` to the appropriate path/URL. Next.js Pages Router static routes always win over `[slug].tsx`, so reserved static slugs (`lens`, `index`) must NOT be used as `slug` values in the registry.
+
+Schema.org: hub emits `ItemList` JSON-LD; detail page emits `WebApplication` JSON-LD. Built for AEO-first discovery.
 
 ## Project Structure
 ```
@@ -88,14 +113,25 @@ src/
 ## Key Files
 - `src/styles/globals.css` — ALL CSS custom properties and component classes
 - `tailwind.config.ts` — Zinc color scale, Inter fonts, animation keyframes
-- `src/pages/_app.tsx` — Font loading (Inter), global layout wrapper
+- `src/pages/_app.tsx` — Font loading (Inter), global layout wrapper, `<LazyMotion features={domAnimation} strict>` provider for Framer Motion (Sprint v5 kinetic-pacing)
+- `src/components/HeroGraphBloom.tsx` — Sprint v5 kinetic-pacing SVG coded-motion graph constellation. Replaces legacy `.hero-orb-*` gradient blur stack with a tangible, brand-relevant knowledge-graph artifact. Deterministic seeded positions (SSR-safe), `pathLength` edge tracing, staggered node fade, center coral pulse. Respects `useReducedMotion()`.
+- `src/components/KineticHeading.tsx` — Sprint v5 kinetic-pacing line-mask word-by-word H1/H2 reveal. Server-renders full text in an `sr-only` span (AEO-safe), animates visible words on hydration with 110% y-offset and `cubic-bezier(0.22, 1, 0.36, 1)` easing. Collapses to plain DOM under reduced-motion.
 - `src/lib/cms.ts` — CMS fetch functions, TypeScript types, per-type helpers
 - `src/lib/demoRequestStore.ts` — Strapi-write layer for `DemoRequest` leads (create + delivery-status update, bearer auth, abort-controller timeout). Handler calls this BEFORE `sendNewsletterEmail` so leads are durable even if email bounces.
 - `src/lib/ontologyTypes.ts` — Shared type system: ContentOntologyConfig, ContentCollection, SolutionStack
 - `src/lib/ontologyRegistry.ts` — Central registry + cross-type relation definitions
 - `src/lib/graphUtils.ts` — Generic graph utilities: `buildGraphData()`, colors, topology
-- `src/components/Layout.tsx` — Header + footer + nav (1,800 lines)
+- `src/components/Layout.tsx` — Header + footer + nav (1,800 lines). `fallbackNavigation.headerLinks` is the source of truth for the top nav when the CMS `global-navigation` content type is not yet published. Current nav order: Platform → **Demos** → Industries → Resources → Updates.
+- `src/data/demos.ts` — Demo registry (type `DemoConfig`) powering `/demo` hub and `/demo/[slug]` detail pages. Add a record, get a detail page for free.
 - `src/components/ContentTypeIcon.tsx` — Premium SVG icons for 5 content types
+- `src/components/LLMArchitectureDeepDive.tsx` — Sprint v4 renderer for the `deepDive` Strapi Dynamic Zone. Dispatches per `__component` to render heading / paragraph / callout / code-block / table / list / image / references blocks as semantic HTML inside `.prose`.
+- `src/lib/deepDiveToPlaintext.ts` — Sprint v4 AEO helper. Exports `deepDiveToPlaintext()`, `deepDiveToCitations()`, and `deepDiveWordCount()` — used by `[slug].tsx` to emit `TechArticle` JSON-LD with `articleBody`, `wordCount`, and structured `citation` array for AI answer engines.
+- `scripts/deep-dives/*.mjs` — File-sourced authoring pipeline for flagship LLM architecture deep dives (Sprint v4). Each module exports `{ slug, blocks }` where `blocks` is the Strapi Dynamic Zone payload. Currently ships 5 flagships: `llama-3-2-3b`, `deepseek-v3`, `kimi-linear-48b-a3b`, `qwen3-next-80b-a3b`, `glm-5-744b`.
+- `scripts/author-llm-deep-dive.mjs` — CLI that loads deep-dive modules and PUTs them to Strapi. Flags: `--slug <slug>`, `--all`, `--dry-run`, `--url`, `--token`. **Critical:** appends `?status=published` to writes so Strapi v5's draft/publish system lands content on the published version (otherwise PUTs default to draft and SSR never sees them).
+- `src/lib/distribution/*` — Catalog distribution module (Sprint v5 CMS-driven). `types.ts` contract (10-platform union + `ChannelConfig`), `source.ts` lean Strapi fetcher (per-kind isolation, `Promise.allSettled`), `channelConfig.ts` fetches the Strapi `distribution-channel` collection with a `STATIC_CHANNELS` fallback — never throws, `resolveChannelCredential` reads env at dispatch time so the CMS never holds secrets. `template.ts` zero-dep Mustache-style engine (`{{title}}`, `{{#tags}}{{.}}{{/tags}}`, `{{#isNew}}`, `{{^isNew}}`, optional HTML escape + maxLength truncation). `templates.ts` pure per-channel renderer. `store.ts` persists one `distribution-log` row per dispatch — never throws. `orchestrator.ts` channels → source → templates → dispatch → log pipeline with bounded per-channel concurrency. Clients in `clients/` — `x.ts` OAuth 1.0a HMAC-SHA1 against `api.twitter.com/2/tweets`, `moltbook.ts` bearer-auth `/posts`, `huggingface.ts` stub (dry-run only; live commit deferred — see `docs/distribution/README.md` §HF Stub Rationale). Unimplemented platforms (`devto`, `reddit`, `discord`, `producthunt`, `hackernews`, `github`, `hashnode`) get synthesized `skipped: not-implemented` dispatches. Every client's `dispatch()` is contractually non-throwing. Idempotency key: `${platform}:${entry.id}:${entry.updatedAt}`.
+- `src/pages/api/cron/catalog-distribution.ts` — Daily distribution cron. POST-only, bearer auth via `CATALOG_DISTRIBUTION_SECRET`, `Cache-Control: no-store`. **DRY_RUN by default** — live posting requires `CATALOG_DISTRIBUTION_LIVE=true` env OR `?live=true` query param. `?forceStatic=true` bypasses CMS for recovery.
+- `src/pages/api/internal/distribution-preview.ts` — Admin DRY_RUN preview. GET|POST, admin-key auth, **always dry-run regardless of flags**. Query params: `windowHours`, repeatable `kind`, repeatable `platform`, `channel=<documentId>` for single-channel preview, `forceStatic=true`.
+- `scripts/seed-distribution-channels.mjs` + `scripts/distribution-templates/{x,moltbook,huggingface}.md` — Idempotent seed for the three starter CMS channels; re-running updates existing rows by `name`.
 
 ## Build & Validation
 ```bash

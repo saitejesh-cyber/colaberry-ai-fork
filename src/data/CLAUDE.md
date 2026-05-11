@@ -38,6 +38,10 @@ Each exports `ContentCollection[]` with `itemSlugs`, `difficulty`, `keywordTags`
 
 - `agents.json`, `mcps.json` — Static fallback when CMS is unavailable
 
+## Interactive Demos Registry
+
+- `demos.ts` — Demo registry (`DemoConfig[]`) powering `/demo` hub and `/demo/[slug]` detail pages. Each record carries title, category, tagline, summary, features, tech stack, metrics, and `launchUrl` (the embed/iframe destination). Kept as a static file (not CMS) while the demo count is small; migrate to a Strapi `demo` content type when it exceeds ~5 entries. **Reserved slugs:** `lens`, `index` — these collide with static files under `src/pages/demo/`.
+
 ## Adding a New Content Type
 
 1. Create `{type}-taxonomy.ts` with categories, classifier, ontology config

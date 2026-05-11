@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { LazyMotion, domAnimation } from "framer-motion";
 
 import "../styles/globals.css";
 import GuidedTourProvider from "../components/GuidedTour/GuidedTourProvider";
@@ -41,24 +42,26 @@ export default function App({ Component, pageProps }: AppProps) {
   }, [router]);
 
   return (
-    <div className={`${inter.variable} font-sans`}>
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
-      <PodcastPlayerProvider>
-        <div
-          style={{
-            opacity: transitioning ? 0 : 1,
-            transition: "opacity 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-            willChange: transitioning ? "opacity" : "auto",
-          }}
-        >
-          <GuidedTourProvider>
-            <Component {...pageProps} />
-          </GuidedTourProvider>
-        </div>
-        <GlobalMiniPlayer />
-      </PodcastPlayerProvider>
-    </div>
+    <LazyMotion features={domAnimation} strict>
+      <div className={`${inter.variable} font-sans`}>
+        <Head>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </Head>
+        <PodcastPlayerProvider>
+          <div
+            style={{
+              opacity: transitioning ? 0 : 1,
+              transition: "opacity 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+              willChange: transitioning ? "opacity" : "auto",
+            }}
+          >
+            <GuidedTourProvider>
+              <Component {...pageProps} />
+            </GuidedTourProvider>
+          </div>
+          <GlobalMiniPlayer />
+        </PodcastPlayerProvider>
+      </div>
+    </LazyMotion>
   );
 }

@@ -28,31 +28,16 @@ export default function Document() {
         <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        {/* Google Analytics — loaded with consent defaults (denied until user accepts) */}
-        <script
-          async
-          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || process.env.NEXT_PUBLIC_GA_ID || "G-F9YN432TTH"}`}
-        />
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-F9YN432TTH" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('consent', 'default', {
-                security_storage: 'granted',
-                functionality_storage: 'granted',
-                analytics_storage: 'denied',
-                ad_storage: 'denied',
-                ad_user_data: 'denied',
-                ad_personalization: 'denied'
-              });
-              try {
-                var c = JSON.parse(localStorage.getItem('colaberry_cookie_consent_v1') || 'null');
-                if (c && c.analytics) gtag('consent', 'update', { analytics_storage: 'granted' });
-                if (c && c.marketing) gtag('consent', 'update', { ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted' });
-              } catch(e) {}
-              gtag('config', '${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || process.env.NEXT_PUBLIC_GA_ID || "G-F9YN432TTH"}', { anonymize_ip: true, transport_type: 'beacon' });
+
+              gtag('config', 'G-F9YN432TTH');
             `,
           }}
         />

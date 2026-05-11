@@ -61,6 +61,15 @@ export default function DemoLens() {
       {/* Compact title bar — keeps branding without eating viewport */}
       <div className="flex items-center justify-between pb-3 pt-1">
         <div className="flex items-center gap-3">
+          <Link
+            href="/demo/goggle-vton"
+            className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+            aria-label="Back to demo details"
+          >
+            <span aria-hidden="true">&larr;</span>
+            Details
+          </Link>
+          <span className="h-3 w-px bg-zinc-300 dark:bg-zinc-700" aria-hidden="true" />
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#DC2626] dark:text-[#F87171]">
             Live Demo
           </span>

@@ -1,0 +1,55 @@
+name: AEO Benchmark
+
+# Runs the AEO indexability scorecard weekly + commits the result.
+#
+# Why: AEO is a moving target — competitors will eventually adopt
+# Schema.org JSON-LD, /llms.txt manifests, and explicit AI-bot
+# allowlists. A weekly benchmark tells us when our lead margin
+# compresses, so we can react before losing #1.
+#
+# Schedule: Mondays 04:00 UTC (Sunday night PT, so a fresh report is
+# in the repo before Monday morning standups in both India + US).
+#
+# Failure mode: if the primary site (www.colaberry.ai) drops from #1,
+# the benchmark script exits 1 and this workflow fails — turning into
+# a real alert via GitHub email + repo notifications.
+
+on:
+  schedule:
+    - cron: "0 4 * * 1"  # Mondays 04:00 UTC
+  workflow_dispatch:      # Allow manual trigger from Actions UI
+
+permissions:
+  contents: write          # to commit the weekly report
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run AEO benchmark
+        run: node scripts/aeo-benchmark.mjs
+        # Script exits 1 if primary site loses #1 — that's the alert
+
+      - name: Commit weekly report
+        # Runs even if the benchmark step exits 1, so we still preserve
+        # the report on a downgrade week.
+        if: always()
+        run: |
+          git config user.name  "aeo-benchmark-bot"
+          git config user.email "aeo-benchmark@colaberry.ai"
+          git add docs/aeo-benchmarks/
+          if git diff --staged --quiet; then
+            echo "No new report this run — skipping commit"
+          else
+            WEEK=$(date -u +%Y-W%V)
+            git commit -m "chore(aeo): weekly indexability benchmark $WEEK [skip ci]"
+            git push origin HEAD
+          fi

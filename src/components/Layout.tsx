@@ -19,9 +19,6 @@ import AnimatedSignalBanner from "./AnimatedSignalBanner";
 import SubstackEmbedSignup from "./SubstackEmbedSignup";
 import { usePodcastPlayer } from "../contexts/PodcastPlayerContext";
 
-const CookieConsentBanner = dynamic(() => import("./CookieConsentBanner"), {
-  ssr: false,
-});
 const DemoRequestWizardModal = dynamic(
   () => import("./DemoRequestWizardModal"),
   { ssr: false },
@@ -38,21 +35,28 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Agents", href: "/aixcelerator/agents", order: 1 },
         { label: "MCP Servers", href: "/aixcelerator/mcp", order: 2 },
         { label: "Skills", href: "/aixcelerator/skills", order: 3 },
+        { label: "LLM Architectures", href: "/aixcelerator/llm-architectures", order: 4 },
         { label: "Platform Ontology", href: "/aixcelerator/ontology", order: 6 },
         { label: "Ecosystem Graph", href: "/aixcelerator/ecosystem", order: 7 },
         { label: "Solution Stacks", href: "/aixcelerator/solution-stacks", order: 8 },
       ],
     },
     {
+      label: "Demos",
+      href: "/demo",
+      order: 2,
+      group: "header",
+    },
+    {
       label: "Industries",
       href: "/industries",
-      order: 2,
+      order: 3,
       group: "header",
     },
     {
       label: "Resources",
       href: "/resources",
-      order: 3,
+      order: 4,
       group: "header",
       children: [
         { label: "Podcasts", href: "/resources/podcasts", order: 1 },
@@ -62,7 +66,7 @@ const fallbackNavigation: GlobalNavigation = {
     {
       label: "Updates",
       href: "/updates",
-      order: 4,
+      order: 5,
       group: "header",
     },
   ],
@@ -74,7 +78,8 @@ const fallbackNavigation: GlobalNavigation = {
         { label: "Agents", href: "/aixcelerator/agents", order: 2, group: "Product" },
         { label: "MCP servers", href: "/aixcelerator/mcp", order: 3, group: "Product" },
         { label: "Skills", href: "/aixcelerator/skills", order: 4, group: "Product" },
-        { label: "Discovery assistant", href: "/assistant", order: 5, group: "Product" },
+        { label: "LLM Architectures", href: "/aixcelerator/llm-architectures", order: 5, group: "Product" },
+        { label: "Discovery assistant", href: "/assistant", order: 6, group: "Product" },
         { label: "Industries", href: "/industries", order: 9, group: "Product" },
       ],
     },
@@ -91,11 +96,28 @@ const fallbackNavigation: GlobalNavigation = {
   cta: { label: "Book a demo", href: "/request-demo", group: "header" },
   socialLinks: [
     {
+      label: "Email",
+      /* Opens Gmail compose in a new tab with `To: info@colaberry.com`
+       * prefilled — parallels the LinkedIn/X/YouTube "click → open
+       * platform in new tab" behavior. Avoids the mailto-handler
+       * roulette (Apple Mail launches cold, Windows default-app
+       * prompts, Chrome "no handler" silent failures). For the ~60% of
+       * visitors who use Gmail (and 100% of Colaberry internals on
+       * Google Workspace) this is a one-click Send flow. Non-Gmail
+       * users land on the Gmail sign-in page and can still copy the
+       * address from the compose UI. */
+      href: "https://mail.google.com/mail/?view=cm&fs=1&to=info@colaberry.com",
+      target: "_blank",
+      icon: "email",
+      order: 1,
+      group: "social",
+    },
+    {
       label: "LinkedIn",
       href: "https://www.linkedin.com/company/colaberry",
       target: "_blank",
       icon: "linkedin",
-      order: 1,
+      order: 2,
       group: "social",
     },
     {
@@ -103,7 +125,7 @@ const fallbackNavigation: GlobalNavigation = {
       href: "https://www.instagram.com/colaberryinc/",
       target: "_blank",
       icon: "instagram",
-      order: 2,
+      order: 3,
       group: "social",
     },
     {
@@ -111,7 +133,7 @@ const fallbackNavigation: GlobalNavigation = {
       href: "https://x.com/colaberryinc?lang=en",
       target: "_blank",
       icon: "x",
-      order: 3,
+      order: 4,
       group: "social",
     },
     {
@@ -119,7 +141,7 @@ const fallbackNavigation: GlobalNavigation = {
       href: "https://www.facebook.com/colaberryschoolofdataanalytics/",
       target: "_blank",
       icon: "facebook",
-      order: 4,
+      order: 5,
       group: "social",
     },
     {
@@ -127,7 +149,7 @@ const fallbackNavigation: GlobalNavigation = {
       href: "https://www.youtube.com/channel/UCb23caPCK7xW8roOkr_iKRA",
       target: "_blank",
       icon: "youtube",
-      order: 5,
+      order: 6,
       group: "social",
     },
   ],
@@ -173,6 +195,12 @@ const SOCIAL_ICON_PATHS: Record<string, ReactNode> = {
     <>
       <rect x="2" y="4.5" width="20" height="15" rx="3" fill="none" stroke="currentColor" strokeWidth="1.6" />
       <polygon points="10 8.5 16 12 10 15.5" fill="currentColor" />
+    </>
+  ),
+  email: (
+    <>
+      <rect x="2.5" y="4.5" width="19" height="15" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <polyline points="3 6 12 13 21 6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </>
   ),
 };
@@ -250,6 +278,11 @@ const RELEASE_HIDDEN_PATHS = SHOW_ALL_NAV ? new Set<string>() : new Set([
   "/solutions",
   "/resources/articles",
   "/resources/case-studies",
+  // Voice Agent demo — hidden until Karun + Harsh approve and Cloud Run
+  // service `voice-agent-demo` is live with `NEXT_PUBLIC_VOICE_AGENT_URL`
+  // pointing at it. Both the SSG detail page and the iframe wrapper.
+  "/demo/voice-agent",
+  "/demo/voice",
 ]);
 
 const PLATFORM_CHILD_BLUEPRINT = [
@@ -260,6 +293,7 @@ const PLATFORM_CHILD_BLUEPRINT = [
   { label: "Platform Ontology", href: "/aixcelerator/ontology" },
   { label: "Ecosystem Graph", href: "/aixcelerator/ecosystem" },
   { label: "Solution Stacks", href: "/aixcelerator/solution-stacks" },
+  { label: "LLM Architectures", href: "/aixcelerator/llm-architectures" },
   { label: "Discovery assistant", href: "/assistant" },
 ];
 
@@ -272,6 +306,8 @@ const PLATFORM_CHILD_ALIASES: Record<string, string> = {
   skill: "/aixcelerator/skills",
   tools: "/aixcelerator/tools",
   tool: "/aixcelerator/tools",
+  "llm architectures": "/aixcelerator/llm-architectures",
+  "llm-architectures": "/aixcelerator/llm-architectures",
   "use cases": "/use-cases",
   "use case": "/use-cases",
   "platform ontology": "/aixcelerator/ontology",
@@ -452,6 +488,9 @@ function getSidebarIcon(href: string): ReactNode {
   if (p.startsWith("/aixcelerator/agents") || p === "/aixcelerator/agents") return <svg {...sidebarIconProps}><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="3" /><line x1="8" y1="16" x2="8" y2="16.01" /><line x1="16" y1="16" x2="16" y2="16.01" /><line x1="12" y1="16" x2="12" y2="18" /></svg>;
   if (p.startsWith("/aixcelerator/mcp")) return <svg {...sidebarIconProps}><rect x="2" y="2" width="20" height="8" rx="2" /><rect x="2" y="14" width="20" height="8" rx="2" /><circle cx="6" cy="6" r="1" /><circle cx="6" cy="18" r="1" /></svg>;
   if (p.startsWith("/aixcelerator/skills")) return <svg {...sidebarIconProps}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>;
+  // LLM Architectures: two transformer-style layers connected by three
+  // "attention" nodes — visual shorthand for a layered neural-net blueprint.
+  if (p.startsWith("/aixcelerator/llm-architectures")) return <svg {...sidebarIconProps}><rect x="3" y="3" width="18" height="5" rx="1" /><rect x="3" y="16" width="18" height="5" rx="1" /><circle cx="8" cy="12" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="16" cy="12" r="1.2" /><line x1="8" y1="8" x2="8" y2="10.8" /><line x1="12" y1="8" x2="12" y2="10.8" /><line x1="16" y1="8" x2="16" y2="10.8" /><line x1="8" y1="13.2" x2="8" y2="16" /><line x1="12" y1="13.2" x2="12" y2="16" /><line x1="16" y1="13.2" x2="16" y2="16" /></svg>;
   if (p.startsWith("/use-cases")) return <svg {...sidebarIconProps}><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a4 4 0 0 0-8 0v2" /></svg>;
   if (p === "/search") return <svg {...sidebarIconProps}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>;
   if (p === "/assistant") return <svg {...sidebarIconProps}><path d="M12 3l1.912 5.813L20 12l-6.088 3.187L12 21l-1.912-5.813L4 12l6.088-3.187z" /><path d="M20 3l.75 2.25L23 6l-2.25.75L20 9l-.75-2.25L17 6l2.25-.75z" /></svg>;
@@ -610,6 +649,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [allowBackdropClose, setAllowBackdropClose] = useState(true);
   const [demoWizardOpen, setDemoWizardOpen] = useState(false);
   const [headerCompact, setHeaderCompact] = useState(false);
+  // True when the <footer> element has entered the viewport — used to hide
+  // the back-to-top FAB so it doesn't overlap the social icon row + legal
+  // links at the bottom of the page. Flip back off as soon as the footer
+  // scrolls out of view upward.
+  const [footerInView, setFooterInView] = useState(false);
   // Footer newsletter state
   const [footerEmail, setFooterEmail] = useState("");
   const [footerHoneypot, setFooterHoneypot] = useState("");
@@ -622,6 +666,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchDialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const footerRef = useRef<HTMLElement | null>(null);
   const { currentEpisode } = usePodcastPlayer();
   const currentPath = normalizePath(router.asPath || "/");
   const isCatalogWorkspace = isCatalogWorkspacePath(currentPath);
@@ -695,6 +740,30 @@ export default function Layout({ children }: { children: ReactNode }) {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /* Hide the back-to-top FAB when the footer enters the viewport. Premium
+   * sites (Linear, Stripe, Vercel) fade the FAB out once the user is in the
+   * footer — there's nothing below to justify the button's presence, and
+   * leaving it parked in bottom-right covers the footer's social-icon row
+   * + legal links, rendering them unclickable. IntersectionObserver on the
+   * <footer> element is the cheap + correct hook (no scroll-listener math).
+   * `rootMargin: 0px 0px -24px 0px` fires the hide slightly before the
+   * footer's top edge touches the viewport bottom so the transition
+   * completes before any overlap. */
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof IntersectionObserver === "undefined") return;
+    const target = footerRef.current;
+    if (!target) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry) setFooterInView(entry.isIntersecting);
+      },
+      { rootMargin: "0px 0px -24px 0px", threshold: 0 },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -933,7 +1002,9 @@ export default function Layout({ children }: { children: ReactNode }) {
         { threshold: 0, rootMargin: "0px 0px -60px 0px" },
       );
       document
-        .querySelectorAll(".reveal:not(.revealed), .stagger-grid:not(.revealed)")
+        .querySelectorAll(
+          ".reveal:not(.revealed), .stagger-grid:not(.revealed), .reveal-wipe:not(.revealed)",
+        )
         .forEach((el) => observer.observe(el));
     };
 
@@ -1182,7 +1253,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={openMobileMenu}
-              className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg text-zinc-700 hover:bg-zinc-100 hover:text-[#18181B] lg:hidden dark:text-zinc-100 dark:hover:bg-zinc-800"
+              className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-lg text-zinc-700 hover:bg-zinc-100 hover:text-[#18181B] xl:hidden dark:text-zinc-100 dark:hover:bg-zinc-800"
               aria-expanded={mobileMenuOpen}
               aria-label="Open navigation menu"
             >
@@ -1195,7 +1266,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => setWorkspaceRailCollapsed((current) => !current)}
-                className="hidden lg:inline-flex items-center justify-center h-10 w-10 rounded-lg text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                className="hidden xl:inline-flex items-center justify-center h-10 w-10 rounded-lg text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                 aria-expanded={!workspaceRailCollapsed}
                 aria-label={workspaceRailCollapsed ? "Expand catalog menu" : "Collapse catalog menu"}
               >
@@ -1232,7 +1303,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             </Link>
           </div>
 
-          <nav aria-label="Main navigation" className="hidden min-w-0 items-center gap-1.5 text-sm lg:flex">
+          <nav aria-label="Main navigation" className="hidden min-w-0 items-center gap-1.5 text-sm xl:flex">
             {isCatalogWorkspace ? (
               <>
                 <span className="hidden rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400 min-[1560px]:inline-flex dark:text-zinc-500">
@@ -1292,7 +1363,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             ) : null}
           </nav>
 
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex items-center gap-2 xl:hidden">
             {isCatalogWorkspace ? (
               <button
                 type="button"
@@ -1348,7 +1419,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </header>
       {mobileMenuOpen ? (
         <div
-          className="fixed inset-0 z-[55] bg-zinc-950/45 backdrop-blur-sm lg:hidden animate-fade-in"
+          className="fixed inset-0 z-[55] bg-zinc-950/45 backdrop-blur-sm xl:hidden animate-fade-in"
           onClick={closeMobileMenu}
         >
           <aside
@@ -1481,7 +1552,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       {isCatalogWorkspace && workspaceMobileRailOpen ? (
         <div
-          className="fixed inset-0 z-[58] bg-zinc-950/45 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-[58] bg-zinc-950/45 backdrop-blur-sm xl:hidden"
           onClick={() => setWorkspaceMobileRailOpen(false)}
         >
           <aside
@@ -1552,7 +1623,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       {isCatalogWorkspace ? (
         <div className="w-full flex-1 transition-[grid-template-columns] duration-200 lg:grid lg:grid-cols-[var(--workspace-rail-width)_minmax(0,1fr)] lg:gap-6 lg:px-8" style={workspaceGridStyle}>
-          <aside className="hidden border-r border-zinc-200 dark:border-zinc-800 lg:block" aria-label="Catalog navigation">
+          <aside className="workspace-rail hidden border-r border-zinc-200 dark:border-zinc-800 lg:block" aria-label="Catalog navigation">
             <div className="sidebar-scroll sticky max-h-[calc(100dvh-var(--site-header-height))] overflow-y-auto pb-6 will-change-[transform]" style={{ top: "var(--site-header-height)" }}>
               <div className="px-5 py-5">
                 {workspaceSections.map((section) => (
@@ -1606,7 +1677,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
       ) : null}
 
-      <footer role="contentinfo" className="footer-surface mt-6">
+      <footer ref={footerRef} role="contentinfo" className="footer-surface mt-6">
         {/* ── Top section: Logo + Newsletter (left) + Link columns (right) ── */}
         <div className="px-4 pt-14 pb-12 sm:px-6 lg:pt-20 lg:pb-14 xl:px-8">
           <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1.2fr] lg:gap-12">
@@ -1909,7 +1980,6 @@ export default function Layout({ children }: { children: ReactNode }) {
           </form>
         </div>
       ) : null}
-      <CookieConsentBanner />
       <DemoRequestWizardModal
         open={demoWizardOpen}
         onClose={() => setDemoWizardOpen(false)}
@@ -1920,7 +1990,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <button
         type="button"
         aria-label="Back to top"
-        className={`back-to-top btn-icon${headerCompact ? " visible" : ""}${miniPlayerVisible ? " mini-player-offset" : ""}`}
+        className={`back-to-top btn-icon${headerCompact && !footerInView ? " visible" : ""}${miniPlayerVisible ? " mini-player-offset" : ""}`}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">

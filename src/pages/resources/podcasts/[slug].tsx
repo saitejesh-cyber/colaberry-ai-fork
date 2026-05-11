@@ -7,6 +7,7 @@ import Head from "next/head";
 import type { GetServerSideProps } from "next";
 import RichText from "../../../components/RichText";
 import SectionHeader from "../../../components/SectionHeader";
+import KineticHeading from "../../../components/KineticHeading";
 import PodcastPlayer from "../../../components/PodcastPlayer";
 import AudioPlayerUI from "../../../components/AudioPlayerUI";
 import TranscriptTimeline from "../../../components/TranscriptTimeline";
@@ -241,9 +242,13 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
               {episode.episodeNumber ? <><span aria-hidden="true">·</span><span>Ep {episode.episodeNumber}</span></> : null}
             </p>
 
-            <h1 className="mt-1.5 font-display text-lg font-bold leading-snug text-zinc-900 break-words dark:text-zinc-100 sm:text-xl lg:text-2xl">
-              {episode.title}
-            </h1>
+            <KineticHeading
+              as="h1"
+              text={episode.title}
+              className="mt-1.5 font-display text-lg font-bold leading-snug text-zinc-900 break-words dark:text-zinc-100 sm:text-xl lg:text-2xl"
+              duration={0.7}
+              stagger={0.05}
+            />
 
             <Link
               href="/resources/podcasts"

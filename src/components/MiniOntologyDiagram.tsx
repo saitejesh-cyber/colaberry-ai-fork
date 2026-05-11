@@ -194,27 +194,39 @@ export default function MiniOntologyDiagram({
               <rect
                 x={pos.x} y={pos.y}
                 width={w} height={catHeight} rx="6"
+                /* Hover tint bumped from 8.3% → 20% (dark) and 3.9% → 10%
+                 * (light) so the category color is clearly readable
+                 * against the pill background. Previous alphas were so
+                 * faint in dark mode that hovered pills were visually
+                 * indistinguishable from non-hovered ones, breaking the
+                 * color-contrast affordance for all 4 taxonomy graphs
+                 * (Agents, MCP, Skills, LLM Architectures). */
                 fill={isHovered
-                  ? (isDark ? `${catColor}15` : `${catColor}0A`)
+                  ? (isDark ? `${catColor}33` : `${catColor}1A`)
                   : surfaceFill
                 }
                 stroke={isHovered ? catColor : stroke}
-                strokeWidth={isHovered ? 1 : 0.5}
-                style={{ transition: "stroke 0.15s, fill 0.15s" }}
+                strokeWidth={isHovered ? 1.25 : 0.5}
+                style={{ transition: "stroke 0.15s, fill 0.15s, stroke-width 0.15s" }}
               />
-              {/* Category color accent dot */}
+              {/* Category color accent dot — slightly larger + full
+               * opacity in default state so it reads cleanly in dark
+               * mode without hover. */}
               <circle
                 cx={pos.x + 10} cy={pos.y + catHeight / 2}
-                r="2.5"
+                r="2.75"
                 fill={catColor}
-                opacity={isHovered ? 1 : 0.65}
-                style={{ transition: "opacity 0.15s" }}
+                opacity={isHovered ? 1 : 0.85}
+                style={{ transition: "opacity 0.15s, r 0.15s" }}
               />
-              {/* Label */}
+              {/* Label — always textPrimary (#fafafa dark / #18181b light)
+               * for WCAG-compliant contrast against both the plain pill
+               * surface and the 20%-tinted hover state. fontWeight bumped
+               * to 600 for better legibility at 10px. */}
               <text
-                x={pos.x + 18} y={pos.y + catHeight / 2 + 0.5}
+                x={pos.x + 19} y={pos.y + catHeight / 2 + 0.5}
                 dominantBaseline="middle"
-                fontSize="10" fontWeight="500"
+                fontSize="10" fontWeight="600"
                 fill={textPrimary}
                 style={{ transition: "fill 0.15s" }}
               >

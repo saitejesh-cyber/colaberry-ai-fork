@@ -151,11 +151,40 @@
   --ease-expo-out: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-page: 300ms;
 
+  /* ── Kinetic-pacing easing palette (Sprint v5 — premium interaction) ──
+   * Four named curves with a single-use rule: never hard-code a cubic-bezier,
+   * always reference one of these tokens. Each curve has a specific job.
+   * See docs/design/kinetic-pacing.md (roadmap) for rationale. */
+  --ease-entry: cubic-bezier(0.22, 1, 0.36, 1);      /* content entering frame */
+  --ease-exit: cubic-bezier(0.64, 0, 0.78, 0);       /* content leaving frame */
+  --ease-soft-ui: cubic-bezier(0.4, 0, 0.2, 1);      /* hover, press, lift — zero overshoot */
+  --ease-magnetic: cubic-bezier(0.34, 1.56, 0.64, 1); /* pointer springs ONLY — never content */
+
   /* ── Header tokens (fixed 64px) ── */
   --header-height-full: 64px;
   --header-height-compact: 64px;
   --header-transition: background-color 200ms var(--ease-expo-out),
                         box-shadow 200ms var(--ease-expo-out);
+
+  /* ── "Global Enterprise" design-system tokens (Sprint v5.3) ──
+   * The Enterprise CTA band is the canonical dark surface. These tokens
+   * centralize the look so other enterprise surfaces (pricing band, case
+   * study ribbon, etc.) can reuse the same contract. All values stay
+   * inside the locked zinc + coral palette. */
+  --enterprise-surface: #0A0A0A;            /* obsidian ground */
+  --enterprise-surface-elevated: #111113;   /* for nested cards on the band */
+  --enterprise-edge: rgba(255, 255, 255, 0.10);    /* glass border */
+  --enterprise-edge-strong: rgba(255, 255, 255, 0.20);  /* ghost-button border */
+  --enterprise-highlight: rgba(255, 255, 255, 0.14);   /* top-rim 1px */
+  --enterprise-text: #FFFFFF;
+  --enterprise-text-muted: #A1A1AA;         /* zinc-400 — subtext contrast */
+  --enterprise-text-subtle: #71717A;        /* zinc-500 — tertiary / meta */
+  --enterprise-accent: #DC2626;             /* locked coral */
+  --enterprise-accent-soft: rgba(220, 38, 38, 0.15); /* ~15% brand blur */
+  --enterprise-accent-rim: rgba(220, 38, 38, 0.35);  /* outline halo */
+  --enterprise-pad-sm: 2rem;      /* p-8 */
+  --enterprise-pad-lg: 3rem;      /* p-12 — standard banner padding */
+  --enterprise-radius: 1rem;      /* rounded-2xl */
 }
 
 .dark {
@@ -567,6 +596,40 @@ h6 {
   box-shadow: none;
 }
 
+/* Responsive safety utility — horizontally scrollable chip row for filter
+ * bars and pill groups on listing pages (skills, mcp, agents, podcasts).
+ * At narrow viewports where many chips don't fit, they scroll horizontally
+ * instead of wrapping into 4+ lines that push content down the page and
+ * break layout. Scrollbar hidden for a clean enterprise feel; swipe /
+ * trackpad pan still works. */
+.chip-row-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.125rem; /* breathing room for hover lift */
+}
+.chip-row-scroll::-webkit-scrollbar {
+  display: none;
+}
+.chip-row-scroll > * {
+  flex-shrink: 0;
+}
+
+/* Responsive safety utility — `text-pretty` applied to all catalog card
+ * titles site-wide so long titles don't orphan single words at narrow
+ * widths. Pairs with .catalog-card without requiring per-page edits. */
+.catalog-card [class*="card-title"],
+.catalog-card h2,
+.catalog-card h3,
+.catalog-card h4 {
+  text-wrap: pretty;
+}
+
 .dark .surface-hover:hover {
   border-color: rgba(161, 161, 170, 0.35);
   box-shadow: var(--shadow-md);
@@ -798,6 +861,22 @@ section[style*="gradient-hero"]::before {
   .hero-orb-2 { width: 350px; height: 350px; }
   .hero-orb-3 { width: 300px; height: 300px; }
   .hero-orb-center { width: 500px; height: 500px; }
+
+  /* HeroGraphBloom is `position: absolute; inset: 0` across the full hero.
+   * On mobile the hero collapses to single column so the graph now sits
+   * under the h1 + description text at 100% opacity, with the coral center
+   * blob landing on top of copy. Dampen to 30% so the animated depth
+   * survives without competing with the text for readability. Desktop
+   * unaffected. */
+  .hero-graph-bloom { opacity: 0.3; }
+}
+
+/* Tablet + small desktop (640px – 1279px): hero is still single-column
+ * because the two-column layout only activates at xl (1280px). The graph
+ * still sits directly under the centered copy, so dampen further to keep
+ * text legible while preserving the depth cue. */
+@media (min-width: 640px) and (max-width: 1279px) {
+  .hero-graph-bloom { opacity: 0.45; }
 }
 
 @media (min-width: 1024px) {
@@ -1109,8 +1188,13 @@ section[style*="gradient-hero"]::before {
   to { opacity: 1; }
 }
 
-/* Responsive — hide metrics feed below lg */
-@media (max-width: 1023px) {
+/* Responsive — hide metrics feed below xl (1280px).
+ * Raised from 1023px to 1279px so iPad Pro (1024px) and small-desktop
+ * (1280px and below) get a clean single-column hero with HeroGraphBloom
+ * centered behind the copy. The two-column layout re-appears at xl+
+ * where there's enough horizontal room for the 420px metric panel + H1
+ * without coral-glow bleed into the text column. */
+@media (max-width: 1279px) {
   .hero-metrics-feed { display: none; }
   .hero-grid-dots { display: none; }
 }
@@ -1351,18 +1435,26 @@ button:focus-visible {
   font-weight: 600;
   line-height: 1.2;
   cursor: pointer;
-  transition: background-color 200ms var(--ease-expo-out),
-              border-color 200ms var(--ease-expo-out),
-              box-shadow 200ms var(--ease-expo-out),
-              color 200ms var(--ease-expo-out);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  transition: transform 240ms var(--ease-soft-ui),
+              background-color 200ms var(--ease-soft-ui),
+              border-color 200ms var(--ease-soft-ui),
+              box-shadow 240ms var(--ease-soft-ui),
+              color 200ms var(--ease-soft-ui);
 }
 
+/* Soft-UI micro-lift — 2px sub-perceptual bounce reads as physicality.
+ * Deliberate override of prior "no translateY" flat-hover dogma. */
 .btn:hover {
-  /* no translateY — clean flat hover */
+  transform: translate3d(0, -2px, 0) scale(1.008);
+  box-shadow: var(--shadow-md);
 }
 
 .btn:active {
-  /* no transform */
+  transform: translate3d(0, 0, 0) scale(0.995);
+  box-shadow: var(--shadow-sm);
+  transition-duration: 80ms;
 }
 
 .btn:focus-visible {
@@ -1411,12 +1503,16 @@ button:focus-visible {
   background: #DC2626;
   color: #ffffff;
   box-shadow: none;
-  transition: background 0.2s ease, box-shadow 0.3s ease;
+  /* Transition inherits from .btn — no local override so transform/box-shadow
+   * both animate on the shared soft-UI curve. */
 }
 
 .btn-cta:hover {
   background: #B91C1C;
-  box-shadow: 0 0 20px rgba(220, 38, 38, 0.45), 0 0 40px rgba(220, 38, 38, 0.15);
+  /* Coral glow + ground shadow from the 2px lift layered together. */
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.20),
+              0 0 20px rgba(220, 38, 38, 0.45),
+              0 0 40px rgba(220, 38, 38, 0.15);
 }
 
 .dark .btn-cta {
@@ -1426,7 +1522,9 @@ button:focus-visible {
 
 .dark .btn-cta:hover {
   background: #FCA5A5;
-  box-shadow: 0 0 20px rgba(248, 113, 113, 0.50), 0 0 50px rgba(248, 113, 113, 0.18);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55),
+              0 0 20px rgba(248, 113, 113, 0.50),
+              0 0 50px rgba(248, 113, 113, 0.18);
 }
 
 .btn-cta:active {
@@ -1478,15 +1576,22 @@ button:focus-visible {
   font-size: 0.75rem;
 }
 
+/* Dark-mode secondary pill — the previous override was a no-op (identical
+ * to the base rule), which left the button with a `--neutral-stroke`
+ * (#3F3F46) border on a near-black page background, effectively
+ * invisible. This replacement adds a subtle translucent tint + brighter
+ * outline so the pill reads as a clearly-clickable surface in dark mode
+ * while staying subordinate to `.btn-primary` (white fill). Applies
+ * site-wide — 34 usages across 25 files. Light-mode styling unchanged. */
 .dark .btn-secondary {
-  background: transparent;
-  border-color: var(--neutral-stroke);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
   color: var(--text-primary);
 }
 
 .dark .btn-secondary:hover {
-  border-color: #71717A;
-  background: var(--neutral-fill);
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .dark .btn-ghost {
@@ -2016,6 +2121,26 @@ footer .footer-link:focus-visible {
   transform: scale(1);
 }
 
+/* Editorial clip-path wipe — left-to-right reveal (Sprint v5 kinetic-pacing).
+ * Heavier easing curve (0.77, 0, 0.175, 1) is the classic editorial wipe —
+ * hard ramp in, long decel out. Pairs with the IntersectionObserver in
+ * Layout.tsx (scanned alongside .reveal / .stagger-grid). Reserved for
+ * display-weight H2s on the homepage; never apply to dense body copy.
+ *
+ * AEO note: the underlying element contains full crawlable text pre-hydration —
+ * clip-path only controls what is *visible*, not what is in the DOM. */
+.reveal-wipe {
+  clip-path: inset(0 100% 0 0);
+  -webkit-clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.1s cubic-bezier(0.77, 0, 0.175, 1),
+              -webkit-clip-path 1.1s cubic-bezier(0.77, 0, 0.175, 1);
+  will-change: clip-path;
+}
+.reveal-wipe.revealed {
+  clip-path: inset(0 0 0 0);
+  -webkit-clip-path: inset(0 0 0 0);
+}
+
 /* ---------------------------------------------------------------------------
  * Hero animated background system
  * --------------------------------------------------------------------------- */
@@ -2250,7 +2375,10 @@ footer .footer-link:focus-visible {
   color: #18181b;
 }
 
-/* Catalog grid card with status indicator */
+/* Catalog grid card with status indicator
+ * Soft-UI micro-lift (Sprint v5 kinetic-pacing). 2px translate + upgraded
+ * shadow on hover reads as physicality, not cheapness. Deliberate override
+ * of prior "no hover lift" dogma — see docs/design/kinetic-pacing.md. */
 .catalog-card {
   position: relative;
   display: flex;
@@ -2258,16 +2386,21 @@ footer .footer-link:focus-visible {
   background: var(--surface-strong);
   border: 1px solid var(--neutral-stroke);
   border-radius: 0.75rem;
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
-  transition: border-color 200ms var(--ease-expo-out),
-              background-color 200ms var(--ease-expo-out);
+  transform: translate3d(0, 0, 0);
+  transition: transform 280ms var(--ease-soft-ui),
+              box-shadow 280ms var(--ease-soft-ui),
+              border-color 200ms var(--ease-soft-ui),
+              background-color 200ms var(--ease-soft-ui);
 }
 
 @media (hover: hover) {
   .catalog-card:hover {
+    transform: translate3d(0, -2px, 0);
     border-color: var(--stroke);
     background: var(--surface-soft);
+    box-shadow: var(--shadow-lg);
   }
 }
 
@@ -2283,12 +2416,12 @@ footer .footer-link:focus-visible {
   }
 }
 
-/* Arrow nudge on card hover */
+/* Arrow nudge on card hover — bumped from 2px to 4px to match the lift. */
 .catalog-card .card-arrow {
-  transition: transform 200ms var(--ease-expo-out);
+  transition: transform 280ms var(--ease-soft-ui);
 }
 .catalog-card:hover .card-arrow {
-  transform: translateX(2px);
+  transform: translateX(4px);
 }
 
 /* ── Card Hover Orbit Animation ──────────────────────────────────── */
@@ -2402,17 +2535,100 @@ footer .footer-link:focus-visible {
   scrollbar-color: var(--border) transparent;
 }
 
-/* Enterprise CTA band */
+/* ── Catalog workspace rail ("Global Enterprise" sidebar pass) ──
+ * Light mode stays solid + legible (backdrop-blur on a white backdrop
+ * reads as nothing). Dark mode gets the modernized frosted glass chrome:
+ * translucent white at 5% over the zinc-950 ground, 12px blur +
+ * saturation bump for color depth behind it.
+ *
+ * The active-state glow is an inset coral top-highlight + soft ground
+ * shadow scoped to the .dark theme — it reinforces the existing
+ * nav-active-indicator's 3px coral rail without touching light mode. */
+.workspace-rail {
+  position: relative;
+}
+
+.dark .workspace-rail {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-right-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Active nav item — dark-mode coral glow. Light mode keeps the clean
+ * zinc-100 surface pairing already set in Layout.tsx. */
+.dark .workspace-rail a[aria-current="page"] {
+  background: linear-gradient(
+    180deg,
+    rgba(220, 38, 38, 0.14) 0%,
+    rgba(220, 38, 38, 0.04) 100%
+  );
+  box-shadow:
+    inset 3px 0 0 #DC2626,
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 24px -8px rgba(220, 38, 38, 0.35);
+}
+
+/* Subtle left indent on rest items — reinforces the "nested" workspace
+ * hierarchy without shifting layout. Applied in both themes. */
+.workspace-rail a:not([aria-current="page"]) {
+  transition: padding-left 160ms var(--ease-soft-ui),
+              background-color 160ms var(--ease-soft-ui),
+              color 160ms var(--ease-soft-ui);
+}
+
+.workspace-rail a:not([aria-current="page"]):hover {
+  padding-left: 0.75rem;
+}
+
+/* Enterprise CTA band — Sprint v5.2 premium redesign.
+ * Deep obsidian #0A0A0A ground (same in light + dark — a dark band is the
+ * whole point). The atmospheric mesh (zinc neutral + coral punch) lives in
+ * the component as an absolutely-positioned decorative layer so it can be
+ * animated or scroll-linked later without touching this base. */
 .cta-band-enterprise {
   position: relative;
   overflow: hidden;
-  background: #18181B;
+  background: #0A0A0A;
   border-radius: 1rem;
   color: #FAFAFA;
 }
 
 .dark .cta-band-enterprise {
-  background: #27272A;
+  background: #0A0A0A;
+}
+
+/* Primary CTA inside the band — solid high-contrast coral. One tiny inset
+ * top-highlight reads as a lit rim without muddying the solid-fill read.
+ * The coral halo bloom on hover is inherited from .btn-cta:hover — no
+ * extra ground-shadow is layered here so the hierarchy vs. the ghost
+ * secondary stays crisp. */
+.cta-band-primary {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.cta-band-primary:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 0 24px rgba(220, 38, 38, 0.35);
+}
+
+/* Secondary CTA inside the band — true ghost. Transparent background,
+ * 20% white edge, white text. No fill, no backdrop-blur — the enterprise
+ * brief called this out explicitly to keep the primary unchallenged. */
+.cta-band-secondary {
+  background: transparent;
+  border: 1px solid var(--enterprise-edge-strong);
+  color: var(--enterprise-text);
+}
+
+.cta-band-secondary:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.30);
+}
+
+.cta-band-secondary:active {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* Scroll indicator for horizontal scroll areas */
@@ -3310,4 +3526,48 @@ footer .footer-link:focus-visible {
   left: -7px;
   top: 50%;
   transform: translateY(-50%) rotate(135deg);
+}
+
+/* ---------------------------------------------------------------------------
+ * Global accessibility — prefers-reduced-motion guard (Sprint v5)
+ * ---------------------------------------------------------------------------
+ * Nukes ambient motion site-wide when the OS/browser flag is set. Covers
+ * every new keyframe (kinetic-pacing, .reveal-*), legacy hero loops, marquee,
+ * orbital spin, etc. Framer Motion components pair this with useReducedMotion()
+ * so JS-driven stagger also collapses.
+ *
+ * Scope rule: !important is deliberate — must win over any local override
+ * without requiring every author to remember the guard. The 0.01ms
+ * (not 0) preserves transitionend events so React / IntersectionObserver
+ * code that listens for them still fires.
+ * --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Reveal/wipe classes: skip straight to the final state, no transition. */
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale,
+  .reveal-wipe,
+  .stagger-grid {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    -webkit-clip-path: none !important;
+  }
+
+  /* Soft-UI micro-lift: remove spatial feedback but keep box-shadow change
+   * so users still get visual confirmation of hover state. */
+  .btn:hover,
+  .catalog-card:hover {
+    transform: none !important;
+  }
 }

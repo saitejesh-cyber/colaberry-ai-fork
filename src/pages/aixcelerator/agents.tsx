@@ -123,13 +123,18 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
     ogImageAlt: "Colaberry AI — 29 enterprise AI agents across 13 industries",
   };
   const canonicalUrl = seoMeta.canonical!;
+  // Surface the top 50 agents (was 12) so AI engines have a richer corpus to
+  // ground citations in. Each entry carries name + description + URL — that's
+  // the citation body LLMs index. 50 keeps the JSON-LD payload under ~30 KB
+  // while exposing roughly the first page-and-a-half of the catalog.
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "Colaberry AI Agents Catalog",
     url: canonicalUrl,
     description: metaDescription,
-    itemListElement: agents.slice(0, 12).map((agent, index) => ({
+    numberOfItems: agents.length,
+    itemListElement: agents.slice(0, 50).map((agent, index) => ({
       "@type": "ListItem",
       position: index + 1,
       item: {
@@ -140,6 +145,18 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
         url: `${siteUrl}/aixcelerator/agents/${agent.slug || agent.id}`,
       },
     })),
+  };
+  // BreadcrumbList — Schema.org-recommended for catalog hubs. Lets AI engines
+  // surface the path "Home → Platform → AI Agents" in answers, improving
+  // contextual relevance for branded + navigational queries.
+  const breadcrumbsLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "AIXcelerator Platform", item: `${siteUrl}/aixcelerator` },
+      { "@type": "ListItem", position: 3, name: "AI Agents", item: canonicalUrl },
+    ],
   };
   const filteredAgents = useMemo(() => {
     const query = effectiveSearch.trim().toLowerCase();
@@ -195,6 +212,7 @@ export default function Agents({ agents, allowPrivate, fetchError }: AgentsPageP
           "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
         ))}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsLd).replace(/</g, "\\u003c") }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "FAQPage",

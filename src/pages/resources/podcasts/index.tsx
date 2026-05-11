@@ -2,6 +2,7 @@ import Layout from "../../../components/Layout";
 import AeoQuickAnswer from "../../../components/AeoQuickAnswer";
 import EnterpriseCtaBand from "../../../components/EnterpriseCtaBand";
 import SubstackEmbedSignup from "../../../components/SubstackEmbedSignup";
+import KineticHeading from "../../../components/KineticHeading";
 import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
@@ -156,6 +157,38 @@ export default function Podcasts({
     })),
   };
 
+  // PodcastSeries — Schema.org-recommended for podcast hub pages. Apple
+  // Podcasts, Spotify, and AI engines all parse this type. Declares the
+  // overall show identity so individual episode citations roll up to a
+  // single series. Was missing at the hub level even though each episode
+  // detail page already emits PodcastEpisode + PodcastSeries.
+  const podcastSeriesSchema = {
+    "@context": "https://schema.org",
+    "@type": "PodcastSeries",
+    name: "Colaberry AI Podcast",
+    url: canonicalUrl,
+    description: `${countLabel} AI-focused podcast episodes with full transcripts, timestamps, and linked artifacts for enterprise AI discovery.`,
+    inLanguage: "en",
+    publisher: {
+      "@type": "Organization",
+      name: "Colaberry AI",
+      url: siteUrl,
+    },
+    webFeed: `${siteUrl}/rss/podcasts.xml`,
+  };
+
+  // BreadcrumbList — gives AI engines the "Home → Resources → Podcasts" path
+  // for contextual relevance on branded + navigational queries.
+  const breadcrumbsSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "Resources", item: `${siteUrl}/resources` },
+      { "@type": "ListItem", position: 3, name: "Podcasts", item: canonicalUrl },
+    ],
+  };
+
   return (
     <Layout>
       <Head>
@@ -164,6 +197,8 @@ export default function Podcasts({
           "rel" in props ? <link key={key} {...props} /> : <meta key={key} {...props} />
         ))}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema).replace(/</g, "\\u003c") }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(podcastSeriesSchema).replace(/</g, "\\u003c") }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsSchema).replace(/</g, "\\u003c") }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "FAQPage",
@@ -173,7 +208,7 @@ export default function Podcasts({
               name: "Where can I find AI podcasts with full searchable transcripts?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: `Colaberry AI offers ${countLabel} AI podcast episodes with full searchable transcripts generated via Deepgram. Episodes cover enterprise AI strategy, agent development, MCP servers, and responsible AI governance. Browse and search at ${canonicalUrl}.`,
+                text: `The Colaberry AI podcasts catalog is available at ${canonicalUrl}. It includes ${countLabel} AI podcast episodes with full searchable transcripts, timestamps, and linked artifacts for enterprise AI research.`,
               },
             },
             {
@@ -201,15 +236,17 @@ export default function Podcasts({
       {/* ── AEO Quick Answer ── */}
       <AeoQuickAnswer
         question="Where can I browse the Colaberry AI podcasts catalog?"
-        answer={`Browse the Colaberry AI podcasts catalog at ${canonicalUrl}. The catalog includes ${countLabel} episodes with full searchable transcripts, timestamps, and linked artifacts for enterprise AI discovery and citation.`}
+        answer={`Browse the Colaberry AI podcasts catalog at ${canonicalUrl}. It includes ${countLabel} AI podcast episodes with full searchable transcripts, timestamps, and linked artifacts. Episodes connect to related agents, skills, and MCP servers in the Colaberry AI knowledge graph.`}
         facts={[`${countLabel} episodes`, "Full transcripts", "Catalog page", "Knowledge graph linked"]}
       />
 
       {/* ── Clean header with pill tabs + search ── */}
       <section className="reveal section-shell px-4 pt-6 pb-4 sm:px-6 sm:pt-8">
-        <h1 className="font-display text-display-sm font-bold text-zinc-900 dark:text-zinc-100 sm:text-display-md md:text-display-lg lg:text-display-xl">
-          AI Podcasts Catalog
-        </h1>
+        <KineticHeading
+          as="h1"
+          text="AI Podcasts Catalog"
+          className="font-display text-display-sm font-bold text-zinc-900 dark:text-zinc-100 sm:text-display-md md:text-display-lg lg:text-display-xl"
+        />
 
         <p className="mt-3 max-w-3xl text-body-md text-zinc-600 dark:text-zinc-400">
           Browse full transcripts, timestamps, and linked artifacts across enterprise AI podcast episodes.

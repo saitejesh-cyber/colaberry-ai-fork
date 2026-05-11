@@ -37,6 +37,25 @@ scripts/data/clawhub-skills-raw.json
 # claude code worktrees
 .claude/worktrees/
 
+# basecamp credentials (local only)
+.basecamp/
+skills-lock.json
+
+# playwright / e2e test artifacts
+test-results/
+playwright-report/
+
+# demo walkthrough generator scratch (Y4M fake-camera inputs, raw recordings)
+tmp/
+
+# silent-backup MP4s from scripts/add-explainer-audio.mjs — regenerable by
+# re-running Playwright, no reason to double repo weight
+public/videos/*-silent.mp4
+
+# large screenshot directories (local capture artifacts)
+screenshots-linkedin-launch/
+screenshots-notebooklm/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

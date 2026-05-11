@@ -2,7 +2,7 @@
  * ContentTypeIcon — Premium SVG icons for each content type.
  *
  * Usage:
- *   <ContentTypeIcon type="skill" size={20} className="text-blue-500" />
+ *   <ContentTypeIcon type="skill" size={20} className="text-zinc-500" />
  *
  * For use inside raw <svg> elements (e.g. platform ontology diagram):
  *   <ContentTypeIconSvg type="skill" x={100} y={80} size={18} fill="#60a5fa" />
@@ -39,6 +39,11 @@ const ICON_PATHS: Record<ContentTypeName, { d: string; viewBox: string }> = {
     viewBox: "0 0 24 24",
     // Microphone — clean studio mic
     d: "M12 1a4 4 0 00-4 4v7a4 4 0 008 0V5a4 4 0 00-4-4zM6 11a1 1 0 10-2 0 8 8 0 0016 0 1 1 0 10-2 0 6 6 0 01-12 0zm5 9.93V23h2v-2.07A9.004 9.004 0 0021 12h-2a7 7 0 01-14 0H3a9.004 9.004 0 008 8.93z",
+  },
+  "llm-architecture": {
+    viewBox: "0 0 24 24",
+    // Brain/network — represents LLM architectures
+    d: "M12 2a7 7 0 00-7 7c0 2.38 1.19 4.47 3 5.74V17a2 2 0 002 2h4a2 2 0 002-2v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 00-7-7zm-1 15v-1h2v1h-2zm3.1-4.37l-.6.43V15h-3v-1.94l-.6-.43A5 5 0 017 9a5 5 0 0110 0 5.002 5.002 0 01-2.9 4.63zM10 21h4v1h-4v-1z",
   },
 };
 

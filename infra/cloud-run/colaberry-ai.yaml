@@ -1,0 +1,84 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/build-enable-automatic-updates: 'false'
+    run.googleapis.com/build-id: 0b735c00-6ecc-4c33-9c83-78fa8a00c530
+    run.googleapis.com/build-image-uri: us-east1-docker.pkg.dev/colaberryaiwebsite/cloud-run-source-deploy/colaberry-ai
+    run.googleapis.com/build-name: projects/956818257204/locations/us-east1/builds/0b735c00-6ecc-4c33-9c83-78fa8a00c530
+    run.googleapis.com/build-source-location: gs://run-sources-colaberryaiwebsite-us-east1/services/colaberry-ai/1774953010.464517-7f4d4274bf4948f5aa36b55e2f587231.zip#1774953078065492
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/invoker-iam-disabled: 'true'
+    run.googleapis.com/maxScale: '20'
+    run.googleapis.com/urls: '["https://colaberry-ai-956818257204.us-east1.run.app","https://colaberry-ai-ucwuixvwga-ue.a.run.app"]'
+  labels:
+    cloud.googleapis.com/location: us-east1
+    commit-sha: ac8b92c67ce2dc142a838530a73c21d945e4d617
+    gcb-build-id: b310da4a-3693-474f-b197-bb139732dc41
+    gcb-trigger-id: c7425cdb-1a89-4df5-bae0-71bf70d7576b
+    gcb-trigger-region: global
+    managed-by: gcp-cloud-build-deploy-cloud-run
+  name: colaberry-ai
+  namespace: '956818257204'
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '3'
+        run.googleapis.com/client-name: gcloud
+        run.googleapis.com/client-version: 554.0.0
+        run.googleapis.com/startup-cpu-boost: 'true'
+      labels:
+        commit-sha: ac8b92c67ce2dc142a838530a73c21d945e4d617
+        gcb-build-id: b310da4a-3693-474f-b197-bb139732dc41
+        gcb-trigger-id: c7425cdb-1a89-4df5-bae0-71bf70d7576b
+        gcb-trigger-region: global
+        managed-by: gcp-cloud-build-deploy-cloud-run
+        run.googleapis.com/startupProbeType: Default
+      name: colaberry-ai-00160-vap
+    spec:
+      containerConcurrency: 80
+      containers:
+      - env:
+        - name: NODE_ENV
+          value: production
+        - name: NEXT_PUBLIC_CMS_URL
+          value: https://colaberry-ai-cms-956818257204.us-east1.run.app
+        - name: CMS_URL
+          value: https://colaberry-ai-cms-956818257204.us-east1.run.app
+        - name: PODCAST_SYNC_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: podcast-sync-secret-dev
+        - name: BUZZSPROUT_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: buzzsprout-api-token
+        - name: CMS_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: cms-api-token-dev
+        image: us-east1-docker.pkg.dev/colaberryaiwebsite/cloud-run-source-deploy/colaberry-ai/colaberry-ai:ac8b92c67ce2dc142a838530a73c21d945e4d617
+        name: placeholder-1
+        ports:
+        - containerPort: 3000
+          name: http1
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 3000
+          timeoutSeconds: 240
+      serviceAccountName: 956818257204-compute@developer.gserviceaccount.com
+      timeoutSeconds: 900
+  traffic:
+  - latestRevision: true
+    percent: 100

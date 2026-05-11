@@ -29,6 +29,20 @@
 
 **Platform pages:** `/aixcelerator/ontology`, `/aixcelerator/ecosystem`, `/aixcelerator/solution-stacks`
 
+## Interactive Demos (`/demo/*`)
+
+Client-facing AI demos — top-level "Demos" nav item (between Platform and Industries).
+
+| Route | File | Purpose |
+|-------|------|---------|
+| `/demo` | `pages/demo/index.tsx` | Hub listing all demos (reads `src/data/demos.ts`) |
+| `/demo/[slug]` | `pages/demo/[slug].tsx` | SSG detail page template (hero, metrics, features, tech stack, launch CTA). `revalidate: 3600`, `fallback: "blocking"` |
+| `/demo/lens` | `pages/demo/lens.tsx` | Existing iframe wrapper for Goggle VTON (preserved URL). Has a "← Details" breadcrumb back to `/demo/goggle-vton` |
+
+**Adding a new demo:** add one record to `src/data/demos.ts`. Hub card + detail page render automatically. **Reserved slugs:** `lens`, `index` (they'd collide with static files and silently make the detail page unreachable).
+
+**AEO:** hub emits `ItemList` JSON-LD; detail page emits `WebApplication` JSON-LD.
+
 ## Per-Type Pages
 
 Per-type ontology/graph/collections pages are thin wrappers around generic templates from `src/components/`. They import the type's `ContentOntologyConfig` and pass it to the template.

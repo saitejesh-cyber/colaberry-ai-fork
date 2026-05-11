@@ -32,6 +32,7 @@ const { buildCreatePayload, buildDeliveryUpdatePayload } = await import(
 const baseInput = {
   name: "Ada Lovelace",
   email: "ada@example.com",
+  phone: "+44 20 7946 0958",
   company: "Analytical Engines",
   role: "Chief Engineer",
   teamSize: "10-50",
@@ -61,6 +62,7 @@ const baseInput = {
   assert.equal(payload.data.email, "ada@example.com");
   assert.equal(payload.data.status, "new", "default status must be 'new'");
   assert.equal(payload.data.emailDelivered, false, "emailDelivered default must be false");
+  assert.equal(payload.data.phone, "+44 20 7946 0958", "phone propagates to Strapi payload");
   assert.equal(payload.data.company, "Analytical Engines");
   assert.equal(payload.data.sourcePage, "request-demo");
   assert.equal(payload.data.requestId, baseInput.requestId);
@@ -74,6 +76,7 @@ const baseInput = {
 {
   const sparseInput = {
     ...baseInput,
+    phone: "",
     company: "",
     role: "",
     teamSize: "",
@@ -91,6 +94,7 @@ const baseInput = {
     },
   };
   const payload = buildCreatePayload(sparseInput);
+  assert.equal(payload.data.phone, null, "empty phone → null");
   assert.equal(payload.data.company, null, "empty company → null");
   assert.equal(payload.data.role, null);
   assert.equal(payload.data.teamSize, null);

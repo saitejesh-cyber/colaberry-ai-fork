@@ -1,5 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { useRef } from "react";
+import { m, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import KineticHeading from "./KineticHeading";
 
 type HeroAction = {
   label: string;
@@ -61,9 +64,58 @@ export default function EnterprisePageHero({
   secondaryAction,
   metrics = [],
 }: EnterprisePageHeroProps) {
+  // Sprint v5 kinetic-pacing — scroll-linked parallax depth layers behind the
+  // page hero. Mirrors the homepage PlatformTabsSection pattern so every page
+  // gets the same "overlapping z-index + subtle drift" depth cue without
+  // touching the content layout. Zinc + coral only (color-lock safe).
+  const sectionRef = useRef<HTMLElement>(null);
+  const reduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  });
+  const grainY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [-10, 10]);
+  const meshY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [-32, 32]);
+  const coralY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [30, -30]);
+
   return (
-    <section className="hero-dot-grid relative overflow-hidden rounded-2xl bg-zinc-50 dark:bg-[#09090B]">
-      <div className={`relative z-10 grid gap-6 px-5 py-12 sm:px-8 sm:py-16 md:px-10 lg:items-start lg:px-14 lg:py-20${image ? " lg:grid-cols-[1.08fr_0.92fr]" : ""}`}>
+    <section
+      ref={sectionRef}
+      className="hero-dot-grid relative isolate overflow-hidden rounded-2xl bg-zinc-50 dark:bg-[#09090B]"
+    >
+      {/* Parallax backdrop layers (decorative, aria-hidden). Stacked at
+       * negative z-index so all hero content stays above them. */}
+      <m.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[-30] opacity-[0.035]"
+        style={{
+          y: grainY,
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          backgroundRepeat: "repeat",
+          backgroundSize: "256px 256px",
+        }}
+      />
+      <m.div
+        aria-hidden="true"
+        className="pointer-events-none absolute -inset-16 z-[-20] opacity-60 dark:opacity-40"
+        style={{
+          y: meshY,
+          background:
+            "radial-gradient(ellipse at 15% 25%, rgba(161, 161, 170, 0.10) 0%, rgba(161, 161, 170, 0) 55%), radial-gradient(ellipse at 85% 70%, rgba(113, 113, 122, 0.08) 0%, rgba(113, 113, 122, 0) 60%)",
+        }}
+      />
+      <m.div
+        aria-hidden="true"
+        className="pointer-events-none absolute right-[-80px] top-[8%] z-[-10] h-[260px] w-[260px] rounded-full blur-3xl"
+        style={{
+          y: coralY,
+          background:
+            "radial-gradient(circle, rgba(220, 38, 38, 0.08) 0%, rgba(220, 38, 38, 0.02) 45%, transparent 70%)",
+        }}
+      />
+
+      <div className={`relative z-10 grid gap-6 px-5 py-12 sm:px-8 sm:py-16 md:px-10 lg:items-start lg:px-14 lg:py-20${image ? " xl:grid-cols-[1.08fr_0.92fr]" : ""}`}>
         <div className="flex flex-col gap-4">
           <div className="rise-in rise-delay-1 inline-flex w-fit items-center gap-2.5 rounded-full border border-zinc-200 bg-zinc-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
             <span className="relative flex h-1.5 w-1.5 shrink-0">
@@ -71,10 +123,24 @@ export default function EnterprisePageHero({
             </span>
             {kicker}
           </div>
-          <h1 className="rise-in rise-delay-2 mt-2 font-sans text-display-sm font-bold text-zinc-900 dark:text-zinc-50 sm:text-display-md md:text-display-lg lg:text-display-xl">
-            {title}
-          </h1>
-          <p className="rise-in rise-delay-3 max-w-2xl text-caption leading-relaxed text-zinc-500 dark:text-zinc-400 sm:text-lg">
+          {/* Sprint v5 kinetic-pacing: H1 rendered via KineticHeading for a
+           * word-by-word line-mask reveal on every page that uses
+           * EnterprisePageHero (16 pages). Keeps `rise-in rise-delay-2`
+           * classes so the wrapper still participates in the existing
+           * on-load stagger. The line-mask animates WITHIN the rise.
+           *
+           * Responsive: `text-pretty` + progressive `max-w` clamp so long
+           * titles (e.g. "Discover, govern, and scale AI skills") don't
+           * orphan on their own line at 768 / 1024 / 1280. Desktop gets
+           * full width via `2xl:max-w-none`. */}
+          <KineticHeading
+            as="h1"
+            text={title}
+            className="rise-in rise-delay-2 mt-2 max-w-[22ch] font-sans text-display-sm font-bold text-zinc-900 text-pretty dark:text-zinc-50 sm:max-w-[28ch] sm:text-display-md md:text-display-lg lg:text-display-xl xl:max-w-[32ch] 2xl:max-w-none"
+            duration={0.9}
+            stagger={0.08}
+          />
+          <p className="rise-in rise-delay-3 max-w-2xl text-caption leading-relaxed text-zinc-500 text-pretty dark:text-zinc-400 sm:text-lg">
             {description}
           </p>
           {chips.length > 0 ? (
