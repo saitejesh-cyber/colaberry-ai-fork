@@ -59,15 +59,20 @@ export default function DemoVoice() {
       </Head>
 
       {/*
-        Flex column fills exactly the space left by main-offset's padding (1rem top + 1.5rem bottom)
-        plus the fixed site header. Title bar is shrink-0; iframe wrapper takes flex-1.
-        This replaces an earlier `calc(100dvh - header - 72px)` magic-number that did not
-        account for main-offset's padding, causing the iframe bottom (where the
-        "call on phone" button lives) to be clipped below the viewport.
+        Flex column sized to fit precisely between the sticky site header and the
+        main-offset bottom padding. The chrome above the wrapper is taller than
+        var(--site-header-height) alone would suggest because:
+          - the <header> is position:sticky (occupies var(--site-header-height) of layout flow)
+          - <main class="main-offset"> ALSO has padding-top: calc(var(--site-header-height) + 1rem)
+        Together that's 2 × var(--site-header-height) + 1rem above the wrapper.
+        Plus main-offset's padding-bottom of 1.5rem below.
+        Total chrome ≈ 2 × 64 + 16 + 24 = 168px (12rem covers it with a small buffer
+        for any cross-browser / font-size variance in the rendered header height).
+        Title bar is shrink-0; iframe wrapper takes flex-1.
       */}
       <div
         className="flex flex-col"
-        style={{ height: "calc(100dvh - var(--site-header-height) - 1rem - 1.5rem)" }}
+        style={{ height: "calc(100dvh - 12rem)" }}
       >
         {/* Compact title bar — keeps branding without eating viewport */}
         <div className="flex shrink-0 items-center justify-between pb-3 pt-1">

@@ -59,14 +59,15 @@ export default function DemoLens() {
       </Head>
 
       {/*
-        Flex column fills exactly the space left by main-offset's padding (1rem top + 1.5rem bottom)
-        plus the fixed site header. Title bar is shrink-0; iframe wrapper takes flex-1.
-        Same fix as voice.tsx — earlier `calc(100dvh - header - 72px)` magic-number didn't
-        account for main-offset's padding, clipping the bottom of the iframe.
+        Flex column sized to fit precisely between the sticky site header and the
+        main-offset bottom padding. See full math in voice.tsx — same chrome above
+        and below this wrapper on both pages. 12rem covers 2 × var(--site-header-height)
+        + 1rem (main-offset padding-top) + 1.5rem (main-offset padding-bottom) with
+        a small buffer for cross-browser variance in rendered header height.
       */}
       <div
         className="flex flex-col"
-        style={{ height: "calc(100dvh - var(--site-header-height) - 1rem - 1.5rem)" }}
+        style={{ height: "calc(100dvh - 12rem)" }}
       >
         {/* Compact title bar — keeps branding without eating viewport */}
         <div className="flex shrink-0 items-center justify-between pb-3 pt-1">
