@@ -58,88 +58,98 @@ export default function DemoLens() {
         <link rel="dns-prefetch" href={VTON_DEMO_URL} />
       </Head>
 
-      {/* Compact title bar — keeps branding without eating viewport */}
-      <div className="flex items-center justify-between pb-3 pt-1">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/demo/goggle-vton"
-            className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            aria-label="Back to demo details"
-          >
-            <span aria-hidden="true">&larr;</span>
-            Details
-          </Link>
-          <span className="h-3 w-px bg-zinc-300 dark:bg-zinc-700" aria-hidden="true" />
-          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#DC2626] dark:text-[#F87171]">
-            Live Demo
-          </span>
-          <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 sm:text-xl">
-            Virtual Lens Try-On
-          </h1>
-        </div>
-        <p className="hidden text-xs text-zinc-500 dark:text-zinc-400 sm:block">
-          Camera processed locally &middot; never stored
-        </p>
-      </div>
-
-      {/* Immersive iframe — fills remaining viewport */}
-      <div className="relative overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700"
-        style={{ height: "calc(100dvh - var(--site-header-height) - 72px)" }}
+      {/*
+        Flex column sized to fit precisely between the sticky site header and the
+        main-offset bottom padding. See full math in voice.tsx — same chrome above
+        and below this wrapper on both pages. 12rem covers 2 × var(--site-header-height)
+        + 1rem (main-offset padding-top) + 1.5rem (main-offset padding-bottom) with
+        a small buffer for cross-browser variance in rendered header height.
+      */}
+      <div
+        className="flex flex-col"
+        style={{ height: "calc(100dvh - 12rem)" }}
       >
-        {!loaded && !error && (
-          <div
-            role="status"
-            aria-live="polite"
-            className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-50 dark:bg-zinc-900"
-          >
-            <div className="flex flex-col items-center gap-3">
-              <div
-                className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-300 border-t-[#DC2626] dark:border-zinc-600 dark:border-t-[#F87171]"
-                aria-hidden="true"
-              />
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                Loading demo&hellip;
-              </p>
-            </div>
+        {/* Compact title bar — keeps branding without eating viewport */}
+        <div className="flex shrink-0 items-center justify-between pb-3 pt-1">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/demo/goggle-vton"
+              className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              aria-label="Back to demo details"
+            >
+              <span aria-hidden="true">&larr;</span>
+              Details
+            </Link>
+            <span className="h-3 w-px bg-zinc-300 dark:bg-zinc-700" aria-hidden="true" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#DC2626] dark:text-[#F87171]">
+              Live Demo
+            </span>
+            <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 sm:text-xl">
+              Virtual Lens Try-On
+            </h1>
           </div>
-        )}
+          <p className="hidden text-xs text-zinc-500 dark:text-zinc-400 sm:block">
+            Camera processed locally &middot; never stored
+          </p>
+        </div>
 
-        {error && (
-          <div role="alert" className="absolute inset-0 flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
-            <div className="flex flex-col items-center gap-3 text-center">
-              <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Demo temporarily unavailable
-              </p>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                Please try again later or{" "}
-                <Link
-                  href="/request-demo"
-                  className="text-[#B91C1C] underline dark:text-[#EF4444]"
-                >
-                  request a live walkthrough
-                </Link>
-                .
-              </p>
+        {/* Immersive iframe — fills remaining viewport */}
+        <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
+          {!loaded && !error && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-50 dark:bg-zinc-900"
+            >
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-300 border-t-[#DC2626] dark:border-zinc-600 dark:border-t-[#F87171]"
+                  aria-hidden="true"
+                />
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  Loading demo&hellip;
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {!error && (
-          <iframe
-            src={iframeSrc}
-            allow="camera; microphone"
-            title="Virtual Lens Try-On Demo"
-            aria-hidden={!loaded}
-            className="h-full w-full"
-            style={{
-              border: "none",
-              opacity: loaded ? 1 : 0,
-              transition: "opacity 0.3s ease",
-            }}
-            onLoad={() => setLoaded(true)}
-            onError={() => setError(true)}
-          />
-        )}
+          {error && (
+            <div role="alert" className="absolute inset-0 flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  Demo temporarily unavailable
+                </p>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  Please try again later or{" "}
+                  <Link
+                    href="/request-demo"
+                    className="text-[#B91C1C] underline dark:text-[#EF4444]"
+                  >
+                    request a live walkthrough
+                  </Link>
+                  .
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!error && (
+            <iframe
+              src={iframeSrc}
+              allow="camera; microphone"
+              title="Virtual Lens Try-On Demo"
+              aria-hidden={!loaded}
+              className="h-full w-full"
+              style={{
+                border: "none",
+                opacity: loaded ? 1 : 0,
+                transition: "opacity 0.3s ease",
+              }}
+              onLoad={() => setLoaded(true)}
+              onError={() => setError(true)}
+            />
+          )}
+        </div>
       </div>
     </Layout>
   );
