@@ -45,6 +45,8 @@ export default function Document() {
       <body>
         <Main />
         <NextScript />
+        {/* Colaberry central visitor tracker — reports to enterprise.colaberry.ai */}
+        <script src="https://enterprise.colaberry.ai/v1/track.js" data-site="colaberry" defer />
       </body>
     </Html>
   );
