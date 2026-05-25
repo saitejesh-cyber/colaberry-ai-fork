@@ -31,6 +31,7 @@ export default function DemoRequestWizardModal({
   const [timeline, setTimeline] = useState("");
   const [message, setMessage] = useState("");
   const [website, setWebsite] = useState("");
+  const [consent, setConsent] = useState(false);
   const [state, setState] = useState<SubmissionState>("idle");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [trackingContext, setTrackingContext] = useState<UtmContext>({});
@@ -59,6 +60,7 @@ export default function DemoRequestWizardModal({
         setStep(1);
         setState("idle");
         setStatusMessage(null);
+        setConsent(false);
         setTrackingContext(getTrackingContext());
       });
       return () => window.cancelAnimationFrame(rafId);
@@ -73,7 +75,7 @@ export default function DemoRequestWizardModal({
     return true;
   }, [step, email]);
 
-  const submitDisabled = state === "submitting" || !isValidWorkEmail(email);
+  const submitDisabled = state === "submitting" || !isValidWorkEmail(email) || !consent;
   const resolvedSourcePath =
     sourcePath || (typeof window !== "undefined" ? `${window.location.pathname}${window.location.search || ""}` : undefined);
 
@@ -91,6 +93,7 @@ export default function DemoRequestWizardModal({
         timeline,
         message,
         website,
+        consent,
         sourcePage,
         sourcePath: resolvedSourcePath,
         utmSource: trackingContext.utmSource,
@@ -295,6 +298,31 @@ export default function DemoRequestWizardModal({
                     <div className="mt-1">Email: {email || "Not provided"}</div>
                     <div>Company: {company || "Not provided"}</div>
                     <div>Timeline: {timeline || "Not provided"}</div>
+                  </div>
+                  <div className="mt-4">
+                    <label htmlFor="demo-wizard-consent" className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
+                      <input
+                        id="demo-wizard-consent"
+                        type="checkbox"
+                        name="consent"
+                        checked={consent}
+                        onChange={(event) => setConsent(event.target.checked)}
+                        required
+                        aria-required="true"
+                        className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-zinc-300 text-zinc-900 focus:ring-2 focus:ring-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:ring-zinc-100"
+                      />
+                      <span>
+                        I agree to be contacted by Colaberry about my request. We only use your info to respond &mdash;
+                        see our{" "}
+                        <Link href="/privacy-policy" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-50">
+                          privacy policy
+                        </Link>
+                        .
+                      </span>
+                    </label>
+                    {!consent ? (
+                      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Required to submit your request.</p>
+                    ) : null}
                   </div>
                 </div>
               ) : null}
