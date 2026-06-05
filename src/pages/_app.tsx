@@ -2,6 +2,7 @@ import type { AppProps } from "next/app";
 import { Inter } from "next/font/google";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import Script from "next/script";
 import { useEffect, useState } from "react";
 import { LazyMotion, domAnimation } from "framer-motion";
 
@@ -9,6 +10,8 @@ import "../styles/globals.css";
 import GuidedTourProvider from "../components/GuidedTour/GuidedTourProvider";
 import { PodcastPlayerProvider } from "../contexts/PodcastPlayerContext";
 import GlobalMiniPlayer from "../components/GlobalMiniPlayer";
+
+const GA_MEASUREMENT_ID = "G-F9YN432TTH";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,6 +50,18 @@ export default function App({ Component, pageProps }: AppProps) {
         <Head>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </Head>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
         <PodcastPlayerProvider>
           <div
             style={{

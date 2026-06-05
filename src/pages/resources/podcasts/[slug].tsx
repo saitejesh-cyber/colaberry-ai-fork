@@ -187,8 +187,15 @@ export default function PodcastDetail({ episode, relatedEpisodes }: PodcastDetai
   const [contentTab, setContentTab] = useState<"description" | "transcript">(
     hasTimedTranscript ? "transcript" : "description"
   );
-  const shouldForceNative = hasTimedTranscript && audioUrl;
-  const usesNativePlayer = Boolean(audioUrl && (shouldForceNative || preferNative));
+  // Always use the custom AudioPlayerUI when we have an audio URL. The
+  // previous gate (`shouldForceNative || preferNative`) required an
+  // explicit `useNativePlayer=true` flag in the CMS OR a timed transcript,
+  // which made the Buzzsprout embed render by default once buzzsproutSync
+  // populated `buzzsproutEmbedCode`. That regressed the original design
+  // (small native audio bar from the listing onward, auto-load via the
+  // global player context). The embed path is now only a fallback for
+  // episodes with no `audioUrl` at all.
+  const usesNativePlayer = Boolean(audioUrl);
   const subscribeLinks = (episode.platformLinks || []).filter(
     (link): link is PlatformLink & { url: string } => Boolean(link?.url)
   );

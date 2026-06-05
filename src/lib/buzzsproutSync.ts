@@ -366,7 +366,16 @@ export async function mapBuzzsproutToStrapi(
       BUZZSPROUT_PODCAST_ID,
       episode.id
     ),
-    useNativePlayer: false,
+    // useNativePlayer must be TRUE so the detail page's preferNative gate
+    // selects the native <audio> player (proxied via /api/audio-stream to
+    // bypass Cloudflare 503 on direct MP3 hotlinks). False would force the
+    // Buzzsprout embed which shows a "Loading podcast player... Load now"
+    // lazy interstitial — wrong UX for a detail page where the player IS
+    // the content. The cron used to overwrite to false on every sync, which
+    // silently broke the design after episodes started getting embedCode
+    // populated (the conditional in [slug].tsx then prefers embed over
+    // native unless useNativePlayer is explicitly true).
+    useNativePlayer: true,
     description: toBlocks(episode.description),
     transcriptStatus: "pending",
   };

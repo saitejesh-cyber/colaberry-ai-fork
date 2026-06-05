@@ -106,11 +106,11 @@ const nextConfig: NextConfig = {
                   // SHA-256 is the correct CSP approach for Pages Router with ISR/SSG.
                   value: [
                     "default-src 'self'",
-                    "script-src 'self' 'sha256-CdQGV8nBFFKUGZSKmXZWMSImilQGgmVGWzhkZ5MUiII=' https://www.googletagmanager.com https://www.google-analytics.com https://www.buzzsprout.com",
+                    "script-src 'self' 'sha256-CdQGV8nBFFKUGZSKmXZWMSImilQGgmVGWzhkZ5MUiII=' https://www.googletagmanager.com https://www.google-analytics.com https://www.buzzsprout.com https://enterprise.colaberry.ai",
                     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
                     "font-src 'self' https://fonts.gstatic.com data:",
                     `img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com ${cmsUrl ? new URL(cmsUrl).origin : ""}`.trim(),
-                    `connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com https://www.buzzsprout.com https://www.buzzsprout.com ${cmsUrl || ""}`.trim(),
+                    `connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://analytics.google.com https://www.buzzsprout.com https://www.buzzsprout.com https://enterprise.colaberry.ai ${cmsUrl || ""}`.trim(),
                     "media-src 'self' https://www.buzzsprout.com https://www.buzzsprout.com",
                     `frame-src 'self' https://www.buzzsprout.com https://substack.com https://www.colaberry.online ${vtonUrl} ${voiceAgentOrigin}`,
                     "object-src 'none'",
