@@ -121,7 +121,7 @@ src/
 - `src/lib/ontologyTypes.ts` — Shared type system: ContentOntologyConfig, ContentCollection, SolutionStack
 - `src/lib/ontologyRegistry.ts` — Central registry + cross-type relation definitions
 - `src/lib/graphUtils.ts` — Generic graph utilities: `buildGraphData()`, colors, topology
-- `src/components/Layout.tsx` — Header + footer + nav (1,800 lines). `fallbackNavigation.headerLinks` is the source of truth for the top nav when the CMS `global-navigation` content type is not yet published. Current nav order: Platform → **Demos** → Industries → Resources → Updates.
+- `src/components/Layout.tsx` — Header + footer + nav (1,800 lines). `fallbackNavigation.headerLinks` is the source of truth for the top nav when the CMS `global-navigation` content type is not yet published. Current nav order: Platform → **Demos** → Industries → Resources → Updates. The left **catalog-workspace drawer** is derived from the header links by `buildWorkspaceSections()` into Platform / Catalog / Explore groups; when adding a top-level header link, also wire it there and add a `sidebarIcon()` case, or it silently won't show in the drawer (the Demos entry was missing for exactly this reason, fixed 2026-06-05).
 - `src/data/demos.ts` — Demo registry (type `DemoConfig`) powering `/demo` hub and `/demo/[slug]` detail pages. Add a record, get a detail page for free.
 - `src/components/ContentTypeIcon.tsx` — Premium SVG icons for 5 content types
 - `src/components/LLMArchitectureDeepDive.tsx` — Sprint v4 renderer for the `deepDive` Strapi Dynamic Zone. Dispatches per `__component` to render heading / paragraph / callout / code-block / table / list / image / references blocks as semantic HTML inside `.prose`.
