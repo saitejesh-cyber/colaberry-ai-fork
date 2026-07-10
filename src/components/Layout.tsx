@@ -506,6 +506,7 @@ function getSidebarIcon(href: string): ReactNode {
   if (p.startsWith("/aixcelerator/ecosystem")) return <svg {...sidebarIconProps}><circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20" /><path d="M12 2a14.5 14.5 0 0 1 0 20" /><line x1="2" y1="12" x2="22" y2="12" /></svg>;
   if (p.startsWith("/aixcelerator/solution-stacks")) return <svg {...sidebarIconProps}><rect x="4" y="2" width="16" height="6" rx="1" /><rect x="4" y="10" width="16" height="6" rx="1" /><rect x="4" y="18" width="16" height="4" rx="1" /></svg>;
   if (p.startsWith("/solutions")) return <svg {...sidebarIconProps}><line x1="12" y1="2" x2="12" y2="6" /><circle cx="12" cy="14" r="8" /><path d="M12 6a6 6 0 0 0-4.24 10.24" /><path d="M12 6a6 6 0 0 1 4.24 10.24" /><line x1="12" y1="18" x2="12" y2="22" /></svg>;
+  if (p.startsWith("/demo")) return <svg {...sidebarIconProps}><rect x="2" y="3" width="20" height="14" rx="2" /><polygon points="10 7.5 15.5 10 10 12.5" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>;
   // fallback: use first letters
   return null;
 }
@@ -535,6 +536,8 @@ function buildWorkspaceSections(nav: GlobalNavigation): WorkspaceSection[] {
     getHeaderLinkByLabel(nav, "industries") || getHeaderLinkByLabel(fallbackNavigation, "industries");
   const solutionsLink =
     getHeaderLinkByLabel(nav, "solutions") || getHeaderLinkByLabel(fallbackNavigation, "solutions");
+  const demosLink =
+    getHeaderLinkByLabel(nav, "demos") || getHeaderLinkByLabel(fallbackNavigation, "demos");
 
   const platformChildren = (platformLink.children || []).map((child) => ({
     label: child.label,
@@ -559,6 +562,7 @@ function buildWorkspaceSections(nav: GlobalNavigation): WorkspaceSection[] {
   ].filter(Boolean) as WorkspaceLink[]).filter((link) => isReleasePath(link.href));
 
   const exploreLinks = dedupeWorkspaceLinks([
+    demosLink ? { label: "Demos", href: demosLink.href, target: demosLink.target } : null,
     industriesLink ? { label: "Industries", href: industriesLink.href, target: industriesLink.target } : null,
     solutionsLink ? { label: "Solutions", href: solutionsLink.href, target: solutionsLink.target } : null,
     resourcesLink ? { label: "Resources", href: resourcesLink.href, target: resourcesLink.target } : null,
