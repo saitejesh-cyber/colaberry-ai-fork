@@ -45,11 +45,9 @@ export default function HeaderAuth({
   onNavigate?: () => void;
 }) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
   const [auth, setAuth] = useState<AuthState>({ ready: false, email: null });
 
   useEffect(() => {
-    setMounted(true);
     let alive = true;
     fetch("/api/auth/me", { credentials: "same-origin" })
       .then((r) => (r.ok ? r.json() : null))
@@ -64,10 +62,12 @@ export default function HeaderAuth({
     };
   }, []);
 
-  // Same-site redirect back to the current page after sign-in. Only added
-  // post-mount so SSR + first client render both emit a bare "/login".
+  // Same-site redirect back to the current page after sign-in. Only added once
+  // the client /me check has resolved (auth.ready), so SSR + first client
+  // render both emit a bare "/login" — no hydration mismatch, no setState in
+  // the effect body.
   const redirect = router.asPath && router.asPath.startsWith("/") ? router.asPath : "/";
-  const loginHref = mounted ? `/login?redirect=${encodeURIComponent(redirect)}` : "/login";
+  const loginHref = auth.ready ? `/login?redirect=${encodeURIComponent(redirect)}` : "/login";
 
   const signOut = async () => {
     try {
