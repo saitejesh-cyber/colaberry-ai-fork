@@ -17,6 +17,7 @@ import { GlobalNavigation } from "../lib/cms";
 import { captureUtmContextFromLocation, getTrackingContext } from "../lib/tracking";
 import AnimatedSignalBanner from "./AnimatedSignalBanner";
 import SubstackEmbedSignup from "./SubstackEmbedSignup";
+import HeaderAuth from "./HeaderAuth";
 import { usePodcastPlayer } from "../contexts/PodcastPlayerContext";
 
 const DemoRequestWizardModal = dynamic(
@@ -1354,6 +1355,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <ThemeIcon isDark={isDarkMode} />
               </button>
             </div>
+            <HeaderAuth />
             {globalNav.cta ? (
               <Link
                 href={globalNav.cta.href}
@@ -1512,6 +1514,15 @@ export default function Layout({ children }: { children: ReactNode }) {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+
+            <div className="mt-3 rounded-lg border border-zinc-200/80 bg-white/90 p-3 dark:border-zinc-700/80 dark:bg-zinc-900/70">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600 dark:text-zinc-400">
+                Account
+              </div>
+              <div className="mt-2">
+                <HeaderAuth variant="mobile" onNavigate={closeMobileMenu} />
               </div>
             </div>
 
