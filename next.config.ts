@@ -3,6 +3,7 @@ import { getMcpRedirects } from "./src/lib/mcp-slug-aliases";
 
 const cmsUrl = process.env.NEXT_PUBLIC_CMS_URL;
 const vtonUrl = process.env.NEXT_PUBLIC_VTON_URL || "https://vton-demo-956818257204.us-east1.run.app";
+const atsUrl = "https://ats-prod-65796390574.us-central1.run.app";
 const cmsRemotePattern = (() => {
   if (!cmsUrl) return null;
   try {
@@ -45,6 +46,10 @@ const nextConfig: NextConfig = {
     const mcpRedirects = getMcpRedirects();
     return [
       ...mcpRedirects,
+      // colaberry.ai/ats → the recruiting ATS on Cloud Run (GCP project sales-team-513212), behind Google sign-in (IAP).
+      // Temporary (307) so the target can change later, e.g. to a custom domain.
+      { source: "/ats", destination: atsUrl, permanent: false },
+      { source: "/ats/:path*", destination: `${atsUrl}/:path*`, permanent: false },
       // Legacy colaberry.ai/episodes → new podcast URLs (301 permanent)
       {
         source: "/episodes",
